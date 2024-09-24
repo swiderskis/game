@@ -1,0 +1,2 @@
+-iquoteext-lib/raylib/src
+-iquoteext-lib/raylib-cpp/include
