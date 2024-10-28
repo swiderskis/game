@@ -4,11 +4,11 @@
 RAYLIB_DIR := ext-lib/raylib/src
 RAYLIB_CPP_DIR := ext-lib/raylib-cpp/include
 
-CPPFLAGS := -MMD -MP -iquote$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
+CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
 CXXFLAGS := -O3 -Wall -Wextra -std=c++20
 LDFLAGS := -L$(RAYLIB_DIR)
 LDLIBS := -lraylib -lopengl32 -lgdi32 -lwinmm
-BIN_NAME := game-engine.exe
+BIN_NAME := game.exe
 
 SRC_DIR := src
 BIN_DIR := build
