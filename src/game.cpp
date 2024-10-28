@@ -2,14 +2,14 @@
 
 #include <cassert>
 
+constexpr int TARGET_FPS = 60;
+
 constexpr float WINDOW_HALF_WIDTH = WINDOW_WIDTH / 2.0;
 constexpr float WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2.0;
 constexpr float SPRITE_DEFAULT_SIZE = 32.0;
 constexpr float SIN45 = 0.70710678119; // cmath is not constexpr yet, cannot use sin(45) directly :(
-constexpr float PLAYER_SPEED = 10.0;
+constexpr float PLAYER_SPEED = 100.0 / TARGET_FPS;
 constexpr float PLAYER_SPEED_DIAG = PLAYER_SPEED * SIN45;
-
-constexpr int TARGET_FPS = 60;
 
 constexpr size_t MAX_ENTITIES = 1024;
 constexpr size_t PLAYER_ID = 0;
