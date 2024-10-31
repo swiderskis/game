@@ -1,93 +1,54 @@
 #ifndef ENGINE_HPP_
 #define ENGINE_HPP_
 
+#include "components.hpp"
+#include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
-#include <cstddef>
-#include <optional>
+#include <unordered_map>
 #include <vector>
 
 constexpr auto WINDOW_TITLE = "Game Title";
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 450;
+constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
 
-const auto TEXTURE_SHEET = "assets/pingwin.png";
+constexpr unsigned WINDOW_WIDTH = 800;
+constexpr unsigned WINDOW_HEIGHT = 450;
+constexpr unsigned WINDOW_HALF_WIDTH = WINDOW_WIDTH / 2;
+constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
+constexpr unsigned MAX_ENTITIES = 1024;
 
-enum class EntityType {
-    Player
-};
-
-class Entity
-{
-    size_t m_id;
-    std::optional<EntityType> m_type;
-
-    explicit Entity(size_t id);
-    Entity(size_t id, EntityType type);
-
-    friend class EntityManager;
-
-public:
-    Entity() = delete;
-
-    [[nodiscard]] size_t id() const;
-    [[nodiscard]] std::optional<EntityType> type() const;
-};
+constexpr float CAMERA_ZOOM = 2.0;
 
 class EntityManager
 {
     std::vector<Entity> m_entities;
-    size_t m_min_empty_id = 1;
-    size_t m_max_occupied_id = 0;
+    std::unordered_map<EntityType, std::vector<unsigned>> m_entity_ids;
 
     EntityManager(); // NOLINT
 
     void spawn_player();
-    void spawn_entity(EntityType type);
+    [[nodiscard]] unsigned spawn_entity(EntityType type);
 
     friend class Game;
 };
 
-struct Tform {
-    RVector2 pos;
-    RVector2 vel;
-
-private:
-    Tform() = default;
-
-    friend class ComponentManager;
-};
-
-struct Sprite {
-    RVector2 pos;
-    RVector2 size;
-
-    Sprite() = delete;
-    explicit Sprite(RVector2 pos);
-    Sprite(RVector2 pos, RVector2 size);
-
-private:
-    friend class ComponentManager;
-};
-
 class ComponentManager
 {
-    std::vector<Tform> m_transforms;
-    std::vector<Sprite> m_sprites;
+    std::vector<Tform> m_transforms{ MAX_ENTITIES, Tform() };
+    std::vector<Sprite> m_sprites{ MAX_ENTITIES, Sprite() };
+    std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
 
-    ComponentManager(); // NOLINT
+    ComponentManager() = default;
 
     void set_player_components();
-    void set_entity_components(EntityType type);
 
     friend class Game;
 };
 
 struct Inputs {
-    bool m_up = false;
-    bool m_down = false;
     bool m_left = false;
     bool m_right = false;
+    bool m_up = false;
 
 private:
     Inputs() = default;
@@ -102,12 +63,18 @@ class Game
     Inputs m_inputs;
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
+    RCamera2D m_camera{ RVector2(WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT), RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
 
+    // Systems
     void poll_inputs();
     void render_sprites();
-    void spawn_entity(EntityType type);
     void set_player_vel();
     void move_entities();
+
+    void spawn_player();
+    void spawn_tile(Tile tile, RVector2 pos);
+    float dt();
+    void correct_collisions(unsigned id, BBox prev_bbox);
 
 public:
     void run();

@@ -5,7 +5,7 @@ RAYLIB_DIR := ext-lib/raylib/src
 RAYLIB_CPP_DIR := ext-lib/raylib-cpp/include
 
 CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
-CXXFLAGS := -O3 -Wall -Wextra -std=c++20
+CXXFLAGS := -O3 -Wall -Wextra -std=c++23
 LDFLAGS := -L$(RAYLIB_DIR)
 LDLIBS := -lraylib -lopengl32 -lgdi32 -lwinmm
 BIN_NAME := game.exe
