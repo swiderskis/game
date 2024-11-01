@@ -16,11 +16,10 @@ constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 7.5;
 constexpr float GRAVITY_ACCELERATION = 15.0;
 constexpr float MAX_FALL_SPEED = 10.0;
-
-constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
-
 constexpr float PLAYER_BBOX_SIZE_X = 22.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
+
+constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
 
 EntityManager::EntityManager()
 {
@@ -63,7 +62,7 @@ void ComponentManager::set_player_components()
     m_transforms[PLAYER_ID].pos = RVector2(WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT);
     m_transforms[PLAYER_ID].vel = RVector2(0.0, 0.0);
     m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
-    m_bounding_boxes[PLAYER_ID].set_params(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
+    m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_bounding_boxes[PLAYER_ID].sync(m_transforms[PLAYER_ID]);
 }
 
@@ -89,9 +88,8 @@ void Game::render_sprites()
         const unsigned id = entity.id();
         const auto sprite = m_component_manager.m_sprites[id].sprite;
         const auto size = m_component_manager.m_sprites[id].size();
-        const auto entity_pos = m_component_manager.m_transforms[id].pos - size / 2;
+        const auto entity_pos = m_component_manager.m_transforms[id].pos;
         m_texture_sheet.Draw(sprite, entity_pos);
-
 #ifdef SHOW_BBOXES
         const auto bounding_box = m_component_manager.m_bounding_boxes[id].bounding_box;
         bounding_box.DrawLines(RED);
