@@ -15,6 +15,28 @@ void Sprite::set_pos(RVector2 pos)
     sprite.SetPosition(pos);
 }
 
+void Sprite::flip()
+{
+    auto size = sprite.GetSize();
+    if (size.x < 0) {
+        return;
+    }
+
+    size.x *= -1;
+    sprite.SetSize(size);
+}
+
+void Sprite::unflip()
+{
+    auto size = sprite.GetSize();
+    if (size.x > 0) {
+        return;
+    }
+
+    size.x *= -1;
+    sprite.SetSize(size);
+}
+
 void BBox::sync(Tform transform)
 {
     bounding_box.SetPosition(transform.pos);

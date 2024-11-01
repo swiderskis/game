@@ -23,6 +23,8 @@ struct Sprite {
 
     [[nodiscard]] RVector2 size() const;
     void set_pos(RVector2 pos);
+    void flip();
+    void unflip();
 
 private:
     Sprite() = default;
