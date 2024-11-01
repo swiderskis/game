@@ -16,7 +16,7 @@ constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 7.5;
 constexpr float GRAVITY_ACCELERATION = 15.0;
 constexpr float MAX_FALL_SPEED = 10.0;
-constexpr float PLAYER_BBOX_SIZE_X = 22.0;
+constexpr float PLAYER_BBOX_SIZE_X = 20.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
 
 constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
@@ -115,8 +115,9 @@ void Game::set_player_vel()
         player_vel.x = -PLAYER_SPEED * dt();
     }
 
-    if (m_inputs.m_up) {
+    if (m_inputs.m_up && m_component_manager.m_grounded[PLAYER_ID].grounded) {
         player_vel.y = -JUMP_SPEED;
+        m_component_manager.m_grounded[PLAYER_ID].grounded = false;
     }
 }
 
@@ -134,6 +135,7 @@ void Game::move_entities()
 
         if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type())) {
             transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt());
+            m_component_manager.m_grounded[id].grounded = false;
         }
 
         const auto prev_bbox = bbox;
@@ -200,6 +202,10 @@ void Game::correct_collisions(unsigned id, BBox prev_bbox)
 
         if (y_adjust != 0.0) {
             transform.vel.y = 0.0;
+        }
+
+        if (y_adjust < 0.0) {
+            m_component_manager.m_grounded[id].grounded = true;
         }
 
         transform.pos.y += y_adjust;
