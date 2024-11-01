@@ -23,7 +23,7 @@ void Sprite::set_pos(RVector2 pos)
 
 void BBox::sync(Tform transform)
 {
-    bounding_box.SetPosition(transform.pos - bounding_box.GetSize() / 2);
+    bounding_box.SetPosition(transform.pos - offset);
 }
 
 bool BBox::collides(BBox other_bbox) const
@@ -51,4 +51,11 @@ bool BBox::y_overlaps(BBox other_bbox) const
 
     return (bbox_y >= other_bbox_y && bbox_y - other_bbox_y < other_bbox_height)
            || (other_bbox_y >= bbox_y && other_bbox_y - bbox_y < bbox_height);
+}
+
+void BBox::set_params(RVector2 size)
+{
+    bounding_box.SetSize(size);
+    offset.x -= (BBOX_DEFAULT_SIZE - size.x) / 2;
+    offset.y -= BBOX_DEFAULT_SIZE - size.y;
 }

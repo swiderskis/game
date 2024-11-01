@@ -4,6 +4,8 @@
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
 constexpr float SPRITE_DEFAULT_SIZE = 32.0;
+constexpr float BBOX_DEFAULT_SIZE = 32.0;
+constexpr float BBOX_HALF_DEFAULT_SIZE = BBOX_DEFAULT_SIZE / 2.0;
 
 struct Tform {
     RVector2 pos;
@@ -31,12 +33,14 @@ private:
 };
 
 struct BBox {
-    RRectangle bounding_box{ RVector2(0.0, 0.0), RVector2(SPRITE_DEFAULT_SIZE, SPRITE_DEFAULT_SIZE) };
+    RRectangle bounding_box{ RVector2(0.0, 0.0), RVector2(BBOX_DEFAULT_SIZE, BBOX_DEFAULT_SIZE) };
+    RVector2 offset{ BBOX_HALF_DEFAULT_SIZE, BBOX_HALF_DEFAULT_SIZE };
 
     void sync(Tform transform);
     [[nodiscard]] bool collides(BBox other_bbox) const;
     [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
     [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
+    void set_params(RVector2 size);
 
 private:
     BBox() = default;
