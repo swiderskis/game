@@ -37,6 +37,7 @@ class ComponentManager
     std::vector<Tform> m_transforms{ MAX_ENTITIES, Tform() };
     std::vector<Sprite> m_sprites{ MAX_ENTITIES, Sprite() };
     std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
+    std::vector<Grounded> m_grounded{ MAX_ENTITIES, Grounded() };
 
     ComponentManager() = default;
 

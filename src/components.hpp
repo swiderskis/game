@@ -47,4 +47,13 @@ private:
     friend class ComponentManager;
 };
 
+struct Grounded {
+    bool grounded = false;
+
+private:
+    Grounded() = default;
+
+    friend class ComponentManager;
+};
+
 #endif
