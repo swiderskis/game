@@ -86,10 +86,15 @@ void Game::render_sprites()
         }
 
         const unsigned id = entity.id();
-        const auto sprite = m_component_manager.m_sprites[id].sprite;
-        const auto size = m_component_manager.m_sprites[id].size();
-        const auto entity_pos = m_component_manager.m_transforms[id].pos;
-        m_texture_sheet.Draw(sprite, entity_pos);
+        const auto entity_tform = m_component_manager.m_transforms[id];
+        auto& sprite = m_component_manager.m_sprites[id];
+        if (entity_tform.vel.x < 0) {
+            sprite.flip();
+        } else if (entity_tform.vel.x > 0) {
+            sprite.unflip();
+        }
+
+        m_texture_sheet.Draw(sprite.sprite, entity_tform.pos);
 #ifdef SHOW_BBOXES
         const auto bounding_box = m_component_manager.m_bounding_boxes[id].bounding_box;
         bounding_box.DrawLines(RED);
