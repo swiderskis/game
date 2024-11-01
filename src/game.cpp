@@ -7,15 +7,17 @@
 #include <span>
 
 #define SHOW_BBOXES
-// #undef SHOW_BBOXES
+#undef SHOW_BBOXES
 
 constexpr unsigned TARGET_FPS = 60;
 constexpr unsigned PLAYER_ID = 0;
 
 constexpr float PLAYER_SPEED = 100.0;
-constexpr float JUMP_SPEED = 7.0;
-constexpr float GRAVITY_ACCELERATION = 16.0;
+constexpr float JUMP_SPEED = 7.5;
+constexpr float GRAVITY_ACCELERATION = 15.0;
 constexpr float MAX_FALL_SPEED = 10.0;
+constexpr float PLAYER_BBOX_SIZE_X = 22.0;
+constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
 
 constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
 
@@ -60,6 +62,7 @@ void ComponentManager::set_player_components()
     m_transforms[PLAYER_ID].pos = RVector2(WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT);
     m_transforms[PLAYER_ID].vel = RVector2(0.0, 0.0);
     m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
+    m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_bounding_boxes[PLAYER_ID].sync(m_transforms[PLAYER_ID]);
 }
 
@@ -85,17 +88,13 @@ void Game::render_sprites()
         const unsigned id = entity.id();
         const auto sprite = m_component_manager.m_sprites[id].sprite;
         const auto size = m_component_manager.m_sprites[id].size();
-        const auto entity_pos = m_component_manager.m_transforms[id].pos - size / 2;
+        const auto entity_pos = m_component_manager.m_transforms[id].pos;
         m_texture_sheet.Draw(sprite, entity_pos);
-    }
-
 #ifdef SHOW_BBOXES
-    for (const auto entity : m_entity_manager.m_entities) {
-        const unsigned id = entity.id();
         const auto bounding_box = m_component_manager.m_bounding_boxes[id].bounding_box;
         bounding_box.DrawLines(RED);
-    }
 #endif
+    }
 
     m_camera.EndMode();
 }
@@ -135,7 +134,6 @@ void Game::move_entities()
         const auto prev_bbox = bbox;
         transform.move();
         bbox.sync(transform);
-
         correct_collisions(id, prev_bbox);
     }
 }
@@ -179,8 +177,6 @@ void Game::correct_collisions(unsigned id, BBox prev_bbox)
         }
 
         float x_adjust = 0.0;
-        float y_adjust = 0.0;
-
         if (prev_bbox.y_overlaps(tile_bbox) && bbox.x_overlaps(tile_bbox)) {
             x_adjust = tile_bbox.bounding_box.x > bbox.bounding_box.x
                            ? tile_bbox.bounding_box.x - bbox.bounding_box.x - bbox.bounding_box.width
@@ -190,6 +186,7 @@ void Game::correct_collisions(unsigned id, BBox prev_bbox)
         transform.pos.x += x_adjust;
         bbox.sync(transform);
 
+        float y_adjust = 0.0;
         if (prev_bbox.x_overlaps(tile_bbox) && bbox.y_overlaps(tile_bbox)) {
             y_adjust = tile_bbox.bounding_box.y > bbox.bounding_box.y
                            ? tile_bbox.bounding_box.y - bbox.bounding_box.y - bbox.bounding_box.height

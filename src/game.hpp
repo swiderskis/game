@@ -1,5 +1,5 @@
-#ifndef ENGINE_HPP_
-#define ENGINE_HPP_
+#ifndef GAME_HPP_
+#define GAME_HPP_
 
 #include "components.hpp"
 #include "entities.hpp"
