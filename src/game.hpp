@@ -42,6 +42,7 @@ class ComponentManager
     ComponentManager() = default;
 
     void set_player_components();
+    void set_circular_bounding_box(unsigned id, RVector2 pos, float radius);
 
     friend class Game;
 };
@@ -76,6 +77,7 @@ class Game
     void spawn_tile(Tile tile, RVector2 pos);
     float dt();
     void correct_collisions(unsigned id, BBox prev_bbox);
+    void spawn_projectile(RVector2 pos);
 
 public:
     void run();

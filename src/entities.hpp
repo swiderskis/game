@@ -5,7 +5,8 @@
 
 enum class EntityType {
     Player,
-    Tile
+    Tile,
+    Projectile
 };
 
 enum class Tile {
