@@ -1,6 +1,7 @@
 #include "game.hpp"
 
 #include "entities.hpp"
+#include "overloaded.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -19,7 +20,7 @@ constexpr float MAX_FALL_SPEED = 10.0;
 constexpr float PLAYER_BBOX_SIZE_X = 20.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
 
-constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
+constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player, EntityType::Projectile };
 
 EntityManager::EntityManager()
 {
@@ -66,6 +67,11 @@ void ComponentManager::set_player_components()
     m_bounding_boxes[PLAYER_ID].sync(m_transforms[PLAYER_ID]);
 }
 
+void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, float radius)
+{
+    m_bounding_boxes[id].bounding_box = Circle(pos, radius);
+}
+
 void Game::poll_inputs()
 {
     m_inputs.m_left = RKeyboard::IsKeyDown(KEY_A);
@@ -96,8 +102,11 @@ void Game::render_sprites()
 
         m_texture_sheet.Draw(sprite.sprite, entity_tform.pos);
 #ifdef SHOW_BBOXES
-        const auto bounding_box = m_component_manager.m_bounding_boxes[id].bounding_box;
-        bounding_box.DrawLines(RED);
+        std::visit(overloaded{
+                       [](RRectangle bbox) { bbox.DrawLines(RED); },
+                       [](Circle bbox) { bbox.draw_lines(RED); },
+                   },
+                   m_component_manager.m_bounding_boxes[id].bounding_box);
 #endif
     }
 
@@ -174,43 +183,65 @@ float Game::dt()
 
 void Game::correct_collisions(unsigned id, BBox prev_bbox)
 {
-    auto& bbox = m_component_manager.m_bounding_boxes[id];
+    auto& bbox_comp = m_component_manager.m_bounding_boxes[id];
     auto& transform = m_component_manager.m_transforms[id];
 
     for (const unsigned tile_id : m_entity_manager.m_entity_ids[EntityType::Tile]) {
-        const auto tile_bbox = m_component_manager.m_bounding_boxes[tile_id];
-        if (!bbox.collides(tile_bbox)) {
+        const auto tile_bbox_comp = m_component_manager.m_bounding_boxes[tile_id];
+        if (!bbox_comp.collides(tile_bbox_comp)) {
             continue;
         }
 
-        float x_adjust = 0.0;
-        if (prev_bbox.y_overlaps(tile_bbox) && bbox.x_overlaps(tile_bbox)) {
-            x_adjust = tile_bbox.bounding_box.x > bbox.bounding_box.x
-                           ? tile_bbox.bounding_box.x - bbox.bounding_box.x - bbox.bounding_box.width
-                           : tile_bbox.bounding_box.x - bbox.bounding_box.x + tile_bbox.bounding_box.width;
+        const auto tile_bbox = std::get<RRectangle>(tile_bbox_comp.bounding_box);
+        const auto calculate_x_adjust = std::visit(
+            overloaded{
+                [tile_bbox](RRectangle bbox) {
+                    return tile_bbox.x - bbox.x + (tile_bbox.x > bbox.x ? -bbox.width : tile_bbox.width);
+                },
+                [tile_bbox](Circle bbox) {
+                    return tile_bbox.x - bbox.pos.x + (bbox.pos.x > tile_bbox.x ? bbox.radius : -bbox.radius);
+                },
+            },
+            bbox_comp.bounding_box);
+        const auto calculate_y_adjust = std::visit(
+            overloaded{
+                [tile_bbox](RRectangle bbox) {
+                    return tile_bbox.y - bbox.y + (tile_bbox.y > bbox.y ? -bbox.height : tile_bbox.height);
+                },
+                [tile_bbox](Circle bbox) {
+                    return tile_bbox.y - bbox.pos.y + (bbox.pos.y > tile_bbox.y ? bbox.radius : -bbox.radius);
+                },
+            },
+            bbox_comp.bounding_box);
+
+        if (tile_bbox_comp.y_overlaps(prev_bbox) && tile_bbox_comp.x_overlaps(bbox_comp)) {
+            const float x_adjust = calculate_x_adjust;
+            transform.pos.x += x_adjust;
+            bbox_comp.sync(transform);
         }
 
-        transform.pos.x += x_adjust;
-        bbox.sync(transform);
+        if (tile_bbox_comp.x_overlaps(prev_bbox) && tile_bbox_comp.y_overlaps(bbox_comp)) {
+            const float y_adjust = calculate_y_adjust;
+            transform.pos.y += y_adjust;
+            bbox_comp.sync(transform);
 
-        float y_adjust = 0.0;
-        if (prev_bbox.x_overlaps(tile_bbox) && bbox.y_overlaps(tile_bbox)) {
-            y_adjust = tile_bbox.bounding_box.y > bbox.bounding_box.y
-                           ? tile_bbox.bounding_box.y - bbox.bounding_box.y - bbox.bounding_box.height
-                           : tile_bbox.bounding_box.y - bbox.bounding_box.y + tile_bbox.bounding_box.height;
+            if (y_adjust != 0.0) {
+                transform.vel.y = 0.0;
+            }
+
+            if (y_adjust < 0.0) {
+                m_component_manager.m_grounded[id].grounded = true;
+            }
         }
-
-        if (y_adjust != 0.0) {
-            transform.vel.y = 0.0;
-        }
-
-        if (y_adjust < 0.0) {
-            m_component_manager.m_grounded[id].grounded = true;
-        }
-
-        transform.pos.y += y_adjust;
-        bbox.sync(transform);
     }
+}
+
+void Game::spawn_projectile(RVector2 pos)
+{
+    const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
+    m_component_manager.m_transforms[id].pos = pos;
+    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0)); // NOLINT
+    m_component_manager.set_circular_bounding_box(id, pos, 9.0);    // NOLINT
 }
 
 void Game::run()
@@ -233,6 +264,8 @@ void Game::run()
     spawn_tile(Tile::Brick, RVector2(352.0, 256.0)); // NOLINT
     spawn_tile(Tile::Brick, RVector2(448.0, 224.0)); // NOLINT
     spawn_tile(Tile::Brick, RVector2(384.0, 128.0)); // NOLINT
+
+    spawn_projectile(RVector2(448.0, 256.0)); // NOLINT
 
     while (!m_window.ShouldClose()) {
         m_window.BeginDrawing();
