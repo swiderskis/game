@@ -1,6 +1,7 @@
 #include "game.hpp"
 
 #include "entities.hpp"
+#include "overloaded.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -8,12 +9,6 @@
 
 #define SHOW_BBOXES
 #undef SHOW_BBOXES
-
-// Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
-template <typename... Ts>
-struct overloaded : Ts... { // NOLINT
-    using Ts::operator()...;
-};
 
 constexpr unsigned TARGET_FPS = 60;
 constexpr unsigned PLAYER_ID = 0;

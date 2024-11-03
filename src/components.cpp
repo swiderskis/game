@@ -1,12 +1,8 @@
 #include "components.hpp"
 
-#include <cassert>
+#include "overloaded.hpp"
 
-// Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
-template <typename... Ts>
-struct overloaded : Ts... { // NOLINT
-    using Ts::operator()...;
-};
+#include <cassert>
 
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 constexpr int CIRCLE_BBOX_INDEX = 1;
