@@ -51,7 +51,7 @@ bool Circle::check_collision(Circle other_circle) const
 
 void Circle::draw_lines(::Color color)
 {
-    DrawCircleLines(static_cast<int>(pos.x + TILE_SIZE / 2), static_cast<int>(pos.y + TILE_SIZE / 2), radius, color);
+    DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
 }
 
 Circle::Circle(RVector2 pos, float radius) : pos(pos), radius(radius) {};
