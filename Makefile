@@ -36,6 +36,7 @@ all: debug
 debug: $(DEBUG_BIN)
 
 run: $(DEBUG_BIN)
+	cp $(RAYLIB_DIR)/raylib.dll $(DEBUG_BIN_DIR)
 	$(DEBUG_BIN)
 
 release: $(BIN)
@@ -56,7 +57,6 @@ $(BIN): $(RAYLIB) $(OBJ) | $(BIN_DIR)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(DEBUG_BIN): $(RAYLIB_SO) $(DEBUG_OBJ) | $(BIN_DIR) $(SO)
-	cp $(RAYLIB_DIR)/raylib.dll $(DEBUG_BIN_DIR)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
 $(SO): $(RAYLIB_SO) $(DEBUG_OBJ) | $(BIN_DIR)
