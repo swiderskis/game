@@ -244,7 +244,7 @@ void Game::spawn_projectile(RVector2 pos)
     m_component_manager.set_circular_bounding_box(id, pos, 9.0);    // NOLINT
 }
 
-void Game::run()
+Game::Game()
 {
     m_window.SetTargetFPS(TARGET_FPS);
     // window.SetExitKey(KEY_NULL);
@@ -266,16 +266,39 @@ void Game::run()
     spawn_tile(Tile::Brick, RVector2(384.0, 128.0)); // NOLINT
 
     spawn_projectile(RVector2(448.0, 256.0)); // NOLINT
-
-    while (!m_window.ShouldClose()) {
-        m_window.BeginDrawing();
-        m_window.ClearBackground(SKYBLUE);
-
-        poll_inputs();
-        set_player_vel();
-        move_entities();
-        render_sprites();
-
-        m_window.EndDrawing();
-    }
 }
+
+void Game::run()
+{
+    m_window.BeginDrawing();
+    m_window.ClearBackground(SKYBLUE);
+
+    poll_inputs();
+    set_player_vel();
+    move_entities();
+    render_sprites();
+
+    m_window.EndDrawing();
+}
+
+RWindow& Game::window()
+{
+    return m_window;
+}
+
+#ifndef NDEBUG
+extern "C" __declspec(dllexport) void run(Game& game)
+{
+    game.run();
+}
+
+extern "C" __declspec(dllexport) bool window_should_close(Game& game)
+{
+    return game.window().ShouldClose();
+}
+
+extern "C" __declspec(dllexport) bool check_reload_lib()
+{
+    return RKeyboard::IsKeyPressed(KEY_R);
+}
+#endif
