@@ -80,7 +80,10 @@ class Game
     void spawn_projectile(RVector2 pos);
 
 public:
+    Game();
+
     void run();
+    RWindow& window();
 };
 
 #endif
