@@ -18,6 +18,7 @@ constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
 constexpr unsigned MAX_ENTITIES = 1024;
 
 constexpr float CAMERA_ZOOM = 2.0;
+constexpr float SCALE_FACTOR = 32.0;
 
 class EntityManager
 {
@@ -48,14 +49,26 @@ class ComponentManager
 };
 
 struct Inputs {
-    bool m_left = false;
-    bool m_right = false;
-    bool m_up = false;
+    bool left = false;
+    bool right = false;
+    bool up = false;
 
 private:
     Inputs() = default;
 
     friend class Game;
+};
+
+class Coordinates
+{
+    RVector2 m_pos;
+
+public:
+    Coordinates() = delete;
+
+    Coordinates(int x, int y);
+
+    operator RVector2() const; // NOLINT
 };
 
 class Game
@@ -74,10 +87,10 @@ class Game
     void move_entities();
 
     void spawn_player();
-    void spawn_tile(Tile tile, RVector2 pos);
+    void spawn_tile(Tile tile, Coordinates coordinates);
     float dt();
     void correct_collisions(unsigned id, BBox prev_bbox);
-    void spawn_projectile(RVector2 pos);
+    void spawn_projectile(Coordinates coordinates);
 
 public:
     Game();
