@@ -60,7 +60,7 @@ unsigned EntityManager::spawn_entity(EntityType type)
 
 void ComponentManager::set_player_components()
 {
-    m_transforms[PLAYER_ID].pos = RVector2(WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT);
+    m_transforms[PLAYER_ID].pos = Coordinates(0, 2);
     m_transforms[PLAYER_ID].vel = RVector2(0.0, 0.0);
     m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
     m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
@@ -72,11 +72,21 @@ void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, floa
     m_bounding_boxes[id].bounding_box = Circle(pos, radius);
 }
 
+Coordinates::Coordinates(int x, int y) :
+    m_pos(static_cast<float>(x) * SCALE_FACTOR, -static_cast<float>(y) * SCALE_FACTOR)
+{
+}
+
+Coordinates::operator RVector2() const
+{
+    return m_pos;
+}
+
 void Game::poll_inputs()
 {
-    m_inputs.m_left = RKeyboard::IsKeyDown(KEY_A);
-    m_inputs.m_right = RKeyboard::IsKeyDown(KEY_D);
-    m_inputs.m_up = RKeyboard::IsKeyPressed(KEY_W);
+    m_inputs.left = RKeyboard::IsKeyDown(KEY_A);
+    m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
+    m_inputs.up = RKeyboard::IsKeyPressed(KEY_W);
 }
 
 void Game::render_sprites()
@@ -116,15 +126,15 @@ void Game::render_sprites()
 void Game::set_player_vel()
 {
     auto& player_vel = m_component_manager.m_transforms[PLAYER_ID].vel;
-    if ((m_inputs.m_left ^ m_inputs.m_right) == 0) {
+    if ((m_inputs.left ^ m_inputs.right) == 0) {
         player_vel.x = 0.0;
-    } else if (m_inputs.m_right) {
+    } else if (m_inputs.right) {
         player_vel.x = PLAYER_SPEED * dt();
-    } else if (m_inputs.m_left) {
+    } else if (m_inputs.left) {
         player_vel.x = -PLAYER_SPEED * dt();
     }
 
-    if (m_inputs.m_up && m_component_manager.m_grounded[PLAYER_ID].grounded) {
+    if (m_inputs.up && m_component_manager.m_grounded[PLAYER_ID].grounded) {
         player_vel.y = -JUMP_SPEED;
         m_component_manager.m_grounded[PLAYER_ID].grounded = false;
     }
@@ -160,7 +170,7 @@ void Game::spawn_player()
     m_component_manager.set_player_components();
 }
 
-void Game::spawn_tile(Tile tile, RVector2 pos)
+void Game::spawn_tile(Tile tile, Coordinates coordinates)
 {
     RVector2 sprite_pos;
     switch (tile) {
@@ -171,7 +181,7 @@ void Game::spawn_tile(Tile tile, RVector2 pos)
 
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Tile);
     auto& transform = m_component_manager.m_transforms[id];
-    transform.pos = pos;
+    transform.pos = coordinates;
     m_component_manager.m_bounding_boxes[id].sync(transform);
     m_component_manager.m_sprites[id].set_pos(sprite_pos);
 }
@@ -236,36 +246,36 @@ void Game::correct_collisions(unsigned id, BBox prev_bbox)
     }
 }
 
-void Game::spawn_projectile(RVector2 pos)
+void Game::spawn_projectile(Coordinates coordinates)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
-    m_component_manager.m_transforms[id].pos = pos;
-    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0)); // NOLINT
-    m_component_manager.set_circular_bounding_box(id, pos, 9.0);    // NOLINT
+    m_component_manager.m_transforms[id].pos = coordinates;
+    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0));      // NOLINT
+    m_component_manager.set_circular_bounding_box(id, coordinates, 9.0); // NOLINT
 }
 
 Game::Game()
 {
     m_window.SetTargetFPS(TARGET_FPS);
-    // window.SetExitKey(KEY_NULL);
+    m_window.SetExitKey(KEY_NULL);
 
     spawn_player();
 
-    for (float i = 0.0; i < 300.0; i += 32.0) {      // NOLINT
-        spawn_tile(Tile::Brick, RVector2(480.0, i)); // NOLINT
+    for (int i = 0; i < 10; i++) {                  // NOLINT
+        spawn_tile(Tile::Brick, Coordinates(2, i)); // NOLINT
     }
-    for (float i = 0.0; i < 300.0; i += 32.0) {      // NOLINT
-        spawn_tile(Tile::Brick, RVector2(320.0, i)); // NOLINT
+    for (int i = 0; i < 10; i++) {                   // NOLINT
+        spawn_tile(Tile::Brick, Coordinates(-3, i)); // NOLINT
     }
-    for (float i = 0.0; i < 800.0; i += 32.0) {      // NOLINT
-        spawn_tile(Tile::Brick, RVector2(i, 320.0)); // NOLINT
+    for (int i = -10; i < 10; i++) {                // NOLINT
+        spawn_tile(Tile::Brick, Coordinates(i, 0)); // NOLINT
     }
 
-    spawn_tile(Tile::Brick, RVector2(352.0, 256.0)); // NOLINT
-    spawn_tile(Tile::Brick, RVector2(448.0, 224.0)); // NOLINT
-    spawn_tile(Tile::Brick, RVector2(384.0, 128.0)); // NOLINT
+    spawn_tile(Tile::Brick, Coordinates(-2, 7)); // NOLINT
+    spawn_tile(Tile::Brick, Coordinates(1, 6));  // NOLINT
+    spawn_tile(Tile::Brick, Coordinates(-1, 3)); // NOLINT
 
-    spawn_projectile(RVector2(448.0, 256.0)); // NOLINT
+    spawn_projectile(Coordinates(1, 5)); // NOLINT
 }
 
 void Game::run()

@@ -77,10 +77,6 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
     return true;
 }
 } // namespace hot_reload
-
-extern "C" __declspec(dllexport) void run(Game& game);
-extern "C" __declspec(dllexport) bool window_should_close(Game& game);
-extern "C" __declspec(dllexport) bool check_reload_lib();
 #endif
 
 #endif
