@@ -16,7 +16,7 @@ constexpr unsigned PLAYER_ID = 0;
 constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
 constexpr float GRAVITY_ACCELERATION = 1000.0;
-constexpr float MAX_FALL_SPEED = 10.0;
+constexpr float MAX_FALL_SPEED = 2000.0;
 constexpr float PLAYER_BBOX_SIZE_X = 20.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
 
@@ -153,7 +153,7 @@ void Game::move_entities()
         const float vel_y = transform.vel.y;
 
         if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type())) {
-            transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt() * dt());
+            transform.vel.y = std::min(MAX_FALL_SPEED * dt(), vel_y + GRAVITY_ACCELERATION * dt() * dt());
             m_component_manager.m_grounded[id].grounded = false;
         }
 
