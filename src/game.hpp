@@ -62,9 +62,6 @@ private:
 struct Coordinates {
     RVector2 m_pos;
 
-public:
-    Coordinates() = delete;
-
     Coordinates(int x, int y);
 
     operator RVector2() const; // NOLINT
