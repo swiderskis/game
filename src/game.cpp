@@ -72,8 +72,7 @@ void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, floa
     m_bounding_boxes[id].bounding_box = Circle(pos, radius);
 }
 
-Coordinates::Coordinates(int x, int y) :
-    m_pos(static_cast<float>(x) * SCALE_FACTOR, -static_cast<float>(y) * SCALE_FACTOR)
+Coordinates::Coordinates(int x, int y) : m_pos(RVector2(static_cast<float>(x), -static_cast<float>(y)) * TILE_SIZE)
 {
 }
 

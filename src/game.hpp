@@ -18,7 +18,6 @@ constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
 constexpr unsigned MAX_ENTITIES = 1024;
 
 constexpr float CAMERA_ZOOM = 2.0;
-constexpr float SCALE_FACTOR = 32.0;
 
 class EntityManager
 {
