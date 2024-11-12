@@ -23,11 +23,14 @@ class EntityManager
 {
     std::vector<Entity> m_entities;
     std::unordered_map<EntityType, std::vector<unsigned>> m_entity_ids;
+    std::vector<unsigned> m_entities_to_destroy;
 
     EntityManager(); // NOLINT
 
     void spawn_player();
     [[nodiscard]] unsigned spawn_entity(EntityType type);
+    void queue_destroy_entity(unsigned id);
+    void destroy_entities();
 
     friend class Game;
 };
@@ -80,11 +83,12 @@ class Game
     void render_sprites();
     void set_player_vel();
     void move_entities();
+    void destroy_entities();
 
     void spawn_player();
     void spawn_tile(Tile tile, Coordinates coordinates);
     float dt();
-    void correct_collisions(unsigned id, BBox prev_bbox);
+    void resolve_collisions(Entity entity, BBox prev_bbox);
     void spawn_projectile(Coordinates coordinates);
 
 public:

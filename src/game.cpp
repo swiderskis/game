@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <optional>
 #include <span>
 
 #define SHOW_BBOXES
@@ -19,8 +20,10 @@ constexpr float GRAVITY_ACCELERATION = 1000.0;
 constexpr float MAX_FALL_SPEED = 2000.0;
 constexpr float PLAYER_BBOX_SIZE_X = 20.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
+constexpr float PROJECTILE_SPEED = 1.0;
 
-constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player, EntityType::Projectile };
+constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player };
+constexpr auto DESTROY_ON_COLLISION = { EntityType::Projectile };
 
 EntityManager::EntityManager()
 {
@@ -56,6 +59,20 @@ unsigned EntityManager::spawn_entity(EntityType type)
     assert(id != PLAYER_ID);
 
     return id;
+}
+
+void EntityManager::queue_destroy_entity(unsigned id)
+{
+    m_entities_to_destroy.push_back(id);
+}
+
+void EntityManager::destroy_entities()
+{
+    for (const auto id : m_entities_to_destroy) {
+        m_entities[id].m_type = std::nullopt;
+    }
+
+    m_entities_to_destroy.clear();
 }
 
 void ComponentManager::set_player_components()
@@ -159,8 +176,13 @@ void Game::move_entities()
         const auto prev_bbox = bbox;
         transform.move();
         bbox.sync(transform);
-        correct_collisions(id, prev_bbox);
+        resolve_collisions(entity, prev_bbox);
     }
+}
+
+void Game::destroy_entities()
+{
+    m_entity_manager.destroy_entities();
 }
 
 void Game::spawn_player()
@@ -190,14 +212,20 @@ float Game::dt()
     return m_window.GetFrameTime();
 }
 
-void Game::correct_collisions(unsigned id, BBox prev_bbox)
+void Game::resolve_collisions(Entity entity, BBox prev_bbox)
 {
+    const auto id = entity.id();
     auto& bbox_comp = m_component_manager.m_bounding_boxes[id];
     auto& transform = m_component_manager.m_transforms[id];
 
     for (const unsigned tile_id : m_entity_manager.m_entity_ids[EntityType::Tile]) {
         const auto tile_bbox_comp = m_component_manager.m_bounding_boxes[tile_id];
         if (!bbox_comp.collides(tile_bbox_comp)) {
+            continue;
+        }
+
+        if (std::ranges::contains(DESTROY_ON_COLLISION, entity.type())) {
+            m_entity_manager.queue_destroy_entity(id);
             continue;
         }
 
@@ -249,8 +277,9 @@ void Game::spawn_projectile(Coordinates coordinates)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
     m_component_manager.m_transforms[id].pos = coordinates;
+    m_component_manager.m_transforms[id].vel = RVector2(0.0, PROJECTILE_SPEED);
     m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0));      // NOLINT
-    m_component_manager.set_circular_bounding_box(id, coordinates, 9.0); // NOLINT
+    m_component_manager.set_circular_bounding_box(id, coordinates, 4.0); // NOLINT
 }
 
 Game::Game()
@@ -285,6 +314,7 @@ void Game::run()
     poll_inputs();
     set_player_vel();
     move_entities();
+    destroy_entities();
     render_sprites();
 
     m_window.EndDrawing();
