@@ -59,12 +59,8 @@ private:
     friend class Game;
 };
 
-class Coordinates
-{
+struct Coordinates {
     RVector2 m_pos;
-
-public:
-    Coordinates() = delete;
 
     Coordinates(int x, int y);
 
