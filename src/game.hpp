@@ -59,8 +59,7 @@ private:
     friend class Game;
 };
 
-class Coordinates
-{
+struct Coordinates {
     RVector2 m_pos;
 
 public:
