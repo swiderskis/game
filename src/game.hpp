@@ -16,6 +16,7 @@ constexpr unsigned WINDOW_HEIGHT = 450;
 constexpr unsigned WINDOW_HALF_WIDTH = WINDOW_WIDTH / 2;
 constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
 constexpr unsigned MAX_ENTITIES = 1024;
+constexpr unsigned PLAYER_ID = 0;
 
 constexpr float CAMERA_ZOOM = 2.0;
 
