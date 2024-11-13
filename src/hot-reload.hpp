@@ -3,6 +3,8 @@
 
 // TODO make this cross-platform
 #ifndef NDEBUG
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 #include "game.hpp"
 
 #include <filesystem>
@@ -11,14 +13,19 @@
 #include <minwindef.h>
 #include <system_error>
 
+#ifndef SO_NAME
+#define SO_NAME "build/debug/game.dll"
+#endif
+#define SO_TEMP_NAME SO_NAME ".tmp"
+
+namespace fs = std::filesystem;
+
 using run_t = void (*)(Game*);
-using window_should_close_t = bool (*)(Game*);
 using check_reload_lib_t = bool (*)();
 
 struct GameFuncs {
     HMODULE lib = nullptr;
     run_t run = nullptr;
-    window_should_close_t window_should_close = nullptr;
     check_reload_lib_t check_reload_lib = nullptr;
 };
 
@@ -31,8 +38,8 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
     }
 
     std::error_code ec;
-    std::filesystem::remove("build/debug/hot-reload-temp.dll");
-    std::filesystem::copy("build/debug/hot-reload.dll", "build/debug/hot-reload-temp.dll", ec);
+    fs::remove(SO_TEMP_NAME);
+    fs::copy(SO_NAME, SO_TEMP_NAME, ec);
 
     if (ec.value() != 0) {
         std::cerr << "Failed to copy shared library file\n";
@@ -40,14 +47,13 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
         return false;
     }
 
-    game_funcs.lib = LoadLibrary("hot-reload-temp");
+    game_funcs.lib = LoadLibrary(SO_TEMP_NAME);
     if (game_funcs.lib == nullptr) {
         std::cerr << "Failed to load library\n";
 
         return false;
     }
 
-#pragma GCC diagnostic ignored "-Wcast-function-type"
     game_funcs.run = (run_t)GetProcAddress(game_funcs.lib, "run"); // NOLINT
     if (game_funcs.run == nullptr) {
         std::cerr << "Failed to get run function address\n";
@@ -55,16 +61,6 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
         return false;
     }
 
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-    game_funcs.window_should_close
-        = (window_should_close_t)GetProcAddress(game_funcs.lib, "window_should_close"); // NOLINT
-    if (game_funcs.window_should_close == nullptr) {
-        std::cerr << "Failed to get window_should_close function address\n";
-
-        return false;
-    }
-
-#pragma GCC diagnostic ignored "-Wcast-function-type"
     game_funcs.check_reload_lib = (check_reload_lib_t)GetProcAddress(game_funcs.lib, "check_reload_lib"); // NOLINT
     if (game_funcs.check_reload_lib == nullptr) {
         std::cerr << "Failed to get check_reload_lib function address\n";
@@ -77,6 +73,8 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
     return true;
 }
 } // namespace hot_reload
+
+#pragma GCC diagnostic error "-Wcast-function-type"
 #endif
 
 #endif

@@ -9,11 +9,10 @@ RAYLIB := $(RAYLIB_DIR)/libraylib.a
 RAYLIB_SO := $(RAYLIB_DIR)/libraylibdll.a
 
 CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
-CXXFLAGS := -O3 -Wall -Wextra -std=c++23
+CXXFLAGS := -O3 -Wall -Wextra -Werror -std=c++23
 LDFLAGS := -L$(RAYLIB_DIR)
 LDLIBS := -lraylib -lopengl32 -lgdi32 -lwinmm
 LDLIBS_SO := -lraylibdll -lopengl32 -lgdi32 -lwinmm
-NDEBUG := -DNDEBUG
 
 SRC_DIR := src
 BIN_DIR := build
@@ -21,13 +20,16 @@ RELEASE_BIN_DIR = $(BIN_DIR)/release
 DEBUG_BIN_DIR = $(BIN_DIR)/debug
 
 BIN_NAME := game.exe
-SO_NAME := hot-reload.dll
+SO_NAME := game.dll
 BIN := $(RELEASE_BIN_DIR)/$(BIN_NAME)
 DEBUG_BIN := $(DEBUG_BIN_DIR)/$(BIN_NAME)
 SO := $(DEBUG_BIN_DIR)/$(SO_NAME)
 SRC := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(RELEASE_BIN_DIR)/%.o)
 DEBUG_OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(DEBUG_BIN_DIR)/%$(HR).o)
+
+NDEBUG := -DNDEBUG
+DEBUG := -DSO_NAME=\"$(SO)\"
 
 .PHONY: all debug run release run_release so clean clean_raylib
 
@@ -66,7 +68,7 @@ $(RELEASE_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(RELEASE_BIN_DIR)
 	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(DEBUG_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEBUG_BIN_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(RAYLIB):
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C $(RAYLIB_DIR)
