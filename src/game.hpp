@@ -28,7 +28,6 @@ class EntityManager
 
     EntityManager(); // NOLINT
 
-    void spawn_player();
     [[nodiscard]] unsigned spawn_entity(EntityType type);
     void queue_destroy_entity(unsigned id);
     void destroy_entities();
@@ -46,7 +45,6 @@ class ComponentManager
 
     ComponentManager() = default;
 
-    void set_player_components();
     void set_circular_bounding_box(unsigned id, RVector2 pos, float radius);
 
     friend class Game;
