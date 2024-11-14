@@ -112,14 +112,14 @@ void Game::update_lifespans()
 {
     for (auto entity : m_entity_manager.m_entities) {
         const auto id = entity.id();
-        auto& lifespan = m_component_manager.m_lifespans[id].current_lifespan;
+        auto& lifespan = m_component_manager.m_lifespans[id].current;
         if (entity.type() == std::nullopt || lifespan == std::nullopt) {
             continue;
         }
 
         lifespan.value() -= dt();
-
         if (lifespan.value() < 0.0) {
+            m_component_manager.m_lifespans[id].current = std::nullopt;
             m_entity_manager.queue_destroy_entity(id);
         }
     }

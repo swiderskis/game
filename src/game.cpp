@@ -67,7 +67,12 @@ void EntityManager::queue_destroy_entity(unsigned id)
 void EntityManager::destroy_entities()
 {
     for (const auto id : m_entities_to_destroy) {
-        m_entities[id].m_type = std::nullopt;
+        assert(m_entities[id].m_type != std::nullopt);
+
+        auto& entity = m_entities[id];
+        auto& entity_ids = m_entity_ids[entity.m_type.value()];
+        entity_ids.erase(std::ranges::find(entity_ids, id));
+        entity.m_type = std::nullopt;
     }
 
     m_entities_to_destroy.clear();
@@ -192,7 +197,7 @@ void Game::spawn_projectile(RVector2 pos)
 
     m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0)); // NOLINT
     m_component_manager.set_circular_bounding_box(id, pos, 4.0);    // NOLINT
-    m_component_manager.m_lifespans[id].current_lifespan = PROJECTILE_LIFESPAN;
+    m_component_manager.m_lifespans[id].current = PROJECTILE_LIFESPAN;
 }
 
 RVector2 Game::get_mouse_pos()
