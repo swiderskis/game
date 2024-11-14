@@ -76,7 +76,7 @@ private:
 };
 
 struct Lifespan {
-    std::optional<float> current_lifespan = std::nullopt;
+    std::optional<float> current = std::nullopt;
 
 private:
     Lifespan() = default;
