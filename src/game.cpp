@@ -30,15 +30,16 @@ EntityManager::EntityManager()
     }
 }
 
-void EntityManager::spawn_player()
-{
-    assert(m_entities[PLAYER_ID].m_type == std::nullopt);
-
-    m_entities[PLAYER_ID].m_type = EntityType::Player;
-}
-
 unsigned EntityManager::spawn_entity(EntityType type)
 {
+    if (type == EntityType::Player) {
+        assert(m_entities[PLAYER_ID].m_type == std::nullopt);
+
+        m_entities[PLAYER_ID].m_type = EntityType::Player;
+
+        return PLAYER_ID;
+    }
+
     assert(type != EntityType::Player);
 
     unsigned id = 1;
@@ -72,15 +73,6 @@ void EntityManager::destroy_entities()
     m_entities_to_destroy.clear();
 }
 
-void ComponentManager::set_player_components()
-{
-    m_transforms[PLAYER_ID].pos = Coordinates(0, 2);
-    m_transforms[PLAYER_ID].vel = RVector2(0.0, 0.0);
-    m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
-    m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
-    m_bounding_boxes[PLAYER_ID].sync(m_transforms[PLAYER_ID]);
-}
-
 void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, float radius)
 {
     m_bounding_boxes[id].bounding_box = Circle(pos, radius);
@@ -97,8 +89,14 @@ Coordinates::operator RVector2() const
 
 void Game::spawn_player()
 {
-    m_entity_manager.spawn_player();
-    m_component_manager.set_player_components();
+    unsigned id = m_entity_manager.spawn_entity(EntityType::Player);
+    auto& transform = m_component_manager.m_transforms[id];
+    transform.pos = Coordinates(0, 2);
+    transform.vel = RVector2(0.0, 0.0);
+
+    m_component_manager.m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
+    m_component_manager.m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
+    m_component_manager.m_bounding_boxes[PLAYER_ID].sync(transform);
 }
 
 void Game::spawn_tile(Tile tile, Coordinates coordinates)
