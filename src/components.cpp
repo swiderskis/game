@@ -7,9 +7,9 @@
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 constexpr int CIRCLE_BBOX_INDEX = 1;
 
-void Tform::move()
+void Tform::move(float dt)
 {
-    pos += vel;
+    pos += vel * dt;
 }
 
 RVector2 Sprite::size() const

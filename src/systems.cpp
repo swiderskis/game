@@ -1,6 +1,9 @@
+#include "components.hpp"
+#include "entities.hpp"
 #include "game.hpp"
 
 #include <algorithm>
+#include <optional>
 
 constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
@@ -14,12 +17,13 @@ void Game::poll_inputs()
     m_inputs.left = RKeyboard::IsKeyDown(KEY_A);
     m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
     m_inputs.up = RKeyboard::IsKeyPressed(KEY_W);
+    m_inputs.attack = RKeyboard::IsKeyPressed(KEY_SPACE);
 }
 
 void Game::render_sprites()
 {
     const auto player_pos = m_component_manager.m_transforms[PLAYER_ID].pos;
-    m_camera.SetTarget(player_pos);
+    m_camera.SetTarget(player_pos + RVector2(TILE_SIZE, TILE_SIZE) / 2);
 
     m_camera.BeginMode();
 
@@ -56,13 +60,13 @@ void Game::set_player_vel()
     if ((m_inputs.left ^ m_inputs.right) == 0) {
         player_vel.x = 0.0;
     } else if (m_inputs.right) {
-        player_vel.x = PLAYER_SPEED * dt();
+        player_vel.x = PLAYER_SPEED;
     } else if (m_inputs.left) {
-        player_vel.x = -PLAYER_SPEED * dt();
+        player_vel.x = -PLAYER_SPEED;
     }
 
     if (m_inputs.up && m_component_manager.m_grounded[PLAYER_ID].grounded) {
-        player_vel.y = -JUMP_SPEED * dt();
+        player_vel.y = -JUMP_SPEED;
         m_component_manager.m_grounded[PLAYER_ID].grounded = false;
     }
 }
@@ -80,12 +84,12 @@ void Game::move_entities()
         const float vel_y = transform.vel.y;
 
         if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type())) {
-            transform.vel.y = std::min(MAX_FALL_SPEED * dt(), vel_y + GRAVITY_ACCELERATION * dt() * dt());
+            transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt());
             m_component_manager.m_grounded[id].grounded = false;
         }
 
         const auto prev_bbox = bbox;
-        transform.move();
+        transform.move(dt());
         bbox.sync(transform);
         resolve_collisions(entity, prev_bbox);
     }
@@ -94,4 +98,29 @@ void Game::move_entities()
 void Game::destroy_entities()
 {
     m_entity_manager.destroy_entities();
+}
+
+void Game::player_attack()
+{
+    if (!m_inputs.attack) {
+        return;
+    }
+    spawn_projectile(m_component_manager.m_transforms[PLAYER_ID].pos);
+}
+
+void Game::update_lifespans()
+{
+    for (auto entity : m_entity_manager.m_entities) {
+        const auto id = entity.id();
+        auto& lifespan = m_component_manager.m_lifespans[id].current_lifespan;
+        if (entity.type() == std::nullopt || lifespan == std::nullopt) {
+            continue;
+        }
+
+        lifespan.value() -= dt();
+
+        if (lifespan.value() < 0.0) {
+            m_entity_manager.queue_destroy_entity(id);
+        }
+    }
 }
