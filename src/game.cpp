@@ -1,10 +1,12 @@
 #include "game.hpp"
 
+#include "components.hpp"
 #include "entities.hpp"
 #include "overloaded.hpp"
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <optional>
 #include <span>
 
@@ -15,7 +17,8 @@ constexpr unsigned TARGET_FPS = 60;
 
 constexpr float PLAYER_BBOX_SIZE_X = 20.0;
 constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
-constexpr float PROJECTILE_SPEED = 1.0;
+constexpr float PROJECTILE_SPEED = 500.0;
+constexpr float PROJECTILE_LIFESPAN = 0.3;
 
 constexpr auto DESTROY_ON_COLLISION = { EntityType::Projectile };
 
@@ -180,13 +183,23 @@ void Game::resolve_collisions(Entity entity, BBox prev_bbox)
     }
 }
 
-void Game::spawn_projectile(Coordinates coordinates)
+void Game::spawn_projectile(RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
-    m_component_manager.m_transforms[id].pos = coordinates;
-    m_component_manager.m_transforms[id].vel = RVector2(0.0, PROJECTILE_SPEED);
-    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0));      // NOLINT
-    m_component_manager.set_circular_bounding_box(id, coordinates, 4.0); // NOLINT
+    auto& transform = m_component_manager.m_transforms[id];
+    transform.pos = m_component_manager.m_transforms[PLAYER_ID].pos;
+    const auto diff = get_mouse_pos() - transform.pos;
+    const auto angle = atan2(diff.y, diff.x);
+    transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
+
+    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0)); // NOLINT
+    m_component_manager.set_circular_bounding_box(id, pos, 4.0);    // NOLINT
+    m_component_manager.m_lifespans[id].current_lifespan = PROJECTILE_LIFESPAN;
+}
+
+RVector2 Game::get_mouse_pos()
+{
+    return m_camera.GetScreenToWorld(RMouse::GetPosition()) - RVector2(TILE_SIZE, TILE_SIZE) / 2;
 }
 
 Game::Game()
@@ -194,11 +207,6 @@ Game::Game()
     m_window.SetTargetFPS(TARGET_FPS);
     m_window.SetExitKey(KEY_NULL);
 
-    spawn_player();
-
-    for (int i = 0; i < 10; i++) {                  // NOLINT
-        spawn_tile(Tile::Brick, Coordinates(2, i)); // NOLINT
-    }
     for (int i = 0; i < 10; i++) {                   // NOLINT
         spawn_tile(Tile::Brick, Coordinates(-3, i)); // NOLINT
     }
@@ -210,7 +218,7 @@ Game::Game()
     spawn_tile(Tile::Brick, Coordinates(1, 6));  // NOLINT
     spawn_tile(Tile::Brick, Coordinates(-1, 3)); // NOLINT
 
-    spawn_projectile(Coordinates(1, 5)); // NOLINT
+    spawn_player();
 }
 
 void Game::run()
@@ -220,7 +228,9 @@ void Game::run()
 
     poll_inputs();
     set_player_vel();
+    player_attack();
     move_entities();
+    update_lifespans();
     destroy_entities();
     render_sprites();
 

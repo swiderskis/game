@@ -42,6 +42,7 @@ class ComponentManager
     std::vector<Sprite> m_sprites{ MAX_ENTITIES, Sprite() };
     std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
     std::vector<Grounded> m_grounded{ MAX_ENTITIES, Grounded() };
+    std::vector<Lifespan> m_lifespans{ MAX_ENTITIES, Lifespan() };
 
     ComponentManager() = default;
 
@@ -55,6 +56,7 @@ struct Inputs {
     bool left = false;
     bool right = false;
     bool up = false;
+    bool attack = false;
 
 private:
     Inputs() = default;
@@ -85,12 +87,15 @@ class Game
     void set_player_vel();
     void move_entities();
     void destroy_entities();
+    void player_attack();
+    void update_lifespans();
 
     void spawn_player();
     void spawn_tile(Tile tile, Coordinates coordinates);
     float dt();
     void resolve_collisions(Entity entity, BBox prev_bbox);
-    void spawn_projectile(Coordinates coordinates);
+    void spawn_projectile(RVector2 pos);
+    RVector2 get_mouse_pos();
 
 public:
     Game();

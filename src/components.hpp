@@ -3,6 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <optional>
 #include <variant>
 
 constexpr float TILE_SIZE = 32.0;
@@ -11,7 +12,7 @@ struct Tform {
     RVector2 pos;
     RVector2 vel;
 
-    void move();
+    void move(float dt);
 
 private:
     Tform() = default;
@@ -70,6 +71,15 @@ struct Grounded {
 
 private:
     Grounded() = default;
+
+    friend class ComponentManager;
+};
+
+struct Lifespan {
+    std::optional<float> current_lifespan = std::nullopt;
+
+private:
+    Lifespan() = default;
 
     friend class ComponentManager;
 };
