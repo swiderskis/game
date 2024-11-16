@@ -6,6 +6,7 @@ Powered by [raylib](https://www.raylib.com/) using [raylib-cpp](https://github.c
 ## Getting started
 
 This project relies only on [GNU Make](https://www.gnu.org/software/make/) to build.
+This can be installed for Windows using [MSYS2](https://www.msys2.org/).
 Once installed, simply type `make run` to build the raylib library and the project.
 
 NOTE: the library flags set in the included `Makefile` are set for Windows, and will need to be changed for [Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux) or [MacOS](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux).
