@@ -5,12 +5,21 @@
 #include <algorithm>
 #include <optional>
 
+#define SHOW_BBOXES
+#undef SHOW_BBOXES
+
+#ifdef SHOW_BBOXES
+#include "overloaded.hpp"
+#endif
+
 constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
 constexpr float GRAVITY_ACCELERATION = 1000.0;
 constexpr float MAX_FALL_SPEED = 2000.0;
 
 constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player, EntityType::Enemy };
+
+constexpr int PROJECTILE_DAMAGE = 25;
 
 void Game::poll_inputs()
 {
@@ -73,7 +82,7 @@ void Game::set_player_vel()
 
 void Game::move_entities()
 {
-    for (auto entity : m_entity_manager.m_entities) {
+    for (const auto entity : m_entity_manager.m_entities) {
         if (entity.type() == std::nullopt || entity.type() == EntityType::Tile) {
             continue;
         }
@@ -91,13 +100,13 @@ void Game::move_entities()
         const auto prev_bbox = bbox;
         transform.move(dt());
         bbox.sync(transform);
-        resolve_collisions(entity, prev_bbox);
+        resolve_tile_collisions(entity, prev_bbox);
     }
 }
 
 void Game::destroy_entities()
 {
-    for (const auto id : m_entity_manager.m_entities_to_destroy) {
+    for (const unsigned id : m_entity_manager.m_entities_to_destroy) {
         auto& entity = m_entity_manager.m_entities[id];
         if (entity.type() == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
             continue;                        // leads to type already being nullopt
@@ -108,6 +117,7 @@ void Game::destroy_entities()
         entity.clear_type();
 
         m_component_manager.m_lifespans[id].current = std::nullopt;
+        m_component_manager.m_health[id].max_health = std::nullopt;
     }
 
     m_entity_manager.m_entities_to_destroy.clear();
@@ -118,13 +128,14 @@ void Game::player_attack()
     if (!m_inputs.attack) {
         return;
     }
+
     spawn_projectile(m_component_manager.m_transforms[PLAYER_ID].pos);
 }
 
 void Game::update_lifespans()
 {
-    for (auto entity : m_entity_manager.m_entities) {
-        const auto id = entity.id();
+    for (const auto entity : m_entity_manager.m_entities) {
+        const unsigned id = entity.id();
         auto& lifespan = m_component_manager.m_lifespans[id].current;
         if (entity.type() == std::nullopt || lifespan == std::nullopt) {
             continue;
@@ -133,6 +144,25 @@ void Game::update_lifespans()
         lifespan.value() -= dt();
         if (lifespan.value() < 0.0) {
             m_entity_manager.queue_destroy_entity(id);
+        }
+    }
+}
+
+void Game::check_projectiles_hit()
+{
+    for (const unsigned projectile_id : m_entity_manager.m_entity_ids[EntityType::Projectile]) {
+        const auto projectile_bbox = m_component_manager.m_bounding_boxes[projectile_id];
+        for (const unsigned enemy_id : m_entity_manager.m_entity_ids[EntityType::Enemy]) {
+            const auto enemy_bbox = m_component_manager.m_bounding_boxes[enemy_id];
+            if (enemy_bbox.collides(projectile_bbox)) {
+                int& current_health = m_component_manager.m_health[enemy_id].current_health;
+                current_health -= PROJECTILE_DAMAGE;
+                m_entity_manager.queue_destroy_entity(projectile_id);
+
+                if (current_health <= 0) {
+                    m_entity_manager.queue_destroy_entity(enemy_id);
+                }
+            }
         }
     }
 }

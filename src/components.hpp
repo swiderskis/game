@@ -84,4 +84,16 @@ private:
     friend class ComponentManager;
 };
 
+struct Health {
+    int current_health = 0;
+    std::optional<int> max_health = std::nullopt;
+
+    void set_health(int health);
+
+private:
+    Health() = default;
+
+    friend class ComponentManager;
+};
+
 #endif

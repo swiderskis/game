@@ -156,4 +156,12 @@ void BBox::set_size(float radius)
     bbox.radius = radius;
 }
 
-BBox::BBox(RVector2 pos, float radius) : bounding_box(Circle(pos, radius)) {};
+BBox::BBox(RVector2 pos, float radius) : bounding_box(Circle(pos, radius))
+{
+}
+
+void Health::set_health(int health)
+{
+    current_health = health;
+    max_health = health;
+}
