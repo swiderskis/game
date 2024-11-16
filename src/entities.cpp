@@ -1,6 +1,8 @@
 #include "entities.hpp"
 
-Entity::Entity(unsigned id) : m_id(id), m_type(std::nullopt) {};
+Entity::Entity(unsigned id) : m_id(id), m_type(std::nullopt)
+{
+}
 
 unsigned Entity::id() const
 {
@@ -10,4 +12,9 @@ unsigned Entity::id() const
 std::optional<EntityType> Entity::type() const
 {
     return m_type;
+}
+
+void Entity::clear_type()
+{
+    m_type = std::nullopt;
 }
