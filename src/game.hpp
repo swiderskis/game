@@ -26,7 +26,7 @@ class EntityManager
     std::unordered_map<EntityType, std::vector<unsigned>> m_entity_ids;
     std::vector<unsigned> m_entities_to_destroy;
 
-    EntityManager(); // NOLINT
+    EntityManager();
 
     [[nodiscard]] unsigned spawn_entity(EntityType type);
     void queue_destroy_entity(unsigned id);
@@ -41,6 +41,7 @@ class ComponentManager
     std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
     std::vector<Grounded> m_grounded{ MAX_ENTITIES, Grounded() };
     std::vector<Lifespan> m_lifespans{ MAX_ENTITIES, Lifespan() };
+    std::vector<Health> m_health{ MAX_ENTITIES, Health() };
 
     ComponentManager() = default;
 
@@ -86,13 +87,15 @@ class Game
     void destroy_entities();
     void player_attack();
     void update_lifespans();
+    void check_projectiles_hit();
 
     void spawn_player();
-    void spawn_tile(Tile tile, Coordinates coordinates);
-    float dt();
-    void resolve_collisions(Entity entity, BBox prev_bbox);
+    void spawn_tile(Tile tile, RVector2 pos);
+    [[nodiscard]] float dt();
+    void resolve_tile_collisions(Entity entity, BBox prev_bbox);
     void spawn_projectile(RVector2 pos);
-    RVector2 get_mouse_pos();
+    [[nodiscard]] RVector2 get_mouse_pos();
+    void spawn_enemy(RVector2 pos);
 
 public:
     Game();
