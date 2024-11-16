@@ -27,6 +27,7 @@ public:
 
     [[nodiscard]] unsigned id() const;
     [[nodiscard]] std::optional<EntityType> type() const;
+    void clear_type();
 };
 
 #endif

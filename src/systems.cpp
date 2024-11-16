@@ -97,7 +97,20 @@ void Game::move_entities()
 
 void Game::destroy_entities()
 {
-    m_entity_manager.destroy_entities();
+    for (const auto id : m_entity_manager.m_entities_to_destroy) {
+        auto& entity = m_entity_manager.m_entities[id];
+        if (entity.type() == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
+            continue;                        // leads to type already being nullopt
+        }
+
+        auto& entity_ids = m_entity_manager.m_entity_ids[entity.type().value()];
+        entity_ids.erase(std::ranges::find(entity_ids, id));
+        entity.clear_type();
+
+        m_component_manager.m_lifespans[id].current = std::nullopt;
+    }
+
+    m_entity_manager.m_entities_to_destroy.clear();
 }
 
 void Game::player_attack()
@@ -119,7 +132,6 @@ void Game::update_lifespans()
 
         lifespan.value() -= dt();
         if (lifespan.value() < 0.0) {
-            m_component_manager.m_lifespans[id].current = std::nullopt;
             m_entity_manager.queue_destroy_entity(id);
         }
     }

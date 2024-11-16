@@ -64,20 +64,6 @@ void EntityManager::queue_destroy_entity(unsigned id)
     m_entities_to_destroy.push_back(id);
 }
 
-void EntityManager::destroy_entities()
-{
-    for (const auto id : m_entities_to_destroy) {
-        assert(m_entities[id].m_type != std::nullopt);
-
-        auto& entity = m_entities[id];
-        auto& entity_ids = m_entity_ids[entity.m_type.value()];
-        entity_ids.erase(std::ranges::find(entity_ids, id));
-        entity.m_type = std::nullopt;
-    }
-
-    m_entities_to_destroy.clear();
-}
-
 void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, float radius)
 {
     m_bounding_boxes[id].bounding_box = Circle(pos, radius);

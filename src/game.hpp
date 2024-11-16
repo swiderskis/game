@@ -30,7 +30,6 @@ class EntityManager
 
     [[nodiscard]] unsigned spawn_entity(EntityType type);
     void queue_destroy_entity(unsigned id);
-    void destroy_entities();
 
     friend class Game;
 };
