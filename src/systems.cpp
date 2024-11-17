@@ -16,6 +16,9 @@ constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
 constexpr float GRAVITY_ACCELERATION = 1000.0;
 constexpr float MAX_FALL_SPEED = 2000.0;
+constexpr float HEALTH_BAR_WIDTH = 32.0;
+constexpr float HEALTH_BAR_HEIGHT = 4.0;
+constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
 constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player, EntityType::Enemy };
 
@@ -42,15 +45,27 @@ void Game::render_sprites()
         }
 
         const unsigned id = entity.id();
-        const auto entity_tform = m_component_manager.m_transforms[id];
+        const auto tform = m_component_manager.m_transforms[id];
         auto& sprite = m_component_manager.m_sprites[id];
-        if (entity_tform.vel.x < 0) {
+        if (tform.vel.x < 0) {
             sprite.flip();
-        } else if (entity_tform.vel.x > 0) {
+        } else if (tform.vel.x > 0) {
             sprite.unflip();
         }
 
-        m_texture_sheet.Draw(sprite.sprite, entity_tform.pos);
+        m_texture_sheet.Draw(sprite.sprite, tform.pos);
+
+        const auto health = m_component_manager.m_health[id];
+        if (health.max != std::nullopt && health.current < health.max) {
+            auto pos = tform.pos;
+            pos.y -= HEALTH_BAR_Y_OFFSET;
+            const auto full_bar = RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+            const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
+            const auto current_bar = RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT));
+            full_bar.Draw(RED);
+            current_bar.Draw(GREEN);
+        }
+
 #ifdef SHOW_BBOXES
         std::visit(overloaded{
                        [](RRectangle bbox) { bbox.DrawLines(RED); },
@@ -117,7 +132,7 @@ void Game::destroy_entities()
         entity.clear_type();
 
         m_component_manager.m_lifespans[id].current = std::nullopt;
-        m_component_manager.m_health[id].max_health = std::nullopt;
+        m_component_manager.m_health[id].max = std::nullopt;
     }
 
     m_entity_manager.m_entities_to_destroy.clear();
@@ -155,7 +170,7 @@ void Game::check_projectiles_hit()
         for (const unsigned enemy_id : m_entity_manager.m_entity_ids[EntityType::Enemy]) {
             const auto enemy_bbox = m_component_manager.m_bounding_boxes[enemy_id];
             if (enemy_bbox.collides(projectile_bbox)) {
-                int& current_health = m_component_manager.m_health[enemy_id].current_health;
+                int& current_health = m_component_manager.m_health[enemy_id].current;
                 current_health -= PROJECTILE_DAMAGE;
                 m_entity_manager.queue_destroy_entity(projectile_id);
 
