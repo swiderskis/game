@@ -162,6 +162,14 @@ BBox::BBox(RVector2 pos, float radius) : bounding_box(Circle(pos, radius))
 
 void Health::set_health(int health)
 {
-    current_health = health;
-    max_health = health;
+    current = health;
+    max = health;
+}
+
+float Health::percentage() const
+{
+    const auto current_health = static_cast<float>(current);
+    const auto max_health = static_cast<float>(max.value());
+
+    return current_health / max_health;
 }

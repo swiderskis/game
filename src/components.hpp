@@ -85,10 +85,11 @@ private:
 };
 
 struct Health {
-    int current_health = 0;
-    std::optional<int> max_health = std::nullopt;
+    int current = 0;
+    std::optional<int> max = std::nullopt;
 
     void set_health(int health);
+    [[nodiscard]] float percentage() const;
 
 private:
     Health() = default;
