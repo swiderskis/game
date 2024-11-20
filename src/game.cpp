@@ -32,7 +32,7 @@ EntityManager::EntityManager()
     }
 }
 
-unsigned EntityManager::spawn_entity(EntityType type)
+unsigned EntityManager::spawn_entity(const EntityType type)
 {
     if (type == EntityType::Player) {
         assert(m_entities[PLAYER_ID].m_type == std::nullopt);
@@ -61,17 +61,13 @@ unsigned EntityManager::spawn_entity(EntityType type)
     return id;
 }
 
-void EntityManager::queue_destroy_entity(unsigned id)
+void EntityManager::queue_destroy_entity(const unsigned id)
 {
     m_entities_to_destroy.push_back(id);
 }
 
-void ComponentManager::set_circular_bounding_box(unsigned id, RVector2 pos, float radius)
-{
-    m_bounding_boxes[id].bounding_box = Circle(pos, radius);
-}
-
-Coordinates::Coordinates(int x, int y) : m_pos(RVector2(static_cast<float>(x), -static_cast<float>(y)) * TILE_SIZE)
+Coordinates::Coordinates(const int x, const int y) :
+    m_pos(RVector2(static_cast<float>(x), -static_cast<float>(y)) * TILE_SIZE)
 {
 }
 
@@ -93,7 +89,7 @@ void Game::spawn_player()
     m_component_manager.m_health[PLAYER_ID].set_health(PLAYER_HEALTH);
 }
 
-void Game::spawn_tile(Tile tile, RVector2 pos)
+void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
     RVector2 sprite_pos;
     switch (tile) {
@@ -109,12 +105,12 @@ void Game::spawn_tile(Tile tile, RVector2 pos)
     m_component_manager.m_sprites[id].set_pos(sprite_pos);
 }
 
-float Game::dt()
+float Game::dt() const
 {
     return m_window.GetFrameTime();
 }
 
-void Game::resolve_tile_collisions(Entity entity, BBox prev_bbox)
+void Game::resolve_tile_collisions(const Entity entity, const BBox prev_bbox)
 {
     const unsigned id = entity.id();
     auto& bbox_comp = m_component_manager.m_bounding_boxes[id];
@@ -172,7 +168,7 @@ void Game::resolve_tile_collisions(Entity entity, BBox prev_bbox)
     }
 }
 
-void Game::spawn_projectile(RVector2 pos)
+void Game::spawn_projectile(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
     auto& transform = m_component_manager.m_transforms[id];
@@ -181,17 +177,17 @@ void Game::spawn_projectile(RVector2 pos)
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0)); // NOLINT
-    m_component_manager.set_circular_bounding_box(id, pos, 4.0);    // NOLINT
+    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0));         // NOLINT
+    m_component_manager.m_bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
     m_component_manager.m_lifespans[id].current = PROJECTILE_LIFESPAN;
 }
 
-RVector2 Game::get_mouse_pos()
+RVector2 Game::get_mouse_pos() const
 {
     return m_camera.GetScreenToWorld(RMouse::GetPosition()) - RVector2(TILE_SIZE, TILE_SIZE) / 2;
 }
 
-void Game::spawn_enemy(RVector2 pos)
+void Game::spawn_enemy(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Enemy);
     m_component_manager.m_transforms[id].pos = pos;
