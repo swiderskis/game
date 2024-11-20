@@ -1,6 +1,6 @@
 #include "entities.hpp"
 
-Entity::Entity(unsigned id) : m_id(id), m_type(std::nullopt)
+Entity::Entity(const unsigned id) : m_id(id), m_type(std::nullopt)
 {
 }
 

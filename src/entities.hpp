@@ -19,7 +19,7 @@ class Entity
     unsigned m_id;
     std::optional<EntityType> m_type;
 
-    explicit Entity(unsigned id);
+    explicit Entity(const unsigned id);
 
     friend class EntityManager;
 

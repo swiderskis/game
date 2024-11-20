@@ -28,8 +28,8 @@ void Game::poll_inputs()
 {
     m_inputs.left = RKeyboard::IsKeyDown(KEY_A);
     m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
-    m_inputs.up = RKeyboard::IsKeyPressed(KEY_W);
-    m_inputs.attack = RKeyboard::IsKeyPressed(KEY_SPACE);
+    m_inputs.up = RKeyboard::IsKeyPressed(KEY_W) || RKeyboard::IsKeyPressed(KEY_SPACE);
+    m_inputs.attack = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
 void Game::render_sprites()
@@ -81,12 +81,12 @@ void Game::render_sprites()
 void Game::set_player_vel()
 {
     auto& player_vel = m_component_manager.m_transforms[PLAYER_ID].vel;
-    if ((m_inputs.left ^ m_inputs.right) == 0) {
-        player_vel.x = 0.0;
-    } else if (m_inputs.right) {
-        player_vel.x = PLAYER_SPEED;
-    } else if (m_inputs.left) {
-        player_vel.x = -PLAYER_SPEED;
+    player_vel.x = 0.0;
+    if (m_inputs.right) {
+        player_vel.x += PLAYER_SPEED;
+    }
+    if (m_inputs.left) {
+        player_vel.x -= PLAYER_SPEED;
     }
 
     if (m_inputs.up && m_component_manager.m_grounded[PLAYER_ID].grounded) {

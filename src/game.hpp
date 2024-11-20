@@ -28,8 +28,8 @@ class EntityManager
 
     EntityManager();
 
-    [[nodiscard]] unsigned spawn_entity(EntityType type);
-    void queue_destroy_entity(unsigned id);
+    [[nodiscard]] unsigned spawn_entity(const EntityType type);
+    void queue_destroy_entity(const unsigned id);
 
     friend class Game;
 };
@@ -44,8 +44,6 @@ class ComponentManager
     std::vector<Health> m_health{ MAX_ENTITIES, Health() };
 
     ComponentManager() = default;
-
-    void set_circular_bounding_box(unsigned id, RVector2 pos, float radius);
 
     friend class Game;
 };
@@ -65,7 +63,7 @@ private:
 struct Coordinates {
     RVector2 m_pos;
 
-    Coordinates(int x, int y);
+    Coordinates(const int x, const int y);
 
     operator RVector2() const; // NOLINT
 };
@@ -90,12 +88,12 @@ class Game
     void check_projectiles_hit();
 
     void spawn_player();
-    void spawn_tile(Tile tile, RVector2 pos);
-    [[nodiscard]] float dt();
-    void resolve_tile_collisions(Entity entity, BBox prev_bbox);
-    void spawn_projectile(RVector2 pos);
-    [[nodiscard]] RVector2 get_mouse_pos();
-    void spawn_enemy(RVector2 pos);
+    void spawn_tile(const Tile tile, const RVector2 pos);
+    [[nodiscard]] float dt() const;
+    void resolve_tile_collisions(const Entity entity, const BBox prev_bbox);
+    void spawn_projectile(const RVector2 pos);
+    [[nodiscard]] RVector2 get_mouse_pos() const;
+    void spawn_enemy(const RVector2 pos);
 
 public:
     Game();

@@ -7,7 +7,7 @@
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 constexpr int CIRCLE_BBOX_INDEX = 1;
 
-void Tform::move(float dt)
+void Tform::move(const float dt)
 {
     pos += vel * dt;
 }
@@ -17,7 +17,7 @@ RVector2 Sprite::size() const
     return sprite.GetSize();
 }
 
-void Sprite::set_pos(RVector2 pos)
+void Sprite::set_pos(const RVector2 pos)
 {
     sprite.SetPosition(pos);
 }
@@ -44,19 +44,21 @@ void Sprite::unflip()
     sprite.SetSize(size);
 }
 
-bool Circle::check_collision(Circle other_circle) const
+bool Circle::check_collision(const Circle other_circle) const
 {
     return radius + other_circle.radius > pos.Distance(other_circle.pos);
 }
 
-void Circle::draw_lines(::Color color)
+void Circle::draw_lines(const ::Color color) const
 {
     DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
 }
 
-Circle::Circle(RVector2 pos, float radius) : pos(pos), radius(radius) {};
+Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
+{
+}
 
-void BBox::sync(Tform transform)
+void BBox::sync(const Tform transform)
 {
     std::visit(overloaded{
                    [transform](RRectangle& bbox) {
@@ -73,7 +75,7 @@ void BBox::sync(Tform transform)
                bounding_box);
 }
 
-bool BBox::collides(BBox other_bounding_box) const
+bool BBox::collides(const BBox other_bounding_box) const
 {
     const auto rect_bbox = [other_bounding_box](RRectangle bbox) {
         return std::visit(
@@ -98,9 +100,9 @@ bool BBox::collides(BBox other_bounding_box) const
             circle_bbox,
         },
         bounding_box);
-};
+}
 
-bool BBox::x_overlaps(BBox other_bounding_box) const
+bool BBox::x_overlaps(const BBox other_bounding_box) const
 {
     assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
@@ -120,7 +122,7 @@ bool BBox::x_overlaps(BBox other_bounding_box) const
                       other_bounding_box.bounding_box);
 }
 
-bool BBox::y_overlaps(BBox other_bounding_box) const
+bool BBox::y_overlaps(const BBox other_bounding_box) const
 {
     assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
@@ -140,7 +142,7 @@ bool BBox::y_overlaps(BBox other_bounding_box) const
                       other_bounding_box.bounding_box);
 }
 
-void BBox::set_size(RVector2 size)
+void BBox::set_size(const RVector2 size)
 {
     assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
@@ -148,7 +150,7 @@ void BBox::set_size(RVector2 size)
     bbox.SetSize(size);
 }
 
-void BBox::set_size(float radius)
+void BBox::set_size(const float radius)
 {
     assert(bounding_box.index() == CIRCLE_BBOX_INDEX);
 
@@ -156,11 +158,11 @@ void BBox::set_size(float radius)
     bbox.radius = radius;
 }
 
-BBox::BBox(RVector2 pos, float radius) : bounding_box(Circle(pos, radius))
+BBox::BBox(const RVector2 pos, const float radius) : bounding_box(Circle(pos, radius))
 {
 }
 
-void Health::set_health(int health)
+void Health::set_health(const int health)
 {
     current = health;
     max = health;
