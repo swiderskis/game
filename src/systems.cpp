@@ -40,7 +40,7 @@ void Game::render_sprites()
     m_camera.BeginMode();
 
     for (const auto entity : m_entity_manager.m_entities) {
-        if (entity.type() == std::nullopt) {
+        if (entity.type == std::nullopt) {
             continue;
         }
 
@@ -98,7 +98,7 @@ void Game::set_player_vel()
 void Game::move_entities()
 {
     for (const auto entity : m_entity_manager.m_entities) {
-        if (entity.type() == std::nullopt || entity.type() == EntityType::Tile) {
+        if (entity.type == std::nullopt || entity.type == EntityType::Tile) {
             continue;
         }
 
@@ -107,7 +107,7 @@ void Game::move_entities()
         auto& bbox = m_component_manager.m_bounding_boxes[id];
         const float vel_y = transform.vel.y;
 
-        if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type())) {
+        if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type)) {
             transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt());
             m_component_manager.m_grounded[id].grounded = false;
         }
@@ -123,13 +123,13 @@ void Game::destroy_entities()
 {
     for (const unsigned id : m_entity_manager.m_entities_to_destroy) {
         auto& entity = m_entity_manager.m_entities[id];
-        if (entity.type() == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
-            continue;                        // leads to type already being nullopt
+        if (entity.type == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
+            continue;                      // leads to type already being nullopt
         }
 
-        auto& entity_ids = m_entity_manager.m_entity_ids[entity.type().value()];
+        auto& entity_ids = m_entity_manager.m_entity_ids[entity.type.value()];
         entity_ids.erase(std::ranges::find(entity_ids, id));
-        entity.clear_type();
+        entity.type = std::nullopt;
 
         m_component_manager.m_lifespans[id].current = std::nullopt;
         m_component_manager.m_health[id].max = std::nullopt;
@@ -152,7 +152,7 @@ void Game::update_lifespans()
     for (const auto entity : m_entity_manager.m_entities) {
         const unsigned id = entity.id();
         auto& lifespan = m_component_manager.m_lifespans[id].current;
-        if (entity.type() == std::nullopt || lifespan == std::nullopt) {
+        if (entity.type == std::nullopt || lifespan == std::nullopt) {
             continue;
         }
 
