@@ -12,7 +12,7 @@ struct Tform {
     RVector2 pos;
     RVector2 vel;
 
-    void move(const float dt);
+    void move(float dt);
 
 private:
     Tform() = default;
@@ -24,7 +24,7 @@ struct Sprite {
     RRectangle sprite{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
 
     [[nodiscard]] RVector2 size() const;
-    void set_pos(const RVector2 pos);
+    void set_pos(RVector2 pos);
     void flip();
     void unflip();
 
@@ -38,12 +38,12 @@ struct Circle {
     RVector2 pos;
     float radius = 0.0;
 
-    [[nodiscard]] bool check_collision(const Circle other_circle) const;
-    void draw_lines(const ::Color color) const;
+    [[nodiscard]] bool check_collision(Circle other_circle) const;
+    void draw_lines(::Color color) const;
 
 private:
     Circle() = default;
-    Circle(const RVector2 pos, const float radius);
+    Circle(RVector2 pos, float radius);
 
     friend class BBox;
     friend class ComponentManager;
@@ -53,16 +53,16 @@ private:
 struct BBox {
     std::variant<RRectangle, Circle> bounding_box = RRectangle{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
 
-    void sync(const Tform transform);
-    [[nodiscard]] bool collides(const BBox other_bounding_box) const;
-    [[nodiscard]] bool x_overlaps(const BBox other_bounding_box) const;
-    [[nodiscard]] bool y_overlaps(const BBox other_bounding_box) const;
-    void set_size(const RVector2 size);
-    void set_size(const float radius);
+    void sync(Tform transform);
+    [[nodiscard]] bool collides(BBox other_bounding_box) const;
+    [[nodiscard]] bool x_overlaps(BBox other_bounding_box) const;
+    [[nodiscard]] bool y_overlaps(BBox other_bounding_box) const;
+    void set_size(RVector2 size);
+    void set_size(float radius);
 
 private:
     BBox() = default;
-    BBox(const RVector2 pos, const float radius);
+    BBox(RVector2 pos, float radius);
 
     friend class ComponentManager;
 };
@@ -89,7 +89,7 @@ struct Health {
     int current = 0;
     std::optional<int> max = std::nullopt;
 
-    void set_health(const int health);
+    void set_health(int health);
     [[nodiscard]] float percentage() const;
 
 private:
