@@ -14,10 +14,11 @@ enum class Tile {
     Brick
 };
 
-class Entity
-{
+struct Entity {
+    std::optional<EntityType> type;
+
+private:
     unsigned m_id;
-    std::optional<EntityType> m_type;
 
     explicit Entity(unsigned id);
 
@@ -27,8 +28,6 @@ public:
     Entity() = delete;
 
     [[nodiscard]] unsigned id() const;
-    [[nodiscard]] std::optional<EntityType> type() const;
-    void clear_type();
 };
 
 #endif

@@ -35,9 +35,9 @@ EntityManager::EntityManager()
 unsigned EntityManager::spawn_entity(const EntityType type)
 {
     if (type == EntityType::Player) {
-        assert(m_entities[PLAYER_ID].m_type == std::nullopt);
+        assert(m_entities[PLAYER_ID].type == std::nullopt);
 
-        m_entities[PLAYER_ID].m_type = EntityType::Player;
+        m_entities[PLAYER_ID].type = EntityType::Player;
 
         return PLAYER_ID;
     }
@@ -46,11 +46,11 @@ unsigned EntityManager::spawn_entity(const EntityType type)
 
     unsigned id = 1;
     for (auto& entity : std::span(m_entities).subspan(1)) {
-        if (entity.m_type != std::nullopt) {
+        if (entity.type != std::nullopt) {
             continue;
         }
 
-        entity.m_type = type;
+        entity.type = type;
         id = entity.m_id;
         m_entity_ids[type].push_back(id);
         break;
@@ -119,7 +119,7 @@ void Game::resolve_tile_collisions(const Entity entity, const BBox prev_bbox)
             continue;
         }
 
-        if (std::ranges::contains(DESTROY_ON_COLLISION, entity.type())) {
+        if (std::ranges::contains(DESTROY_ON_COLLISION, entity.type)) {
             m_entity_manager.queue_destroy_entity(id);
             continue;
         }
