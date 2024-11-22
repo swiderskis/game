@@ -3,7 +3,7 @@
 
 // Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
 template <typename... Ts>
-struct overloaded : Ts... { // NOLINT
+struct overloaded : Ts... { // NOLINT(readability-identifier-naming)
     using Ts::operator()...;
 };
 

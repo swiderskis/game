@@ -113,7 +113,7 @@ void Game::move_entities()
         }
 
         const auto prev_bbox = bbox;
-        transform.move(dt());
+        transform.pos += transform.vel * dt();
         bbox.sync(transform);
         resolve_tile_collisions(entity, prev_bbox);
     }

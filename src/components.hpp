@@ -3,6 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <cstddef>
 #include <optional>
 #include <variant>
 
@@ -12,23 +13,40 @@ struct Tform {
     RVector2 pos;
     RVector2 vel;
 
-    void move(float dt);
-
 private:
     Tform() = default;
 
     friend class ComponentManager;
 };
 
+enum class SpriteType {
+    Player,
+    TileBrick,
+    Projectile,
+    Enemy
+};
+
 struct Sprite {
     RRectangle sprite{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
 
-    [[nodiscard]] RVector2 size() const;
-    void set_pos(RVector2 pos);
+    void set_sprite(SpriteType type);
     void flip();
     void unflip();
 
 private:
+    // NOLINTBEGIN(*avoid-c-arrays)
+    constexpr static struct {
+        float x;
+        float y;
+    } SHEET_POS[] = {
+        [(size_t)SpriteType::Player] = { 0.0, 0.0 },
+        [(size_t)SpriteType::TileBrick] = { 0.0, 32.0 },
+        [(size_t)SpriteType::Projectile] = { 0.0, 64.0 },
+        [(size_t)SpriteType::Enemy] = { 0.0, 96.0 },
+    };
+
+    // NOLINTEND(*avoid-c-arrays)
+
     Sprite() = default;
 
     friend class ComponentManager;
@@ -38,16 +56,15 @@ struct Circle {
     RVector2 pos;
     float radius = 0.0;
 
+    Circle(RVector2 pos, float radius);
+
     [[nodiscard]] bool check_collision(Circle other_circle) const;
     void draw_lines(::Color color) const;
 
 private:
     Circle() = default;
-    Circle(RVector2 pos, float radius);
 
-    friend class BBox;
     friend class ComponentManager;
-    friend class Game;
 };
 
 struct BBox {
