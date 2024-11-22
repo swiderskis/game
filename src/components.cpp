@@ -3,23 +3,14 @@
 #include "overloaded.hpp"
 
 #include <cassert>
+#include <cstddef>
 
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 constexpr int CIRCLE_BBOX_INDEX = 1;
 
-void Tform::move(const float dt)
+void Sprite::set_sprite(const SpriteType type)
 {
-    pos += vel * dt;
-}
-
-RVector2 Sprite::size() const
-{
-    return sprite.GetSize();
-}
-
-void Sprite::set_pos(const RVector2 pos)
-{
-    sprite.SetPosition(pos);
+    sprite.SetPosition(RVector2(SHEET_POS[(size_t)type].x, SHEET_POS[(size_t)type].y));
 }
 
 void Sprite::flip()
@@ -44,6 +35,10 @@ void Sprite::unflip()
     sprite.SetSize(size);
 }
 
+Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
+{
+}
+
 bool Circle::check_collision(const Circle other_circle) const
 {
     return radius + other_circle.radius > pos.Distance(other_circle.pos);
@@ -51,11 +46,7 @@ bool Circle::check_collision(const Circle other_circle) const
 
 void Circle::draw_lines(const ::Color color) const
 {
-    DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
-}
-
-Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
-{
+    DrawCircleLines((int)pos.x, (int)pos.y, radius, color);
 }
 
 void BBox::sync(const Tform transform)
@@ -170,8 +161,8 @@ void Health::set_health(const int health)
 
 float Health::percentage() const
 {
-    const auto current_health = static_cast<float>(current);
-    const auto max_health = static_cast<float>(max.value());
+    const auto current_health = (float)current;
+    const auto max_health = (float)max.value();
 
     return current_health / max_health;
 }

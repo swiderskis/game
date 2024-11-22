@@ -65,7 +65,7 @@ struct Coordinates {
 
     Coordinates(int x, int y);
 
-    operator RVector2() const; // NOLINT
+    operator RVector2() const; // NOLINT(hicpp-explicit-conversions)
 };
 
 class Game

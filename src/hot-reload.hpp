@@ -31,7 +31,7 @@ struct GameFuncs {
 
 namespace hot_reload
 {
-bool reload_lib(GameFuncs& game_funcs) // NOLINT
+bool reload_lib(GameFuncs& game_funcs) // NOLINT(misc-definitions-in-headers)
 {
     if (game_funcs.lib != nullptr) {
         FreeLibrary(game_funcs.lib);
@@ -54,19 +54,21 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT
         return false;
     }
 
-    game_funcs.run = (run_t)GetProcAddress(game_funcs.lib, "run"); // NOLINT
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
+    game_funcs.run = (run_t)GetProcAddress(game_funcs.lib, "run");
     if (game_funcs.run == nullptr) {
         std::cerr << "Failed to get run function address\n";
 
         return false;
     }
 
-    game_funcs.check_reload_lib = (check_reload_lib_t)GetProcAddress(game_funcs.lib, "check_reload_lib"); // NOLINT
+    game_funcs.check_reload_lib = (check_reload_lib_t)GetProcAddress(game_funcs.lib, "check_reload_lib");
     if (game_funcs.check_reload_lib == nullptr) {
         std::cerr << "Failed to get check_reload_lib function address\n";
 
         return false;
     }
+    // NOLINTEND(cppcoreguidelines-pro-type-cstyle-cast)
 
     std::cout << "Loaded lib successfully\n";
 

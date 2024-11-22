@@ -66,8 +66,7 @@ void EntityManager::queue_destroy_entity(const unsigned id)
     m_entities_to_destroy.push_back(id);
 }
 
-Coordinates::Coordinates(const int x, const int y) :
-    m_pos(RVector2(static_cast<float>(x), -static_cast<float>(y)) * TILE_SIZE)
+Coordinates::Coordinates(const int x, const int y) : m_pos(RVector2((float)x, (float)-y) * TILE_SIZE)
 {
 }
 
@@ -83,7 +82,7 @@ void Game::spawn_player()
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.m_sprites[PLAYER_ID].set_pos(RVector2(0.0, 0.0));
+    m_component_manager.m_sprites[PLAYER_ID].set_sprite(SpriteType::Player);
     m_component_manager.m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_component_manager.m_bounding_boxes[PLAYER_ID].sync(transform);
     m_component_manager.m_health[PLAYER_ID].set_health(PLAYER_HEALTH);
@@ -91,18 +90,16 @@ void Game::spawn_player()
 
 void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
-    RVector2 sprite_pos;
-    switch (tile) {
-    case Tile::Brick:
-        sprite_pos = RVector2(0.0, 32.0); // NOLINT
-        break;
-    }
-
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Tile);
     auto& transform = m_component_manager.m_transforms[id];
     transform.pos = pos;
     m_component_manager.m_bounding_boxes[id].sync(transform);
-    m_component_manager.m_sprites[id].set_pos(sprite_pos);
+
+    switch (tile) {
+    case Tile::Brick:
+        m_component_manager.m_sprites[id].set_sprite(SpriteType::TileBrick);
+        break;
+    }
 }
 
 float Game::dt() const
@@ -177,7 +174,7 @@ void Game::spawn_projectile(const RVector2 pos)
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 64.0));         // NOLINT
+    m_component_manager.m_sprites[id].set_sprite(SpriteType::Projectile);
     m_component_manager.m_bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
     m_component_manager.m_lifespans[id].current = PROJECTILE_LIFESPAN;
 }
@@ -191,7 +188,7 @@ void Game::spawn_enemy(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(EntityType::Enemy);
     m_component_manager.m_transforms[id].pos = pos;
-    m_component_manager.m_sprites[id].set_pos(RVector2(0.0, 96.0)); // NOLINT
+    m_component_manager.m_sprites[id].set_sprite(SpriteType::Enemy);
     m_component_manager.m_bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
     m_component_manager.m_health[id].set_health(ENEMY_HEALTH);
 }
