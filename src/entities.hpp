@@ -17,17 +17,16 @@ enum class Tile {
 struct Entity {
     std::optional<EntityType> type;
 
+    Entity() = delete;
+
+    [[nodiscard]] unsigned id() const;
+
 private:
     unsigned m_id;
 
     explicit Entity(unsigned id);
 
     friend class EntityManager;
-
-public:
-    Entity() = delete;
-
-    [[nodiscard]] unsigned id() const;
 };
 
 #endif
