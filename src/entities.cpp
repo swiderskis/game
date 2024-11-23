@@ -17,7 +17,7 @@ unsigned EntityManager::spawn_entity(const Entity type)
     assert(type != Entity::Player);
 
     unsigned entity_id = 0;
-    for (auto [id, entity] : std::span(m_entities).subspan(1) | std::views::enumerate) {
+    for (const auto [id, entity] : std::span(m_entities).subspan(1) | std::views::enumerate) {
         if (entity != std::nullopt) {
             continue;
         }

@@ -68,8 +68,8 @@ void Game::render_sprites()
 
 #ifdef SHOW_BBOXES
         std::visit(overloaded{
-                       [](RRectangle bbox) { bbox.DrawLines(RED); },
-                       [](Circle bbox) { bbox.draw_lines(RED); },
+                       [](const RRectangle bbox) { bbox.DrawLines(RED); },
+                       [](const Circle bbox) { bbox.draw_lines(RED); },
                    },
                    m_component_manager.m_bounding_boxes[id].bounding_box);
 #endif

@@ -71,16 +71,16 @@ bool BBox::collides(const BBox other_bounding_box) const
     const auto rect_bbox = [other_bounding_box](RRectangle bbox) {
         return std::visit(
             overloaded{
-                [bbox](RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
-                [bbox](Circle other_bbox) { return bbox.CheckCollision(other_bbox.pos, other_bbox.radius); },
+                [bbox](const RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
+                [bbox](const Circle other_bbox) { return bbox.CheckCollision(other_bbox.pos, other_bbox.radius); },
             },
             other_bounding_box.bounding_box);
     };
     const auto circle_bbox = [other_bounding_box](Circle bbox) {
         return std::visit(
             overloaded{
-                [bbox](RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
-                [bbox](Circle other_bbox) { return bbox.check_collision(other_bbox); },
+                [bbox](const RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
+                [bbox](const Circle other_bbox) { return bbox.check_collision(other_bbox); },
             },
             other_bounding_box.bounding_box);
     };
@@ -100,11 +100,11 @@ bool BBox::x_overlaps(const BBox other_bounding_box) const
     const auto bbox = std::get<RRectangle>(bounding_box);
 
     return std::visit(overloaded{
-                          [bbox](RRectangle other_bbox) {
+                          [bbox](const RRectangle other_bbox) {
                               return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
                                      || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
                           },
-                          [bbox](Circle other_bbox) {
+                          [bbox](const Circle other_bbox) {
                               return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
                                      || (other_bbox.pos.x >= bbox.x
                                          && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
@@ -120,11 +120,11 @@ bool BBox::y_overlaps(const BBox other_bounding_box) const
     const auto bbox = std::get<RRectangle>(bounding_box);
 
     return std::visit(overloaded{
-                          [bbox](RRectangle other_bbox) {
+                          [bbox](const RRectangle other_bbox) {
                               return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
                                      || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
                           },
-                          [bbox](Circle other_bbox) {
+                          [bbox](const Circle other_bbox) {
                               return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
                                      || (other_bbox.pos.y >= bbox.y
                                          && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
