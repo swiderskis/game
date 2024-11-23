@@ -122,14 +122,15 @@ void Game::destroy_entities()
 {
     for (const unsigned id : m_entity_manager.m_entities_to_destroy) {
         auto& entity = m_entity_manager.m_entities[id];
-        if (entity == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
-            continue;                 // leads to type already being nullopt
+        if (entity == std::nullopt) { // possible for an entity to be queued for destruction multiple times,
+            continue;                 // leads to already being nullopt
         }
 
         auto& entity_ids = m_entity_manager.m_entity_ids[entity.value()];
         entity_ids.erase(std::ranges::find(entity_ids, id));
         entity = std::nullopt;
 
+        m_component_manager.m_transforms[id].vel = RVector2(0.0, 0.0);
         m_component_manager.m_lifespans[id].current = std::nullopt;
         m_component_manager.m_health[id].max = std::nullopt;
     }
