@@ -1,9 +1,13 @@
 #ifndef ENTITIES_HPP_
 #define ENTITIES_HPP_
 
-#include <optional>
+#include "settings.hpp"
 
-enum class EntityType {
+#include <optional>
+#include <unordered_map>
+#include <vector>
+
+enum class Entity {
     Player,
     Tile,
     Projectile,
@@ -14,19 +18,16 @@ enum class Tile {
     Brick
 };
 
-struct Entity {
-    std::optional<EntityType> type;
+class EntityManager
+{
+    std::vector<std::optional<Entity>> m_entities{ MAX_ENTITIES, std::nullopt };
+    std::unordered_map<Entity, std::vector<unsigned>> m_entity_ids;
+    std::vector<unsigned> m_entities_to_destroy;
 
-    Entity() = delete;
+    [[nodiscard]] unsigned spawn_entity(Entity type);
+    void queue_destroy_entity(unsigned id);
 
-    [[nodiscard]] unsigned id() const;
-
-private:
-    unsigned m_id;
-
-    explicit Entity(unsigned id);
-
-    friend class EntityManager;
+    friend class Game;
 };
 
 #endif
