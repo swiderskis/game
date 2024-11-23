@@ -135,18 +135,12 @@ bool BBox::y_overlaps(const BBox other_bounding_box) const
 
 void BBox::set_size(const RVector2 size)
 {
-    assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
-
-    auto& bbox = std::get<RRectangle>(bounding_box);
-    bbox.SetSize(size);
+    bounding_box = RRectangle(RVector2(0.0, 0.0), size);
 }
 
 void BBox::set_size(const float radius)
 {
-    assert(bounding_box.index() == CIRCLE_BBOX_INDEX);
-
-    auto& bbox = std::get<Circle>(bounding_box);
-    bbox.radius = radius;
+    bounding_box = Circle(RVector2(0.0, 0.0), radius);
 }
 
 BBox::BBox(const RVector2 pos, const float radius) : bounding_box(Circle(pos, radius))
