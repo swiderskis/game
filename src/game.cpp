@@ -82,10 +82,10 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
         const auto tile_bbox = std::get<RRectangle>(tile_bbox_comp.bounding_box);
         const float x_adjust = std::visit(
             overloaded{
-                [tile_bbox](RRectangle bbox) {
+                [tile_bbox](const RRectangle bbox) {
                     return tile_bbox.x - bbox.x + (tile_bbox.x > bbox.x ? -bbox.width : tile_bbox.width);
                 },
-                [tile_bbox](Circle bbox) {
+                [tile_bbox](const Circle bbox) {
                     return tile_bbox.x - bbox.pos.x + (bbox.pos.x > tile_bbox.x ? bbox.radius : -bbox.radius);
                 },
             },
@@ -97,10 +97,10 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
 
         const float y_adjust = std::visit(
             overloaded{
-                [tile_bbox](RRectangle bbox) {
+                [tile_bbox](const RRectangle bbox) {
                     return tile_bbox.y - bbox.y + (tile_bbox.y > bbox.y ? -bbox.height : tile_bbox.height);
                 },
-                [tile_bbox](Circle bbox) {
+                [tile_bbox](const Circle bbox) {
                     return tile_bbox.y - bbox.pos.y + (bbox.pos.y > tile_bbox.y ? bbox.radius : -bbox.radius);
                 },
             },
