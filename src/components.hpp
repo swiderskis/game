@@ -2,6 +2,7 @@
 #define COMPONENTS_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "settings.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -113,6 +114,20 @@ private:
     Health() = default;
 
     friend class ComponentManager;
+};
+
+class ComponentManager
+{
+    std::vector<Tform> m_transforms{ MAX_ENTITIES, Tform() };
+    std::vector<Sprite> m_sprites{ MAX_ENTITIES, Sprite() };
+    std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
+    std::vector<Grounded> m_grounded{ MAX_ENTITIES, Grounded() };
+    std::vector<Lifespan> m_lifespans{ MAX_ENTITIES, Lifespan() };
+    std::vector<Health> m_health{ MAX_ENTITIES, Health() };
+
+    ComponentManager() = default;
+
+    friend class Game;
 };
 
 #endif

@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <optional>
-#include <span>
 
 constexpr unsigned TARGET_FPS = 60;
 
@@ -19,52 +17,10 @@ constexpr float PROJECTILE_LIFESPAN = 0.3;
 constexpr float ENEMY_BBOX_SIZE_X = 30.0;
 constexpr float ENEMY_BBOX_SIZE_Y = 24.0;
 
-constexpr auto DESTROY_ON_COLLISION = { EntityType::Projectile };
+constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
 
 constexpr int PLAYER_HEALTH = 100;
 constexpr int ENEMY_HEALTH = 100;
-
-EntityManager::EntityManager()
-{
-    m_entities.reserve(MAX_ENTITIES);
-    for (unsigned id = 0; id < MAX_ENTITIES; id++) {
-        m_entities.push_back(Entity(id));
-    }
-}
-
-unsigned EntityManager::spawn_entity(const EntityType type)
-{
-    if (type == EntityType::Player) {
-        assert(m_entities[PLAYER_ID].type == std::nullopt);
-
-        m_entities[PLAYER_ID].type = EntityType::Player;
-
-        return PLAYER_ID;
-    }
-
-    assert(type != EntityType::Player);
-
-    unsigned id = 1;
-    for (auto& entity : std::span(m_entities).subspan(1)) {
-        if (entity.type != std::nullopt) {
-            continue;
-        }
-
-        entity.type = type;
-        id = entity.m_id;
-        m_entity_ids[type].push_back(id);
-        break;
-    }
-
-    assert(id != PLAYER_ID);
-
-    return id;
-}
-
-void EntityManager::queue_destroy_entity(const unsigned id)
-{
-    m_entities_to_destroy.push_back(id);
-}
 
 Coordinates::Coordinates(const int x, const int y) : m_pos(RVector2((float)x, (float)-y) * TILE_SIZE)
 {
@@ -77,20 +33,20 @@ Coordinates::operator RVector2() const
 
 void Game::spawn_player()
 {
-    unsigned id = m_entity_manager.spawn_entity(EntityType::Player);
+    unsigned id = m_entity_manager.spawn_entity(Entity::Player);
     auto& transform = m_component_manager.m_transforms[id];
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.m_sprites[PLAYER_ID].set_sprite(SpriteType::Player);
-    m_component_manager.m_bounding_boxes[PLAYER_ID].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
-    m_component_manager.m_bounding_boxes[PLAYER_ID].sync(transform);
-    m_component_manager.m_health[PLAYER_ID].set_health(PLAYER_HEALTH);
+    m_component_manager.m_sprites[id].set_sprite(SpriteType::Player);
+    m_component_manager.m_bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
+    m_component_manager.m_bounding_boxes[id].sync(transform);
+    m_component_manager.m_health[id].set_health(PLAYER_HEALTH);
 }
 
 void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(EntityType::Tile);
+    const unsigned id = m_entity_manager.spawn_entity(Entity::Tile);
     auto& transform = m_component_manager.m_transforms[id];
     transform.pos = pos;
     m_component_manager.m_bounding_boxes[id].sync(transform);
@@ -107,19 +63,18 @@ float Game::dt() const
     return m_window.GetFrameTime();
 }
 
-void Game::resolve_tile_collisions(const Entity entity, const BBox prev_bbox)
+void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const BBox prev_bbox)
 {
-    const unsigned id = entity.id();
     auto& bbox_comp = m_component_manager.m_bounding_boxes[id];
     auto& transform = m_component_manager.m_transforms[id];
 
-    for (const unsigned tile_id : m_entity_manager.m_entity_ids[EntityType::Tile]) {
+    for (const unsigned tile_id : m_entity_manager.m_entity_ids[Entity::Tile]) {
         const auto tile_bbox_comp = m_component_manager.m_bounding_boxes[tile_id];
         if (!bbox_comp.collides(tile_bbox_comp)) {
             continue;
         }
 
-        if (std::ranges::contains(DESTROY_ON_COLLISION, entity.type)) {
+        if (std::ranges::contains(DESTROY_ON_COLLISION, entity)) {
             m_entity_manager.queue_destroy_entity(id);
             continue;
         }
@@ -167,7 +122,7 @@ void Game::resolve_tile_collisions(const Entity entity, const BBox prev_bbox)
 
 void Game::spawn_projectile(const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(EntityType::Projectile);
+    const unsigned id = m_entity_manager.spawn_entity(Entity::Projectile);
     auto& transform = m_component_manager.m_transforms[id];
     transform.pos = m_component_manager.m_transforms[PLAYER_ID].pos;
     const auto diff = get_mouse_pos() - transform.pos;
@@ -186,7 +141,7 @@ RVector2 Game::get_mouse_pos() const
 
 void Game::spawn_enemy(const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(EntityType::Enemy);
+    const unsigned id = m_entity_manager.spawn_entity(Entity::Enemy);
     m_component_manager.m_transforms[id].pos = pos;
     m_component_manager.m_sprites[id].set_sprite(SpriteType::Enemy);
     m_component_manager.m_bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));

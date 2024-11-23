@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <ranges>
 
 #define SHOW_BBOXES
 #undef SHOW_BBOXES
@@ -20,7 +21,7 @@ constexpr float HEALTH_BAR_WIDTH = 32.0;
 constexpr float HEALTH_BAR_HEIGHT = 4.0;
 constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
-constexpr auto GRAVITY_AFFECTED_ENTITIES = { EntityType::Player, EntityType::Enemy };
+constexpr auto GRAVITY_AFFECTED_ENTITIES = { Entity::Player, Entity::Enemy };
 
 constexpr int PROJECTILE_DAMAGE = 25;
 
@@ -39,12 +40,11 @@ void Game::render_sprites()
 
     m_camera.BeginMode();
 
-    for (const auto entity : m_entity_manager.m_entities) {
-        if (entity.type == std::nullopt) {
+    for (const auto [id, entity] : m_entity_manager.m_entities | std::views::enumerate | std::views::as_const) {
+        if (entity == std::nullopt) {
             continue;
         }
 
-        const unsigned id = entity.id();
         const auto tform = m_component_manager.m_transforms[id];
         auto& sprite = m_component_manager.m_sprites[id];
         if (tform.vel.x < 0) {
@@ -97,17 +97,16 @@ void Game::set_player_vel()
 
 void Game::move_entities()
 {
-    for (const auto entity : m_entity_manager.m_entities) {
-        if (entity.type == std::nullopt || entity.type == EntityType::Tile) {
+    for (const auto [id, entity] : m_entity_manager.m_entities | std::views::enumerate | std::views::as_const) {
+        if (entity == std::nullopt || entity == Entity::Tile) {
             continue;
         }
 
-        const unsigned id = entity.id();
         auto& transform = m_component_manager.m_transforms[id];
         auto& bbox = m_component_manager.m_bounding_boxes[id];
         const float vel_y = transform.vel.y;
 
-        if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity.type)) {
+        if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity)) {
             transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt());
             m_component_manager.m_grounded[id].grounded = false;
         }
@@ -115,7 +114,7 @@ void Game::move_entities()
         const auto prev_bbox = bbox;
         transform.pos += transform.vel * dt();
         bbox.sync(transform);
-        resolve_tile_collisions(entity, prev_bbox);
+        resolve_tile_collisions(id, entity.value(), prev_bbox);
     }
 }
 
@@ -123,13 +122,13 @@ void Game::destroy_entities()
 {
     for (const unsigned id : m_entity_manager.m_entities_to_destroy) {
         auto& entity = m_entity_manager.m_entities[id];
-        if (entity.type == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
-            continue;                      // leads to type already being nullopt
+        if (entity == std::nullopt) { // Possible for an entity to be queued for destruction multiple times,
+            continue;                 // leads to type already being nullopt
         }
 
-        auto& entity_ids = m_entity_manager.m_entity_ids[entity.type.value()];
+        auto& entity_ids = m_entity_manager.m_entity_ids[entity.value()];
         entity_ids.erase(std::ranges::find(entity_ids, id));
-        entity.type = std::nullopt;
+        entity = std::nullopt;
 
         m_component_manager.m_lifespans[id].current = std::nullopt;
         m_component_manager.m_health[id].max = std::nullopt;
@@ -149,10 +148,9 @@ void Game::player_attack()
 
 void Game::update_lifespans()
 {
-    for (const auto entity : m_entity_manager.m_entities) {
-        const unsigned id = entity.id();
+    for (const auto [id, entity] : m_entity_manager.m_entities | std::views::enumerate | std::views::as_const) {
         auto& lifespan = m_component_manager.m_lifespans[id].current;
-        if (entity.type == std::nullopt || lifespan == std::nullopt) {
+        if (entity == std::nullopt || lifespan == std::nullopt) {
             continue;
         }
 
@@ -165,9 +163,9 @@ void Game::update_lifespans()
 
 void Game::check_projectiles_hit()
 {
-    for (const unsigned projectile_id : m_entity_manager.m_entity_ids[EntityType::Projectile]) {
+    for (const unsigned projectile_id : m_entity_manager.m_entity_ids[Entity::Projectile]) {
         const auto projectile_bbox = m_component_manager.m_bounding_boxes[projectile_id];
-        for (const unsigned enemy_id : m_entity_manager.m_entity_ids[EntityType::Enemy]) {
+        for (const unsigned enemy_id : m_entity_manager.m_entity_ids[Entity::Enemy]) {
             const auto enemy_bbox = m_component_manager.m_bounding_boxes[enemy_id];
             if (enemy_bbox.collides(projectile_bbox)) {
                 int& current_health = m_component_manager.m_health[enemy_id].current;
