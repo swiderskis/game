@@ -217,6 +217,7 @@ RWindow& Game::window()
 
 void Game::reload_texture_sheet()
 {
+    m_texture_sheet.Unload();
     m_texture_sheet.Load(TEXTURE_SHEET);
     std::cout << "Texture sheet reloaded\n";
 }
