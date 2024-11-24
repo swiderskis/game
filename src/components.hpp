@@ -22,8 +22,6 @@ private:
 };
 
 enum class SpriteType {
-    None = -1,
-
     PlayerIdle,
     PlayerWalk,
     Projectile,
@@ -34,7 +32,7 @@ enum class SpriteType {
 };
 
 struct Sprite {
-    SpriteType type = SpriteType::None;
+    SpriteType type = SpriteType::PlayerIdle; // initialise to 0, should be overwritten for every spawned entity anyway
     float frame_update_dt = 0.0;
     unsigned current_frame = 0;
     bool flipped = false;

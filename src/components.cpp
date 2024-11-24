@@ -9,8 +9,6 @@ constexpr int RECTANGLE_BBOX_INDEX = 0;
 
 void Sprite::set(const SpriteType sprite_type)
 {
-    assert(sprite_type != SpriteType::None);
-
     if (type == sprite_type) {
         return;
     }
