@@ -159,15 +159,18 @@ void Game::check_projectiles_hit()
         const auto projectile_bbox = m_component_manager.m_bounding_boxes[projectile_id];
         for (const unsigned enemy_id : m_entity_manager.m_entity_ids[Entity::Enemy]) {
             const auto enemy_bbox = m_component_manager.m_bounding_boxes[enemy_id];
-            if (enemy_bbox.collides(projectile_bbox)) {
-                int& current_health = m_component_manager.m_health[enemy_id].current;
-                current_health -= PROJECTILE_DAMAGE;
-                m_entity_manager.queue_destroy_entity(projectile_id);
-
-                if (current_health <= 0) {
-                    m_entity_manager.queue_destroy_entity(enemy_id);
-                }
+            if (!enemy_bbox.collides(projectile_bbox)) {
+                continue;
             }
+
+            int& current_health = m_component_manager.m_health[enemy_id].current;
+            current_health -= PROJECTILE_DAMAGE;
+            m_entity_manager.queue_destroy_entity(projectile_id);
+            if (current_health <= 0) {
+                m_entity_manager.queue_destroy_entity(enemy_id);
+            }
+
+            break;
         }
     }
 }
