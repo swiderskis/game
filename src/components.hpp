@@ -24,6 +24,8 @@ private:
 enum class SpriteType {
     PlayerIdle,
     PlayerWalk,
+    PlayerJump,
+    PlayerFall,
     Projectile,
     Enemy,
 
@@ -51,9 +53,11 @@ private:
         float frame_duration;
     } DETAILS[] = {
         [(size_t)SpriteType::PlayerIdle] = { 128.0, 0.0, TILE_SIZE, 2, 0.5 },
-        [(size_t)SpriteType::PlayerWalk] = { 128.0, 32.0, TILE_SIZE, 4, 0.2 },
-        [(size_t)SpriteType::Projectile] = { 128.0, 64.0, TILE_SIZE, 1, 0.0 },
-        [(size_t)SpriteType::Enemy] = { 128.0, 96.0, TILE_SIZE, 1, 0.0 },
+        [(size_t)SpriteType::PlayerWalk] = { 128.0, 32.0, TILE_SIZE, 4, 0.16 },
+        [(size_t)SpriteType::PlayerJump] = { 128.0, 64.0, TILE_SIZE, 1, 0.0 },
+        [(size_t)SpriteType::PlayerFall] = { 128.0, 96.0, TILE_SIZE, 4, 0.1 },
+        [(size_t)SpriteType::Projectile] = { 128.0, 128.0, TILE_SIZE, 1, 0.0 },
+        [(size_t)SpriteType::Enemy] = { 128.0, 160.0, TILE_SIZE, 1, 0.0 },
 
         // Tiles
         [(size_t)SpriteType::TileBrick] = { 0.0, 0.0, TILE_SIZE, 1, 0.0 },
