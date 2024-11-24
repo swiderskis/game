@@ -8,6 +8,8 @@
 #include <cassert>
 #include <cmath>
 
+static constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
+
 constexpr unsigned TARGET_FPS = 60;
 
 constexpr float PLAYER_BBOX_SIZE_X = 20.0;
@@ -19,8 +21,6 @@ constexpr float ENEMY_BBOX_SIZE_Y = 24.0;
 constexpr float HEALTH_BAR_WIDTH = 32.0;
 constexpr float HEALTH_BAR_HEIGHT = 4.0;
 constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
-
-constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
 
 constexpr int PLAYER_HEALTH = 100;
 constexpr int ENEMY_HEALTH = 100;
