@@ -40,7 +40,7 @@ void Sprite::check_update_frame(const float dt)
     }
 }
 
-void Sprite::lookup_set_idle_sprite(Entity entity)
+void Sprite::lookup_set_idle_sprite(const Entity entity)
 {
     auto idle_sprite = SpriteType::None;
     switch (entity) {
@@ -54,7 +54,7 @@ void Sprite::lookup_set_idle_sprite(Entity entity)
     set_sprite(idle_sprite);
 }
 
-void Sprite::lookup_set_walk_sprite(Entity entity)
+void Sprite::lookup_set_walk_sprite(const Entity entity)
 {
     auto walk_sprite = SpriteType::None;
     switch (entity) {
