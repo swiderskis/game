@@ -39,10 +39,8 @@ struct Sprite {
     unsigned current_frame = 0;
     bool flipped = false;
 
-    void set_sprite(SpriteType type);
+    void set(SpriteType type);
     void check_update_frame(float dt);
-    void lookup_set_idle_sprite(Entity entity);
-    void lookup_set_walk_sprite(Entity entity);
     [[nodiscard]] RRectangle sprite() const;
 
 private:
