@@ -69,6 +69,10 @@ public:
 
     void run();
     RWindow& window();
+
+#ifndef NDEBUG
+    void reload_texture_sheet();
+#endif
 };
 
 #endif

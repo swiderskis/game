@@ -14,8 +14,12 @@ int main()
     }
 
     while (!game.window().ShouldClose()) {
-        if (game_funcs.check_reload_lib() && !hot_reload::reload_lib(game_funcs)) {
-            return -1;
+        if (game_funcs.check_reload_lib()) {
+            if (!hot_reload::reload_lib(game_funcs)) {
+                return -1;
+            }
+
+            game.reload_texture_sheet();
         }
 
         game_funcs.run(&game);

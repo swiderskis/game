@@ -213,13 +213,24 @@ RWindow& Game::window()
 }
 
 #ifndef NDEBUG
-extern "C" __declspec(dllexport) void run(Game& game)
+#include <iostream>
+
+void Game::reload_texture_sheet()
+{
+    m_texture_sheet.Unload();
+    m_texture_sheet.Load(TEXTURE_SHEET);
+    std::cout << "Texture sheet reloaded\n";
+}
+
+extern "C" {
+__declspec(dllexport) void run(Game& game)
 {
     game.run();
 }
 
-extern "C" __declspec(dllexport) bool check_reload_lib()
+__declspec(dllexport) bool check_reload_lib()
 {
     return RKeyboard::IsKeyPressed(KEY_R);
+}
 }
 #endif
