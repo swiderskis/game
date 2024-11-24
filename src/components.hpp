@@ -18,7 +18,7 @@ struct Tform {
 private:
     Tform() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 enum class SpriteType {
@@ -67,7 +67,7 @@ private:
 
     Sprite() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 struct Circle {
@@ -82,7 +82,7 @@ struct Circle {
 private:
     Circle() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 struct BBox {
@@ -99,7 +99,7 @@ private:
     BBox() = default;
     BBox(RVector2 pos, float radius);
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 struct Grounded {
@@ -108,7 +108,7 @@ struct Grounded {
 private:
     Grounded() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 struct Lifespan {
@@ -117,7 +117,7 @@ struct Lifespan {
 private:
     Lifespan() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
 struct Health {
@@ -130,18 +130,18 @@ struct Health {
 private:
     Health() = default;
 
-    friend class ComponentManager;
+    friend struct ComponentManager;
 };
 
-class ComponentManager
-{
-    std::vector<Tform> m_transforms{ MAX_ENTITIES, Tform() };
-    std::vector<Sprite> m_sprites{ MAX_ENTITIES, Sprite() };
-    std::vector<BBox> m_bounding_boxes{ MAX_ENTITIES, BBox() };
-    std::vector<Grounded> m_grounded{ MAX_ENTITIES, Grounded() };
-    std::vector<Lifespan> m_lifespans{ MAX_ENTITIES, Lifespan() };
-    std::vector<Health> m_health{ MAX_ENTITIES, Health() };
+struct ComponentManager {
+    std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
+    std::vector<Sprite> sprites{ MAX_ENTITIES, Sprite() };
+    std::vector<BBox> bounding_boxes{ MAX_ENTITIES, BBox() };
+    std::vector<Grounded> grounded{ MAX_ENTITIES, Grounded() };
+    std::vector<Lifespan> lifespans{ MAX_ENTITIES, Lifespan() };
+    std::vector<Health> health{ MAX_ENTITIES, Health() };
 
+private:
     ComponentManager() = default;
 
     friend class Game;

@@ -38,26 +38,26 @@ Coordinates::operator RVector2() const
 void Game::spawn_player()
 {
     unsigned id = m_entity_manager.spawn_entity(Entity::Player);
-    auto& transform = m_component_manager.m_transforms[id];
+    auto& transform = m_component_manager.transforms[id];
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.m_sprites[id].set(SpriteType::PlayerIdle);
-    m_component_manager.m_bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
-    m_component_manager.m_bounding_boxes[id].sync(transform);
-    m_component_manager.m_health[id].set_health(PLAYER_HEALTH);
+    m_component_manager.sprites[id].set(SpriteType::PlayerIdle);
+    m_component_manager.bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
+    m_component_manager.bounding_boxes[id].sync(transform);
+    m_component_manager.health[id].set_health(PLAYER_HEALTH);
 }
 
 void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Tile);
-    auto& transform = m_component_manager.m_transforms[id];
+    auto& transform = m_component_manager.transforms[id];
     transform.pos = pos;
-    m_component_manager.m_bounding_boxes[id].sync(transform);
+    m_component_manager.bounding_boxes[id].sync(transform);
 
     switch (tile) {
     case Tile::Brick:
-        m_component_manager.m_sprites[id].set(SpriteType::TileBrick);
+        m_component_manager.sprites[id].set(SpriteType::TileBrick);
         break;
     }
 }
@@ -69,11 +69,11 @@ float Game::dt() const
 
 void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const BBox prev_bbox)
 {
-    auto& bbox_comp = m_component_manager.m_bounding_boxes[id];
-    auto& transform = m_component_manager.m_transforms[id];
+    auto& bbox_comp = m_component_manager.bounding_boxes[id];
+    auto& transform = m_component_manager.transforms[id];
 
-    for (const unsigned tile_id : m_entity_manager.m_entity_ids[Entity::Tile]) {
-        const auto tile_bbox_comp = m_component_manager.m_bounding_boxes[tile_id];
+    for (const unsigned tile_id : m_entity_manager.entity_ids[Entity::Tile]) {
+        const auto tile_bbox_comp = m_component_manager.bounding_boxes[tile_id];
         if (!bbox_comp.collides(tile_bbox_comp)) {
             continue;
         }
@@ -118,7 +118,7 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
             }
 
             if (y_adjust < 0.0) {
-                m_component_manager.m_grounded[id].grounded = true;
+                m_component_manager.grounded[id].grounded = true;
             }
         }
     }
@@ -127,15 +127,15 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
 void Game::spawn_projectile(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Projectile);
-    auto& transform = m_component_manager.m_transforms[id];
-    transform.pos = m_component_manager.m_transforms[PLAYER_ID].pos;
+    auto& transform = m_component_manager.transforms[id];
+    transform.pos = m_component_manager.transforms[PLAYER_ID].pos;
     const auto diff = get_mouse_pos() - transform.pos;
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_component_manager.m_sprites[id].set(SpriteType::Projectile);
-    m_component_manager.m_bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
-    m_component_manager.m_lifespans[id].current = PROJECTILE_LIFESPAN;
+    m_component_manager.sprites[id].set(SpriteType::Projectile);
+    m_component_manager.bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
+    m_component_manager.lifespans[id].current = PROJECTILE_LIFESPAN;
 }
 
 RVector2 Game::get_mouse_pos() const
@@ -146,20 +146,20 @@ RVector2 Game::get_mouse_pos() const
 void Game::spawn_enemy(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Enemy);
-    m_component_manager.m_transforms[id].pos = pos;
-    m_component_manager.m_sprites[id].set(SpriteType::Enemy);
-    m_component_manager.m_bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
-    m_component_manager.m_health[id].set_health(ENEMY_HEALTH);
+    m_component_manager.transforms[id].pos = pos;
+    m_component_manager.sprites[id].set(SpriteType::Enemy);
+    m_component_manager.bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
+    m_component_manager.health[id].set_health(ENEMY_HEALTH);
 }
 
 void Game::render_health_bars(unsigned id)
 {
-    const auto health = m_component_manager.m_health[id];
+    const auto health = m_component_manager.health[id];
     if (health.max == std::nullopt || health.current == health.max) {
         return;
     }
 
-    const auto pos = m_component_manager.m_transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
+    const auto pos = m_component_manager.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
     const auto full_bar = RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
     const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
     const auto current_bar = RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT));
