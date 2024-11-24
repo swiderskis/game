@@ -3,7 +3,6 @@
 
 // TODO make this cross-platform
 #ifndef NDEBUG
-#pragma GCC diagnostic ignored "-Wcast-function-type"
 
 #include "game.hpp"
 
@@ -54,6 +53,7 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT(misc-definitions-in-headers)
         return false;
     }
 
+#pragma GCC diagnostic ignored "-Wcast-function-type"
     // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
     game_funcs.run = (run_t)GetProcAddress(game_funcs.lib, "run");
     if (game_funcs.run == nullptr) {
@@ -69,14 +69,14 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT(misc-definitions-in-headers)
         return false;
     }
     // NOLINTEND(cppcoreguidelines-pro-type-cstyle-cast)
+#pragma GCC diagnostic error "-Wcast-function-type"
 
-    std::cout << "Loaded lib successfully\n";
+    std::cout << "Loaded library successfully\n";
 
     return true;
 }
 } // namespace hot_reload
 
-#pragma GCC diagnostic error "-Wcast-function-type"
 #endif
 
 #endif
