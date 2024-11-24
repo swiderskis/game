@@ -16,6 +16,9 @@ constexpr float PROJECTILE_SPEED = 500.0;
 constexpr float PROJECTILE_LIFESPAN = 0.3;
 constexpr float ENEMY_BBOX_SIZE_X = 30.0;
 constexpr float ENEMY_BBOX_SIZE_Y = 24.0;
+constexpr float HEALTH_BAR_WIDTH = 32.0;
+constexpr float HEALTH_BAR_HEIGHT = 4.0;
+constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
 constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
 
@@ -38,7 +41,7 @@ void Game::spawn_player()
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.m_sprites[id].set_sprite(SpriteType::Player);
+    m_component_manager.m_sprites[id].set_sprite(SpriteType::PlayerIdle);
     m_component_manager.m_bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_component_manager.m_bounding_boxes[id].sync(transform);
     m_component_manager.m_health[id].set_health(PLAYER_HEALTH);
@@ -148,6 +151,21 @@ void Game::spawn_enemy(const RVector2 pos)
     m_component_manager.m_health[id].set_health(ENEMY_HEALTH);
 }
 
+void Game::render_health_bars(unsigned id)
+{
+    const auto health = m_component_manager.m_health[id];
+    if (health.max == std::nullopt || health.current == health.max) {
+        return;
+    }
+
+    const auto pos = m_component_manager.m_transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
+    const auto full_bar = RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
+    const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
+    const auto current_bar = RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT));
+    full_bar.Draw(RED);
+    current_bar.Draw(GREEN);
+}
+
 Game::Game()
 {
     m_window.SetTargetFPS(TARGET_FPS);
@@ -181,6 +199,10 @@ void Game::run()
     check_projectiles_hit();
     destroy_entities();
     render_sprites();
+
+    if (m_inputs.spawn_enemy) {
+        spawn_enemy(Coordinates(2, 2));
+    }
 
     m_window.EndDrawing();
 }

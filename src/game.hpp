@@ -20,6 +20,7 @@ struct Inputs {
     bool right = false;
     bool up = false;
     bool attack = false;
+    bool spawn_enemy = false;
 
 private:
     Inputs() = default;
@@ -61,6 +62,7 @@ class Game
     void spawn_projectile(RVector2 pos);
     [[nodiscard]] RVector2 get_mouse_pos() const;
     void spawn_enemy(RVector2 pos);
+    void render_health_bars(unsigned id);
 
 public:
     Game();

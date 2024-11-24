@@ -17,9 +17,6 @@ constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
 constexpr float GRAVITY_ACCELERATION = 1000.0;
 constexpr float MAX_FALL_SPEED = 2000.0;
-constexpr float HEALTH_BAR_WIDTH = 32.0;
-constexpr float HEALTH_BAR_HEIGHT = 4.0;
-constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
 constexpr auto GRAVITY_AFFECTED_ENTITIES = { Entity::Player, Entity::Enemy };
 
@@ -31,6 +28,7 @@ void Game::poll_inputs()
     m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
     m_inputs.up = RKeyboard::IsKeyPressed(KEY_W) || RKeyboard::IsKeyPressed(KEY_SPACE);
     m_inputs.attack = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
+    m_inputs.spawn_enemy = RKeyboard::IsKeyPressed(KEY_P);
 }
 
 void Game::render_sprites()
@@ -45,26 +43,19 @@ void Game::render_sprites()
             continue;
         }
 
-        const auto tform = m_component_manager.m_transforms[id];
+        const auto transform = m_component_manager.m_transforms[id];
         auto& sprite = m_component_manager.m_sprites[id];
-        if (tform.vel.x < 0) {
-            sprite.flip();
-        } else if (tform.vel.x > 0) {
-            sprite.unflip();
+
+        if (transform.vel.x != 0) {
+            sprite.flipped = transform.vel.x < 0;
+            sprite.lookup_set_walk_sprite(entity.value());
+        } else {
+            sprite.lookup_set_idle_sprite(entity.value());
         }
 
-        m_texture_sheet.Draw(sprite.sprite, tform.pos);
-
-        const auto health = m_component_manager.m_health[id];
-        if (health.max != std::nullopt && health.current < health.max) {
-            auto pos = tform.pos;
-            pos.y -= HEALTH_BAR_Y_OFFSET;
-            const auto full_bar = RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT));
-            const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
-            const auto current_bar = RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT));
-            full_bar.Draw(RED);
-            current_bar.Draw(GREEN);
-        }
+        sprite.check_update_frame(dt());
+        m_texture_sheet.Draw(sprite.sprite(), transform.pos);
+        render_health_bars(id);
 
 #ifdef SHOW_BBOXES
         std::visit(overloaded{
