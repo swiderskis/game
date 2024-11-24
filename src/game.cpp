@@ -187,6 +187,43 @@ std::optional<SpriteType> Game::lookup_walk_sprite(const Entity entity)
     }
 }
 
+std::optional<SpriteType> Game::lookup_jump_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerJump;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Game::lookup_fall_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerFall;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Game::lookup_movement_sprite(const Entity entity, const RVector2 vel)
+{
+    if (vel.y < 0) {
+        return lookup_jump_sprite(entity);
+    }
+
+    if (vel.y > 0) {
+        return lookup_fall_sprite(entity);
+    }
+
+    if (vel.x != 0) {
+        return lookup_walk_sprite(entity);
+    }
+
+    return lookup_idle_sprite(entity);
+}
+
 Game::Game()
 {
     m_window.SetTargetFPS(TARGET_FPS);

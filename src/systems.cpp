@@ -45,15 +45,11 @@ void Game::render_sprites()
 
         const auto transform = m_component_manager.m_transforms[id];
         auto& sprite = m_component_manager.m_sprites[id];
-
-        std::optional<SpriteType> new_sprite = std::nullopt;
         if (transform.vel.x != 0) {
             sprite.flipped = transform.vel.x < 0;
-            new_sprite = lookup_walk_sprite(entity.value());
-        } else {
-            new_sprite = lookup_idle_sprite(entity.value());
         }
 
+        const auto new_sprite = lookup_movement_sprite(entity.value(), transform.vel);
         if (new_sprite != std::nullopt) {
             sprite.set(new_sprite.value());
         }

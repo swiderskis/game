@@ -65,6 +65,9 @@ class Game
     void render_health_bars(unsigned id);
     [[nodiscard]] static std::optional<SpriteType> lookup_idle_sprite(Entity entity);
     [[nodiscard]] static std::optional<SpriteType> lookup_walk_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_jump_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_fall_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_movement_sprite(Entity entity, RVector2 vel);
 
 public:
     Game();
