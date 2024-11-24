@@ -63,6 +63,8 @@ class Game
     [[nodiscard]] RVector2 get_mouse_pos() const;
     void spawn_enemy(RVector2 pos);
     void render_health_bars(unsigned id);
+    [[nodiscard]] static std::optional<SpriteType> lookup_idle_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_walk_sprite(Entity entity);
 
 public:
     Game();

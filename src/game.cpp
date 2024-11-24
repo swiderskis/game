@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <optional>
 
 static constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
 
@@ -41,7 +42,7 @@ void Game::spawn_player()
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.m_sprites[id].set_sprite(SpriteType::PlayerIdle);
+    m_component_manager.m_sprites[id].set(SpriteType::PlayerIdle);
     m_component_manager.m_bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_component_manager.m_bounding_boxes[id].sync(transform);
     m_component_manager.m_health[id].set_health(PLAYER_HEALTH);
@@ -56,7 +57,7 @@ void Game::spawn_tile(const Tile tile, const RVector2 pos)
 
     switch (tile) {
     case Tile::Brick:
-        m_component_manager.m_sprites[id].set_sprite(SpriteType::TileBrick);
+        m_component_manager.m_sprites[id].set(SpriteType::TileBrick);
         break;
     }
 }
@@ -132,7 +133,7 @@ void Game::spawn_projectile(const RVector2 pos)
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_component_manager.m_sprites[id].set_sprite(SpriteType::Projectile);
+    m_component_manager.m_sprites[id].set(SpriteType::Projectile);
     m_component_manager.m_bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
     m_component_manager.m_lifespans[id].current = PROJECTILE_LIFESPAN;
 }
@@ -146,7 +147,7 @@ void Game::spawn_enemy(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Enemy);
     m_component_manager.m_transforms[id].pos = pos;
-    m_component_manager.m_sprites[id].set_sprite(SpriteType::Enemy);
+    m_component_manager.m_sprites[id].set(SpriteType::Enemy);
     m_component_manager.m_bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
     m_component_manager.m_health[id].set_health(ENEMY_HEALTH);
 }
@@ -164,6 +165,26 @@ void Game::render_health_bars(unsigned id)
     const auto current_bar = RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT));
     full_bar.Draw(RED);
     current_bar.Draw(GREEN);
+}
+
+std::optional<SpriteType> Game::lookup_idle_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerIdle;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Game::lookup_walk_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerWalk;
+    default:
+        return std::nullopt;
+    }
 }
 
 Game::Game()

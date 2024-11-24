@@ -1,6 +1,5 @@
 #include "components.hpp"
 
-#include "entities.hpp"
 #include "overloaded.hpp"
 
 #include <cassert>
@@ -8,7 +7,7 @@
 
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 
-void Sprite::set_sprite(const SpriteType sprite_type)
+void Sprite::set(const SpriteType sprite_type)
 {
     assert(sprite_type != SpriteType::None);
 
@@ -38,34 +37,6 @@ void Sprite::check_update_frame(const float dt)
     if (current_frame == details.frames) {
         current_frame = 0;
     }
-}
-
-void Sprite::lookup_set_idle_sprite(const Entity entity)
-{
-    auto idle_sprite = SpriteType::None;
-    switch (entity) {
-    case Entity::Player:
-        idle_sprite = SpriteType::PlayerIdle;
-        break;
-    default:
-        return;
-    }
-
-    set_sprite(idle_sprite);
-}
-
-void Sprite::lookup_set_walk_sprite(const Entity entity)
-{
-    auto walk_sprite = SpriteType::None;
-    switch (entity) {
-    case Entity::Player:
-        walk_sprite = SpriteType::PlayerWalk;
-        break;
-    default:
-        return;
-    }
-
-    set_sprite(walk_sprite);
 }
 
 RRectangle Sprite::sprite() const
