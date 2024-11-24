@@ -1,38 +1,80 @@
 #include "components.hpp"
 
+#include "entities.hpp"
 #include "overloaded.hpp"
 
 #include <cassert>
 #include <cstddef>
 
 constexpr int RECTANGLE_BBOX_INDEX = 0;
-constexpr int CIRCLE_BBOX_INDEX = 1;
 
-void Sprite::set_sprite(const SpriteType type)
+void Sprite::set_sprite(const SpriteType sprite_type)
 {
-    sprite.SetPosition(RVector2(SHEET_POS[(size_t)type].x, SHEET_POS[(size_t)type].y));
-}
+    assert(sprite_type != SpriteType::None);
 
-void Sprite::flip()
-{
-    auto size = sprite.GetSize();
-    if (size.x < 0) {
+    if (type == sprite_type) {
         return;
     }
 
-    size.x *= -1;
-    sprite.SetSize(size);
+    type = sprite_type;
+    current_frame = 0;
+    frame_update_dt = 0.0;
 }
 
-void Sprite::unflip()
+void Sprite::check_update_frame(const float dt)
 {
-    auto size = sprite.GetSize();
-    if (size.x > 0) {
+    const auto details = DETAILS[(size_t)type];
+    if (details.frames == 1) {
         return;
     }
 
-    size.x *= -1;
-    sprite.SetSize(size);
+    frame_update_dt += dt;
+    if (frame_update_dt < details.frame_duration) {
+        return;
+    }
+
+    frame_update_dt = 0.0;
+    current_frame += 1;
+    if (current_frame == details.frames) {
+        current_frame = 0;
+    }
+}
+
+void Sprite::lookup_set_idle_sprite(Entity entity)
+{
+    auto idle_sprite = SpriteType::None;
+    switch (entity) {
+    case Entity::Player:
+        idle_sprite = SpriteType::PlayerIdle;
+        break;
+    default:
+        return;
+    }
+
+    set_sprite(idle_sprite);
+}
+
+void Sprite::lookup_set_walk_sprite(Entity entity)
+{
+    auto walk_sprite = SpriteType::None;
+    switch (entity) {
+    case Entity::Player:
+        walk_sprite = SpriteType::PlayerWalk;
+        break;
+    default:
+        return;
+    }
+
+    set_sprite(walk_sprite);
+}
+
+RRectangle Sprite::sprite() const
+{
+    const auto details = DETAILS[(size_t)type];
+    const auto pos = RVector2(details.x + (details.size * (float)current_frame), details.y);
+    const auto size = RVector2(details.size * (float)(flipped ? -1 : 1), details.size);
+
+    return { pos, size };
 }
 
 Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)

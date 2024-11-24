@@ -1,6 +1,7 @@
 #ifndef COMPONENTS_HPP_
 #define COMPONENTS_HPP_
 
+#include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "settings.hpp"
 
@@ -21,29 +22,45 @@ private:
 };
 
 enum class SpriteType {
-    Player,
-    TileBrick,
+    None = -1,
+
+    PlayerIdle,
+    PlayerWalk,
     Projectile,
-    Enemy
+    Enemy,
+
+    // Tiles
+    TileBrick
 };
 
 struct Sprite {
-    RRectangle sprite{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
+    SpriteType type = SpriteType::None;
+    float frame_update_dt = 0.0;
+    unsigned current_frame = 0;
+    bool flipped = false;
 
     void set_sprite(SpriteType type);
-    void flip();
-    void unflip();
+    void check_update_frame(float dt);
+    void lookup_set_idle_sprite(Entity entity);
+    void lookup_set_walk_sprite(Entity entity);
+    [[nodiscard]] RRectangle sprite() const;
 
 private:
     // NOLINTBEGIN(*avoid-c-arrays)
-    constexpr static struct {
+    static constexpr struct {
         float x;
         float y;
-    } SHEET_POS[] = {
-        [(size_t)SpriteType::Player] = { 0.0, 0.0 },
-        [(size_t)SpriteType::TileBrick] = { 0.0, 32.0 },
-        [(size_t)SpriteType::Projectile] = { 0.0, 64.0 },
-        [(size_t)SpriteType::Enemy] = { 0.0, 96.0 },
+        float size;
+        unsigned frames;
+        float frame_duration;
+    } DETAILS[] = {
+        [(size_t)SpriteType::PlayerIdle] = { 128.0, 0.0, TILE_SIZE, 2, 0.5 },
+        [(size_t)SpriteType::PlayerWalk] = { 128.0, 32.0, TILE_SIZE, 4, 0.2 },
+        [(size_t)SpriteType::Projectile] = { 128.0, 64.0, TILE_SIZE, 1, 0.0 },
+        [(size_t)SpriteType::Enemy] = { 128.0, 96.0, TILE_SIZE, 1, 0.0 },
+
+        // Tiles
+        [(size_t)SpriteType::TileBrick] = { 0.0, 0.0, TILE_SIZE, 1, 0.0 },
     };
 
     // NOLINTEND(*avoid-c-arrays)
