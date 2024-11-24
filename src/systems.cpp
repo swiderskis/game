@@ -13,12 +13,12 @@
 #include "overloaded.hpp"
 #endif
 
+static constexpr auto GRAVITY_AFFECTED_ENTITIES = { Entity::Player, Entity::Enemy };
+
 constexpr float PLAYER_SPEED = 100.0;
 constexpr float JUMP_SPEED = 450.0;
 constexpr float GRAVITY_ACCELERATION = 1000.0;
 constexpr float MAX_FALL_SPEED = 2000.0;
-
-constexpr auto GRAVITY_AFFECTED_ENTITIES = { Entity::Player, Entity::Enemy };
 
 constexpr int PROJECTILE_DAMAGE = 25;
 
