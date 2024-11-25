@@ -47,7 +47,7 @@ class Game
 
     // Systems
     void poll_inputs();
-    void render_sprites();
+    void render();
     void set_player_vel();
     void move_entities();
     void destroy_entities();
@@ -58,18 +58,15 @@ class Game
     void spawn_player();
     void spawn_tile(Tile tile, RVector2 pos);
     [[nodiscard]] float dt() const;
-    void resolve_tile_collisions(unsigned id, Entity entity, BBox prev_bbox);
     void spawn_projectile(RVector2 pos);
     [[nodiscard]] RVector2 get_mouse_pos() const;
     void spawn_enemy(RVector2 pos);
-    void render_health_bars(unsigned id);
 
 public:
     Game();
 
     void run();
     RWindow& window();
-
 #ifndef NDEBUG
     void reload_texture_sheet();
 #endif
