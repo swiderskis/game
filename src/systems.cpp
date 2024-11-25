@@ -49,7 +49,7 @@ void Game::render_sprites()
             sprite.flipped = transform.vel.x < 0;
         }
 
-        const auto new_sprite = lookup_movement_sprite(entity.value(), transform.vel);
+        const auto new_sprite = Sprite::lookup_movement_sprite(entity.value(), transform.vel);
         if (new_sprite != std::nullopt) {
             sprite.set(new_sprite.value());
         }

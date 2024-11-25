@@ -42,6 +42,7 @@ struct Sprite {
     void set(SpriteType type);
     void check_update_frame(float dt);
     [[nodiscard]] RRectangle sprite() const;
+    [[nodiscard]] static std::optional<SpriteType> lookup_movement_sprite(Entity entity, RVector2 vel);
 
 private:
     // NOLINTBEGIN(*avoid-c-arrays)
@@ -66,6 +67,11 @@ private:
     // NOLINTEND(*avoid-c-arrays)
 
     Sprite() = default;
+
+    [[nodiscard]] static std::optional<SpriteType> lookup_idle_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_walk_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_jump_sprite(Entity entity);
+    [[nodiscard]] static std::optional<SpriteType> lookup_fall_sprite(Entity entity);
 
     friend struct ComponentManager;
 };
