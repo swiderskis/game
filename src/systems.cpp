@@ -63,7 +63,7 @@ void Game::render_sprites()
                        [](const RRectangle bbox) { bbox.DrawLines(RED); },
                        [](const Circle bbox) { bbox.draw_lines(RED); },
                    },
-                   m_component_manager.bounding_boxes[id].bounding_box);
+                   m_component_manager.bounding_boxes[id].bounding_box());
 #endif
     }
 

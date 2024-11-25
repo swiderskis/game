@@ -14,11 +14,6 @@ constexpr float TILE_SIZE = 32.0;
 struct Tform {
     RVector2 pos;
     RVector2 vel;
-
-private:
-    Tform() = default;
-
-    friend struct ComponentManager;
 };
 
 enum class SpriteType {
@@ -33,18 +28,12 @@ enum class SpriteType {
     TileBrick
 };
 
-struct Sprite {
-    SpriteType type = SpriteType::PlayerIdle; // initialise to 0, should be overwritten for every spawned entity anyway
-    float frame_update_dt = 0.0;
-    unsigned current_frame = 0;
-    bool flipped = false;
+class Sprite
+{
+    SpriteType m_type = SpriteType::PlayerIdle; // initialise to 0, should always be overwritten for spawned entity
+    float m_frame_update_dt = 0.0;
+    unsigned m_current_frame = 0;
 
-    void set(SpriteType type);
-    void check_update_frame(float dt);
-    [[nodiscard]] RRectangle sprite() const;
-    [[nodiscard]] static std::optional<SpriteType> lookup_movement_sprite(Entity entity, RVector2 vel);
-
-private:
     // NOLINTBEGIN(*avoid-c-arrays)
     static constexpr struct {
         float x;
@@ -66,14 +55,18 @@ private:
 
     // NOLINTEND(*avoid-c-arrays)
 
-    Sprite() = default;
-
     [[nodiscard]] static std::optional<SpriteType> lookup_idle_sprite(Entity entity);
     [[nodiscard]] static std::optional<SpriteType> lookup_walk_sprite(Entity entity);
     [[nodiscard]] static std::optional<SpriteType> lookup_jump_sprite(Entity entity);
     [[nodiscard]] static std::optional<SpriteType> lookup_fall_sprite(Entity entity);
 
-    friend struct ComponentManager;
+public:
+    bool flipped = false;
+
+    void set(SpriteType type);
+    void check_update_frame(float dt);
+    [[nodiscard]] RRectangle sprite() const;
+    [[nodiscard]] static std::optional<SpriteType> lookup_movement_sprite(Entity entity, RVector2 vel);
 };
 
 struct Circle {
@@ -84,46 +77,30 @@ struct Circle {
 
     [[nodiscard]] bool check_collision(Circle other_circle) const;
     void draw_lines(::Color color) const;
-
-private:
-    Circle() = default;
-
-    friend struct ComponentManager;
 };
 
-struct BBox {
-    std::variant<RRectangle, Circle> bounding_box = RRectangle{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
+class BBox
+{
+    std::variant<RRectangle, Circle> m_bounding_box = RRectangle{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
+
+public:
+    BBox() = default;
 
     void sync(Tform transform);
     [[nodiscard]] bool collides(BBox other_bounding_box) const;
     [[nodiscard]] bool x_overlaps(BBox other_bounding_box) const;
     [[nodiscard]] bool y_overlaps(BBox other_bounding_box) const;
-    void set_size(RVector2 size);
-    void set_size(float radius);
-
-private:
-    BBox() = default;
-    BBox(RVector2 pos, float radius);
-
-    friend struct ComponentManager;
+    void set(Tform transform, RVector2 size);
+    void set(Tform transform, float radius);
+    [[nodiscard]] std::variant<RRectangle, Circle> bounding_box() const;
 };
 
 struct Grounded {
     bool grounded = false;
-
-private:
-    Grounded() = default;
-
-    friend struct ComponentManager;
 };
 
 struct Lifespan {
     std::optional<float> current = std::nullopt;
-
-private:
-    Lifespan() = default;
-
-    friend struct ComponentManager;
 };
 
 struct Health {
@@ -132,11 +109,6 @@ struct Health {
 
     void set_health(int health);
     [[nodiscard]] float percentage() const;
-
-private:
-    Health() = default;
-
-    friend struct ComponentManager;
 };
 
 struct ComponentManager {

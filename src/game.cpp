@@ -43,8 +43,7 @@ void Game::spawn_player()
     transform.vel = RVector2(0.0, 0.0);
 
     m_component_manager.sprites[id].set(SpriteType::PlayerIdle);
-    m_component_manager.bounding_boxes[id].set_size(RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
-    m_component_manager.bounding_boxes[id].sync(transform);
+    m_component_manager.bounding_boxes[id].set(transform, RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_component_manager.health[id].set_health(PLAYER_HEALTH);
 }
 
@@ -83,7 +82,7 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
             continue;
         }
 
-        const auto tile_bbox = std::get<RRectangle>(tile_bbox_comp.bounding_box);
+        const auto tile_bbox = std::get<RRectangle>(tile_bbox_comp.bounding_box());
         const float x_adjust = std::visit(
             overloaded{
                 [tile_bbox](const RRectangle bbox) {
@@ -93,7 +92,7 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
                     return tile_bbox.x - bbox.pos.x + (bbox.pos.x > tile_bbox.x ? bbox.radius : -bbox.radius);
                 },
             },
-            bbox_comp.bounding_box);
+            bbox_comp.bounding_box());
         if (tile_bbox_comp.y_overlaps(prev_bbox) && tile_bbox_comp.x_overlaps(bbox_comp)) {
             transform.pos.x += x_adjust;
             bbox_comp.sync(transform);
@@ -108,7 +107,7 @@ void Game::resolve_tile_collisions(const unsigned id, const Entity entity, const
                     return tile_bbox.y - bbox.pos.y + (bbox.pos.y > tile_bbox.y ? bbox.radius : -bbox.radius);
                 },
             },
-            bbox_comp.bounding_box);
+            bbox_comp.bounding_box());
         if (tile_bbox_comp.x_overlaps(prev_bbox) && tile_bbox_comp.y_overlaps(bbox_comp)) {
             transform.pos.y += y_adjust;
             bbox_comp.sync(transform);
@@ -128,13 +127,13 @@ void Game::spawn_projectile(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Projectile);
     auto& transform = m_component_manager.transforms[id];
-    transform.pos = m_component_manager.transforms[PLAYER_ID].pos;
+    transform.pos = pos;
     const auto diff = get_mouse_pos() - transform.pos;
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
     m_component_manager.sprites[id].set(SpriteType::Projectile);
-    m_component_manager.bounding_boxes[id].bounding_box = Circle(pos, 4); // NOLINT
+    m_component_manager.bounding_boxes[id].set(transform, 4); // NOLINT
     m_component_manager.lifespans[id].current = PROJECTILE_LIFESPAN;
 }
 
@@ -146,9 +145,10 @@ RVector2 Game::get_mouse_pos() const
 void Game::spawn_enemy(const RVector2 pos)
 {
     const unsigned id = m_entity_manager.spawn_entity(Entity::Enemy);
-    m_component_manager.transforms[id].pos = pos;
+    auto& transform = m_component_manager.transforms[id];
+    transform.pos = pos;
     m_component_manager.sprites[id].set(SpriteType::Enemy);
-    m_component_manager.bounding_boxes[id].set_size(RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
+    m_component_manager.bounding_boxes[id].set(transform, RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
     m_component_manager.health[id].set_health(ENEMY_HEALTH);
 }
 
