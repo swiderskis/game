@@ -9,7 +9,7 @@
 #include <optional>
 #include <variant>
 
-constexpr float TILE_SIZE = 32.0;
+inline constexpr float TILE_SIZE = 32.0;
 
 struct Tform {
     RVector2 pos;

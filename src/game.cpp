@@ -7,17 +7,17 @@
 #include <cmath>
 #include <optional>
 
-constexpr unsigned TARGET_FPS = 60;
+inline constexpr unsigned TARGET_FPS = 60;
 
-constexpr float PLAYER_BBOX_SIZE_X = 20.0;
-constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
-constexpr float PROJECTILE_SPEED = 500.0;
-constexpr float PROJECTILE_LIFESPAN = 0.3;
-constexpr float ENEMY_BBOX_SIZE_X = 30.0;
-constexpr float ENEMY_BBOX_SIZE_Y = 24.0;
+inline constexpr float PLAYER_BBOX_SIZE_X = 20.0;
+inline constexpr float PLAYER_BBOX_SIZE_Y = 29.0;
+inline constexpr float PROJECTILE_SPEED = 500.0;
+inline constexpr float PROJECTILE_LIFESPAN = 0.3;
+inline constexpr float ENEMY_BBOX_SIZE_X = 30.0;
+inline constexpr float ENEMY_BBOX_SIZE_Y = 24.0;
 
-constexpr int PLAYER_HEALTH = 100;
-constexpr int ENEMY_HEALTH = 100;
+inline constexpr int PLAYER_HEALTH = 100;
+inline constexpr int ENEMY_HEALTH = 100;
 
 Coordinates::Coordinates(const int x, const int y) : m_pos(RVector2((float)x, (float)-y) * TILE_SIZE)
 {

@@ -13,15 +13,15 @@
 static constexpr auto GRAVITY_AFFECTED_ENTITIES = { Entity::Player, Entity::Enemy };
 static constexpr auto DESTROY_ON_COLLISION = { Entity::Projectile };
 
-constexpr float PLAYER_SPEED = 100.0;
-constexpr float JUMP_SPEED = 450.0;
-constexpr float GRAVITY_ACCELERATION = 1000.0;
-constexpr float MAX_FALL_SPEED = 500.0;
-constexpr float HEALTH_BAR_WIDTH = 32.0;
-constexpr float HEALTH_BAR_HEIGHT = 4.0;
-constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
+inline constexpr float PLAYER_SPEED = 100.0;
+inline constexpr float JUMP_SPEED = 450.0;
+inline constexpr float GRAVITY_ACCELERATION = 1000.0;
+inline constexpr float MAX_FALL_SPEED = 500.0;
+inline constexpr float HEALTH_BAR_WIDTH = 32.0;
+inline constexpr float HEALTH_BAR_HEIGHT = 4.0;
+inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
-constexpr int PROJECTILE_DAMAGE = 25;
+inline constexpr int PROJECTILE_DAMAGE = 25;
 
 void Game::poll_inputs()
 {
