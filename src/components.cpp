@@ -7,62 +7,6 @@
 
 constexpr int RECTANGLE_BBOX_INDEX = 0;
 
-void Sprite::set(const SpriteType sprite_type)
-{
-    if (type == sprite_type) {
-        return;
-    }
-
-    type = sprite_type;
-    current_frame = 0;
-    frame_update_dt = 0.0;
-}
-
-void Sprite::check_update_frame(const float dt)
-{
-    const auto details = DETAILS[(size_t)type];
-    if (details.frames == 1) {
-        return;
-    }
-
-    frame_update_dt += dt;
-    if (frame_update_dt < details.frame_duration) {
-        return;
-    }
-
-    frame_update_dt = 0.0;
-    current_frame += 1;
-    if (current_frame == details.frames) {
-        current_frame = 0;
-    }
-}
-
-RRectangle Sprite::sprite() const
-{
-    const auto details = DETAILS[(size_t)type];
-    const auto pos = RVector2(details.x + (details.size * (float)current_frame), details.y);
-    const auto size = RVector2(details.size * (float)(flipped ? -1 : 1), details.size);
-
-    return { pos, size };
-}
-
-std::optional<SpriteType> Sprite::lookup_movement_sprite(const Entity entity, const RVector2 vel)
-{
-    if (vel.y < 0) {
-        return lookup_jump_sprite(entity);
-    }
-
-    if (vel.y > 0) {
-        return lookup_fall_sprite(entity);
-    }
-
-    if (vel.x != 0) {
-        return lookup_walk_sprite(entity);
-    }
-
-    return lookup_idle_sprite(entity);
-}
-
 std::optional<SpriteType> Sprite::lookup_idle_sprite(const Entity entity)
 {
     switch (entity) {
@@ -103,6 +47,62 @@ std::optional<SpriteType> Sprite::lookup_fall_sprite(const Entity entity)
     }
 }
 
+void Sprite::set(const SpriteType sprite_type)
+{
+    if (m_type == sprite_type) {
+        return;
+    }
+
+    m_type = sprite_type;
+    m_current_frame = 0;
+    m_frame_update_dt = 0.0;
+}
+
+void Sprite::check_update_frame(const float dt)
+{
+    const auto details = DETAILS[(size_t)m_type];
+    if (details.frames == 1) {
+        return;
+    }
+
+    m_frame_update_dt += dt;
+    if (m_frame_update_dt < details.frame_duration) {
+        return;
+    }
+
+    m_frame_update_dt = 0.0;
+    m_current_frame += 1;
+    if (m_current_frame == details.frames) {
+        m_current_frame = 0;
+    }
+}
+
+RRectangle Sprite::sprite() const
+{
+    const auto details = DETAILS[(size_t)m_type];
+    const auto pos = RVector2(details.x + (details.size * (float)m_current_frame), details.y);
+    const auto size = RVector2(details.size * (float)(flipped ? -1 : 1), details.size);
+
+    return { pos, size };
+}
+
+std::optional<SpriteType> Sprite::lookup_movement_sprite(const Entity entity, const RVector2 vel)
+{
+    if (vel.y < 0) {
+        return lookup_jump_sprite(entity);
+    }
+
+    if (vel.y > 0) {
+        return lookup_fall_sprite(entity);
+    }
+
+    if (vel.x != 0) {
+        return lookup_walk_sprite(entity);
+    }
+
+    return lookup_idle_sprite(entity);
+}
+
 Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
 {
 }
@@ -131,7 +131,7 @@ void BBox::sync(const Tform transform)
                        bbox.pos.y += TILE_SIZE / 2;
                    },
                },
-               bounding_box);
+               m_bounding_box);
 }
 
 bool BBox::collides(const BBox other_bounding_box) const
@@ -142,7 +142,7 @@ bool BBox::collides(const BBox other_bounding_box) const
                 [bbox](const RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
                 [bbox](const Circle other_bbox) { return bbox.CheckCollision(other_bbox.pos, other_bbox.radius); },
             },
-            other_bounding_box.bounding_box);
+            other_bounding_box.m_bounding_box);
     };
     const auto circle_bbox = [other_bounding_box](Circle bbox) {
         return std::visit(
@@ -150,7 +150,7 @@ bool BBox::collides(const BBox other_bounding_box) const
                 [bbox](const RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
                 [bbox](const Circle other_bbox) { return bbox.check_collision(other_bbox); },
             },
-            other_bounding_box.bounding_box);
+            other_bounding_box.m_bounding_box);
     };
 
     return std::visit(
@@ -158,14 +158,14 @@ bool BBox::collides(const BBox other_bounding_box) const
             rect_bbox,
             circle_bbox,
         },
-        bounding_box);
+        m_bounding_box);
 }
 
 bool BBox::x_overlaps(const BBox other_bounding_box) const
 {
-    assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
+    assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
-    const auto bbox = std::get<RRectangle>(bounding_box);
+    const auto bbox = std::get<RRectangle>(m_bounding_box);
 
     return std::visit(overloaded{
                           [bbox](const RRectangle other_bbox) {
@@ -178,14 +178,14 @@ bool BBox::x_overlaps(const BBox other_bounding_box) const
                                          && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
                           },
                       },
-                      other_bounding_box.bounding_box);
+                      other_bounding_box.m_bounding_box);
 }
 
 bool BBox::y_overlaps(const BBox other_bounding_box) const
 {
-    assert(bounding_box.index() == RECTANGLE_BBOX_INDEX);
+    assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
-    const auto bbox = std::get<RRectangle>(bounding_box);
+    const auto bbox = std::get<RRectangle>(m_bounding_box);
 
     return std::visit(overloaded{
                           [bbox](const RRectangle other_bbox) {
@@ -198,21 +198,24 @@ bool BBox::y_overlaps(const BBox other_bounding_box) const
                                          && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
                           },
                       },
-                      other_bounding_box.bounding_box);
+                      other_bounding_box.m_bounding_box);
 }
 
-void BBox::set_size(const RVector2 size)
+void BBox::set(Tform transform, RVector2 size)
 {
-    bounding_box = RRectangle(RVector2(0.0, 0.0), size);
+    m_bounding_box = RRectangle(RVector2(0.0, 0.0), size);
+    sync(transform);
 }
 
-void BBox::set_size(const float radius)
+void BBox::set(Tform transform, float radius)
 {
-    bounding_box = Circle(RVector2(0.0, 0.0), radius);
+    m_bounding_box = Circle(RVector2(0.0, 0.0), radius);
+    sync(transform);
 }
 
-BBox::BBox(const RVector2 pos, const float radius) : bounding_box(Circle(pos, radius))
+std::variant<RRectangle, Circle> BBox::bounding_box() const
 {
+    return m_bounding_box;
 }
 
 void Health::set_health(const int health)
