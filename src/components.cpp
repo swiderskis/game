@@ -46,6 +46,63 @@ RRectangle Sprite::sprite() const
     return { pos, size };
 }
 
+std::optional<SpriteType> Sprite::lookup_movement_sprite(const Entity entity, const RVector2 vel)
+{
+    if (vel.y < 0) {
+        return lookup_jump_sprite(entity);
+    }
+
+    if (vel.y > 0) {
+        return lookup_fall_sprite(entity);
+    }
+
+    if (vel.x != 0) {
+        return lookup_walk_sprite(entity);
+    }
+
+    return lookup_idle_sprite(entity);
+}
+
+std::optional<SpriteType> Sprite::lookup_idle_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerIdle;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Sprite::lookup_walk_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerWalk;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Sprite::lookup_jump_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerJump;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> Sprite::lookup_fall_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerFall;
+    default:
+        return std::nullopt;
+    }
+}
+
 Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
 {
 }
