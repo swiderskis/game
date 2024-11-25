@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstddef>
 
-constexpr int RECTANGLE_BBOX_INDEX = 0;
+inline constexpr int RECTANGLE_BBOX_INDEX = 0;
 
 std::optional<SpriteType> Sprite::lookup_idle_sprite(const Entity entity)
 {

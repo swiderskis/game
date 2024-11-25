@@ -5,15 +5,15 @@
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
-constexpr auto WINDOW_TITLE = "Game Title";
-constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
+inline constexpr auto WINDOW_TITLE = "Game Title";
+inline constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
 
-constexpr unsigned WINDOW_WIDTH = 800;
-constexpr unsigned WINDOW_HEIGHT = 450;
-constexpr unsigned WINDOW_HALF_WIDTH = WINDOW_WIDTH / 2;
-constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
+inline constexpr unsigned WINDOW_WIDTH = 800;
+inline constexpr unsigned WINDOW_HEIGHT = 450;
+inline constexpr unsigned WINDOW_HALF_WIDTH = WINDOW_WIDTH / 2;
+inline constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
 
-constexpr float CAMERA_ZOOM = 2.0;
+inline constexpr float CAMERA_ZOOM = 2.0;
 
 struct Inputs {
     bool left = false;
