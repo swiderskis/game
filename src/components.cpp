@@ -5,47 +5,33 @@
 #include <cassert>
 #include <cstddef>
 
+// NOLINTBEGIN(*avoid-c-arrays)
+static constexpr struct {
+    float x;
+    float y;
+    float size;
+    unsigned frames;
+    float frame_duration;
+} SPRITE_DETAILS[] = {
+    [(size_t)SpriteType::PlayerIdle] = { 128.0, 0.0, TILE_SIZE, 2, 0.5 },
+    [(size_t)SpriteType::PlayerWalk] = { 128.0, 32.0, TILE_SIZE, 4, 0.16 },
+    [(size_t)SpriteType::PlayerJump] = { 128.0, 64.0, TILE_SIZE, 1, 0.0 },
+    [(size_t)SpriteType::PlayerFall] = { 128.0, 96.0, TILE_SIZE, 4, 0.1 },
+    [(size_t)SpriteType::Projectile] = { 128.0, 128.0, TILE_SIZE, 1, 0.0 },
+    [(size_t)SpriteType::Enemy] = { 128.0, 160.0, TILE_SIZE, 1, 0.0 },
+
+    // tiles
+    [(size_t)SpriteType::TileBrick] = { 0.0, 0.0, TILE_SIZE, 1, 0.0 },
+};
+
+// NOLINTEND(*avoid-c-arrays)
+
 inline constexpr int RECTANGLE_BBOX_INDEX = 0;
 
-std::optional<SpriteType> Sprite::lookup_idle_sprite(const Entity entity)
-{
-    switch (entity) {
-    case Entity::Player:
-        return SpriteType::PlayerIdle;
-    default:
-        return std::nullopt;
-    }
-}
-
-std::optional<SpriteType> Sprite::lookup_walk_sprite(const Entity entity)
-{
-    switch (entity) {
-    case Entity::Player:
-        return SpriteType::PlayerWalk;
-    default:
-        return std::nullopt;
-    }
-}
-
-std::optional<SpriteType> Sprite::lookup_jump_sprite(const Entity entity)
-{
-    switch (entity) {
-    case Entity::Player:
-        return SpriteType::PlayerJump;
-    default:
-        return std::nullopt;
-    }
-}
-
-std::optional<SpriteType> Sprite::lookup_fall_sprite(const Entity entity)
-{
-    switch (entity) {
-    case Entity::Player:
-        return SpriteType::PlayerFall;
-    default:
-        return std::nullopt;
-    }
-}
+std::optional<SpriteType> lookup_idle_sprite(Entity entity);
+std::optional<SpriteType> lookup_walk_sprite(Entity entity);
+std::optional<SpriteType> lookup_jump_sprite(Entity entity);
+std::optional<SpriteType> lookup_fall_sprite(Entity entity);
 
 void Sprite::set(const SpriteType sprite_type)
 {
@@ -60,7 +46,7 @@ void Sprite::set(const SpriteType sprite_type)
 
 void Sprite::check_update_frame(const float dt)
 {
-    const auto details = DETAILS[(size_t)m_type];
+    const auto details = SPRITE_DETAILS[(size_t)m_type];
     if (details.frames == 1) {
         return;
     }
@@ -79,28 +65,11 @@ void Sprite::check_update_frame(const float dt)
 
 RRectangle Sprite::sprite() const
 {
-    const auto details = DETAILS[(size_t)m_type];
+    const auto details = SPRITE_DETAILS[(size_t)m_type];
     const auto pos = RVector2(details.x + (details.size * (float)m_current_frame), details.y);
     const auto size = RVector2(details.size * (float)(flipped ? -1 : 1), details.size);
 
     return { pos, size };
-}
-
-std::optional<SpriteType> Sprite::lookup_movement_sprite(const Entity entity, const RVector2 vel)
-{
-    if (vel.y < 0) {
-        return lookup_jump_sprite(entity);
-    }
-
-    if (vel.y > 0) {
-        return lookup_fall_sprite(entity);
-    }
-
-    if (vel.x != 0) {
-        return lookup_walk_sprite(entity);
-    }
-
-    return lookup_idle_sprite(entity);
 }
 
 Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
@@ -230,4 +199,61 @@ float Health::percentage() const
     const auto max_health = (float)max.value();
 
     return current_health / max_health;
+}
+
+std::optional<SpriteType> components::lookup_movement_sprite(const Entity entity, const RVector2 vel)
+{
+    if (vel.y < 0) {
+        return lookup_jump_sprite(entity);
+    }
+
+    if (vel.y > 0) {
+        return lookup_fall_sprite(entity);
+    }
+
+    if (vel.x != 0) {
+        return lookup_walk_sprite(entity);
+    }
+
+    return lookup_idle_sprite(entity);
+}
+
+std::optional<SpriteType> lookup_idle_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerIdle;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> lookup_walk_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerWalk;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> lookup_jump_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerJump;
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SpriteType> lookup_fall_sprite(const Entity entity)
+{
+    switch (entity) {
+    case Entity::Player:
+        return SpriteType::PlayerFall;
+    default:
+        return std::nullopt;
+    }
 }
