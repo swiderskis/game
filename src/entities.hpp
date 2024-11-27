@@ -18,18 +18,19 @@ enum class Tile {
     Brick
 };
 
-struct EntityManager {
-    std::vector<std::optional<Entity>> entities{ MAX_ENTITIES, std::nullopt };
-    std::unordered_map<Entity, std::vector<unsigned>> entity_ids;
-    std::vector<unsigned> entities_to_destroy;
+class Entities
+{
+    std::vector<std::optional<Entity>> m_entities{ MAX_ENTITIES, std::nullopt };
+    std::unordered_map<Entity, std::vector<unsigned>> m_entity_ids;
+    std::vector<unsigned> m_to_destroy;
 
-    [[nodiscard]] unsigned spawn_entity(Entity type);
-    void queue_destroy_entity(unsigned id);
-
-private:
-    EntityManager() = default;
-
-    friend class Game;
+public:
+    [[nodiscard]] unsigned spawn(Entity type);
+    void queue_destroy(unsigned id);
+    [[nodiscard]] std::vector<std::optional<Entity>> const& entities() const;
+    [[nodiscard]] std::vector<unsigned> const& entity_ids(Entity entity);
+    [[nodiscard]] std::vector<unsigned> const& to_destroy() const;
+    void destroy_queued();
 };
 
 #endif

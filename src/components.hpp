@@ -59,9 +59,9 @@ public:
     BBox() = default;
 
     void sync(Tform transform);
-    [[nodiscard]] bool collides(BBox other_bounding_box) const;
-    [[nodiscard]] bool x_overlaps(BBox other_bounding_box) const;
-    [[nodiscard]] bool y_overlaps(BBox other_bounding_box) const;
+    [[nodiscard]] bool collides(BBox other_bbox) const;
+    [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
+    [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
     void set(Tform transform, RVector2 size);
     void set(Tform transform, float radius);
     [[nodiscard]] std::variant<RRectangle, Circle> bounding_box() const;
@@ -83,18 +83,13 @@ struct Health {
     [[nodiscard]] float percentage() const;
 };
 
-struct ComponentManager {
+struct Components {
     std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
     std::vector<Sprite> sprites{ MAX_ENTITIES, Sprite() };
     std::vector<BBox> bounding_boxes{ MAX_ENTITIES, BBox() };
     std::vector<Grounded> grounded{ MAX_ENTITIES, Grounded() };
     std::vector<Lifespan> lifespans{ MAX_ENTITIES, Lifespan() };
     std::vector<Health> health{ MAX_ENTITIES, Health() };
-
-private:
-    ComponentManager() = default;
-
-    friend class Game;
 };
 
 namespace components

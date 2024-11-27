@@ -30,26 +30,26 @@ Coordinates::operator RVector2() const
 
 void Game::spawn_player()
 {
-    unsigned id = m_entity_manager.spawn_entity(Entity::Player);
-    auto& transform = m_component_manager.transforms[id];
+    unsigned id = m_entities.spawn(Entity::Player);
+    auto& transform = m_components.transforms[id];
     transform.pos = Coordinates(0, 2);
     transform.vel = RVector2(0.0, 0.0);
 
-    m_component_manager.sprites[id].set(SpriteType::PlayerIdle);
-    m_component_manager.bounding_boxes[id].set(transform, RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
-    m_component_manager.health[id].set_health(PLAYER_HEALTH);
+    m_components.sprites[id].set(SpriteType::PlayerIdle);
+    m_components.bounding_boxes[id].set(transform, RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
+    m_components.health[id].set_health(PLAYER_HEALTH);
 }
 
 void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(Entity::Tile);
-    auto& transform = m_component_manager.transforms[id];
+    const unsigned id = m_entities.spawn(Entity::Tile);
+    auto& transform = m_components.transforms[id];
     transform.pos = pos;
-    m_component_manager.bounding_boxes[id].sync(transform);
+    m_components.bounding_boxes[id].sync(transform);
 
     switch (tile) {
     case Tile::Brick:
-        m_component_manager.sprites[id].set(SpriteType::TileBrick);
+        m_components.sprites[id].set(SpriteType::TileBrick);
         break;
     }
 }
@@ -61,16 +61,16 @@ float Game::dt() const
 
 void Game::spawn_projectile(const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(Entity::Projectile);
-    auto& transform = m_component_manager.transforms[id];
+    const unsigned id = m_entities.spawn(Entity::Projectile);
+    auto& transform = m_components.transforms[id];
     transform.pos = pos;
     const auto diff = get_mouse_pos() - transform.pos;
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_component_manager.sprites[id].set(SpriteType::Projectile);
-    m_component_manager.bounding_boxes[id].set(transform, 4); // NOLINT
-    m_component_manager.lifespans[id].current = PROJECTILE_LIFESPAN;
+    m_components.sprites[id].set(SpriteType::Projectile);
+    m_components.bounding_boxes[id].set(transform, 4); // NOLINT
+    m_components.lifespans[id].current = PROJECTILE_LIFESPAN;
 }
 
 RVector2 Game::get_mouse_pos() const
@@ -80,12 +80,12 @@ RVector2 Game::get_mouse_pos() const
 
 void Game::spawn_enemy(const RVector2 pos)
 {
-    const unsigned id = m_entity_manager.spawn_entity(Entity::Enemy);
-    auto& transform = m_component_manager.transforms[id];
+    const unsigned id = m_entities.spawn(Entity::Enemy);
+    auto& transform = m_components.transforms[id];
     transform.pos = pos;
-    m_component_manager.sprites[id].set(SpriteType::Enemy);
-    m_component_manager.bounding_boxes[id].set(transform, RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
-    m_component_manager.health[id].set_health(ENEMY_HEALTH);
+    m_components.sprites[id].set(SpriteType::Enemy);
+    m_components.bounding_boxes[id].set(transform, RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
+    m_components.health[id].set_health(ENEMY_HEALTH);
 }
 
 Game::Game()
