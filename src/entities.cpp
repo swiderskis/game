@@ -4,12 +4,12 @@
 #include <ranges>
 #include <span>
 
-unsigned EntityManager::spawn_entity(const Entity type)
+unsigned Entities::spawn(const Entity type)
 {
     if (type == Entity::Player) {
-        assert(entities[PLAYER_ID] == std::nullopt);
+        assert(m_entities[PLAYER_ID] == std::nullopt);
 
-        entities[PLAYER_ID] = Entity::Player;
+        m_entities[PLAYER_ID] = Entity::Player;
 
         return PLAYER_ID;
     }
@@ -17,14 +17,14 @@ unsigned EntityManager::spawn_entity(const Entity type)
     assert(type != Entity::Player);
 
     unsigned entity_id = 0;
-    for (const auto [id, entity] : std::span(entities).subspan(1) | std::views::enumerate) {
+    for (const auto [id, entity] : std::span(m_entities).subspan(1) | std::views::enumerate) {
         if (entity != std::nullopt) {
             continue;
         }
 
         entity = type;
         entity_id = id + 1; // enumerate will start at 0, subspan starts loop from m_entitites[1]
-        entity_ids[type].push_back(entity_id);
+        m_entity_ids[type].push_back(entity_id);
         break;
     }
 
@@ -33,7 +33,38 @@ unsigned EntityManager::spawn_entity(const Entity type)
     return entity_id;
 }
 
-void EntityManager::queue_destroy_entity(const unsigned id)
+void Entities::queue_destroy(const unsigned id)
 {
-    entities_to_destroy.push_back(id);
+    m_to_destroy.push_back(id);
+}
+
+std::vector<std::optional<Entity>> const& Entities::entities() const
+{
+    return m_entities;
+}
+
+std::vector<unsigned> const& Entities::entity_ids(Entity entity) // not marked const to allow creating vector for key
+{                                                                // if it doesn't exist already
+    return m_entity_ids[entity];
+}
+
+std::vector<unsigned> const& Entities::to_destroy() const
+{
+    return m_to_destroy;
+}
+
+void Entities::destroy_queued()
+{
+    for (const unsigned id : to_destroy()) {
+        auto& entity = m_entities[id];
+        if (entity == std::nullopt) { // possible for an entity to be queued for destruction multiple times,
+            continue;                 // leads to already being nullopt
+        }
+
+        auto& entity_ids = m_entity_ids[entity.value()];
+        entity_ids.erase(std::ranges::find(entity_ids, id));
+        entity = std::nullopt;
+    }
+
+    m_to_destroy.clear();
 }

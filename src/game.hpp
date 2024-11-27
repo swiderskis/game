@@ -38,14 +38,21 @@ struct Coordinates {
 
 class Game
 {
-    EntityManager m_entity_manager;
-    ComponentManager m_component_manager;
+    Entities m_entities;
+    Components m_components;
     Inputs m_inputs;
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
     RCamera2D m_camera{ RVector2(WINDOW_HALF_WIDTH, WINDOW_HALF_HEIGHT), RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
 
-    // Systems
+    void spawn_player();
+    void spawn_tile(Tile tile, RVector2 pos);
+    [[nodiscard]] float dt() const;
+    void spawn_projectile(RVector2 pos);
+    [[nodiscard]] RVector2 get_mouse_pos() const;
+    void spawn_enemy(RVector2 pos);
+
+    // systems
     void poll_inputs();
     void render();
     void set_player_vel();
@@ -54,13 +61,6 @@ class Game
     void player_attack();
     void update_lifespans();
     void check_projectiles_hit();
-
-    void spawn_player();
-    void spawn_tile(Tile tile, RVector2 pos);
-    [[nodiscard]] float dt() const;
-    void spawn_projectile(RVector2 pos);
-    [[nodiscard]] RVector2 get_mouse_pos() const;
-    void spawn_enemy(RVector2 pos);
 
 public:
     Game();

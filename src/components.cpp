@@ -103,23 +103,23 @@ void BBox::sync(const Tform transform)
                m_bounding_box);
 }
 
-bool BBox::collides(const BBox other_bounding_box) const
+bool BBox::collides(const BBox other_bbox) const
 {
-    const auto rect_bbox = [other_bounding_box](RRectangle bbox) {
+    const auto rect_bbox = [other_bbox](RRectangle bbox) {
         return std::visit(
             overloaded{
                 [bbox](const RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
                 [bbox](const Circle other_bbox) { return bbox.CheckCollision(other_bbox.pos, other_bbox.radius); },
             },
-            other_bounding_box.m_bounding_box);
+            other_bbox.m_bounding_box);
     };
-    const auto circle_bbox = [other_bounding_box](Circle bbox) {
+    const auto circle_bbox = [other_bbox](Circle bbox) {
         return std::visit(
             overloaded{
                 [bbox](const RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
                 [bbox](const Circle other_bbox) { return bbox.check_collision(other_bbox); },
             },
-            other_bounding_box.m_bounding_box);
+            other_bbox.m_bounding_box);
     };
 
     return std::visit(
@@ -130,7 +130,7 @@ bool BBox::collides(const BBox other_bounding_box) const
         m_bounding_box);
 }
 
-bool BBox::x_overlaps(const BBox other_bounding_box) const
+bool BBox::x_overlaps(const BBox other_bbox) const
 {
     assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
@@ -147,10 +147,10 @@ bool BBox::x_overlaps(const BBox other_bounding_box) const
                                          && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
                           },
                       },
-                      other_bounding_box.m_bounding_box);
+                      other_bbox.m_bounding_box);
 }
 
-bool BBox::y_overlaps(const BBox other_bounding_box) const
+bool BBox::y_overlaps(const BBox other_bbox) const
 {
     assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
 
@@ -167,7 +167,7 @@ bool BBox::y_overlaps(const BBox other_bounding_box) const
                                          && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
                           },
                       },
-                      other_bounding_box.m_bounding_box);
+                      other_bbox.m_bounding_box);
 }
 
 void BBox::set(Tform transform, RVector2 size)
