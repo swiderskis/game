@@ -47,7 +47,8 @@ void Game::spawn_tile(const Tile tile, const RVector2 pos)
     transform.pos = pos;
     m_components.bounding_boxes[id].sync(transform);
 
-    switch (tile) {
+    switch (tile)
+    {
     case Tile::Brick:
         m_components.sprites[id].set(SpriteType::TileBrick);
         break;
@@ -93,10 +94,12 @@ Game::Game()
     m_window.SetTargetFPS(TARGET_FPS);
     m_window.SetExitKey(KEY_NULL);
 
-    for (int i = 0; i < 10; i++) {                   // NOLINT
+    for (int i = 0; i < 10; i++) // NOLINT
+    {
         spawn_tile(Tile::Brick, Coordinates(-3, i)); // NOLINT
     }
-    for (int i = -10; i < 10; i++) {                // NOLINT
+    for (int i = -10; i < 10; i++) // NOLINT
+    {
         spawn_tile(Tile::Brick, Coordinates(i, 0)); // NOLINT
     }
 
@@ -122,7 +125,8 @@ void Game::run()
     destroy_entities();
     render();
 
-    if (m_inputs.spawn_enemy) {
+    if (m_inputs.spawn_enemy)
+    {
         spawn_enemy(Coordinates(2, 2));
     }
 
@@ -144,15 +148,13 @@ void Game::reload_texture_sheet()
     std::cout << "Texture sheet reloaded\n";
 }
 
-extern "C" {
-__declspec(dllexport) void run(Game& game)
+extern "C" __declspec(dllexport) void run(Game& game)
 {
     game.run();
 }
 
-__declspec(dllexport) bool check_reload_lib()
+extern "C" __declspec(dllexport) bool check_reload_lib()
 {
     return RKeyboard::IsKeyPressed(KEY_R);
-}
 }
 #endif

@@ -10,12 +10,14 @@
 
 inline constexpr float TILE_SIZE = 32.0;
 
-struct Tform {
+struct Tform
+{
     RVector2 pos;
     RVector2 vel;
 };
 
-enum class SpriteType {
+enum class SpriteType
+{
     PlayerIdle,
     PlayerWalk,
     PlayerJump,
@@ -41,7 +43,8 @@ public:
     [[nodiscard]] RRectangle sprite() const;
 };
 
-struct Circle {
+struct Circle
+{
     RVector2 pos;
     float radius = 0.0;
 
@@ -67,15 +70,18 @@ public:
     [[nodiscard]] std::variant<RRectangle, Circle> bounding_box() const;
 };
 
-struct Grounded {
+struct Grounded
+{
     bool grounded = false;
 };
 
-struct Lifespan {
+struct Lifespan
+{
     std::optional<float> current = std::nullopt;
 };
 
-struct Health {
+struct Health
+{
     int current = 0;
     std::optional<int> max = std::nullopt;
 
@@ -83,7 +89,8 @@ struct Health {
     [[nodiscard]] float percentage() const;
 };
 
-struct Components {
+struct Components
+{
     std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
     std::vector<Sprite> sprites{ MAX_ENTITIES, Sprite() };
     std::vector<BBox> bounding_boxes{ MAX_ENTITIES, BBox() };

@@ -6,7 +6,8 @@
 
 unsigned Entities::spawn(const Entity type)
 {
-    if (type == Entity::Player) {
+    if (type == Entity::Player)
+    {
         assert(m_entities[PLAYER_ID] == std::nullopt);
 
         m_entities[PLAYER_ID] = Entity::Player;
@@ -17,8 +18,10 @@ unsigned Entities::spawn(const Entity type)
     assert(type != Entity::Player);
 
     unsigned entity_id = 0;
-    for (const auto [id, entity] : std::span(m_entities).subspan(1) | std::views::enumerate) {
-        if (entity != std::nullopt) {
+    for (const auto [id, entity] : std::span(m_entities).subspan(1) | std::views::enumerate)
+    {
+        if (entity != std::nullopt)
+        {
             continue;
         }
 
@@ -55,10 +58,12 @@ std::vector<unsigned> const& Entities::to_destroy() const
 
 void Entities::destroy_queued()
 {
-    for (const unsigned id : to_destroy()) {
+    for (const unsigned id : m_to_destroy)
+    {
         auto& entity = m_entities[id];
-        if (entity == std::nullopt) { // possible for an entity to be queued for destruction multiple times,
-            continue;                 // leads to already being nullopt
+        if (entity == std::nullopt) // possible for an entity to be queued for destruction multiple times,
+        {                           // leads to already being nullopt
+            continue;
         }
 
         auto& entity_ids = m_entity_ids[entity.value()];
