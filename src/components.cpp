@@ -6,7 +6,8 @@
 #include <cstddef>
 
 // NOLINTBEGIN(*avoid-c-arrays)
-static constexpr struct {
+static constexpr struct
+{
     float x;
     float y;
     float size;
@@ -35,7 +36,8 @@ std::optional<SpriteType> lookup_fall_sprite(Entity entity);
 
 void Sprite::set(const SpriteType sprite_type)
 {
-    if (m_type == sprite_type) {
+    if (m_type == sprite_type)
+    {
         return;
     }
 
@@ -47,18 +49,21 @@ void Sprite::set(const SpriteType sprite_type)
 void Sprite::check_update_frame(const float dt)
 {
     const auto details = SPRITE_DETAILS[(size_t)m_type];
-    if (details.frames == 1) {
+    if (details.frames == 1)
+    {
         return;
     }
 
     m_frame_update_dt += dt;
-    if (m_frame_update_dt < details.frame_duration) {
+    if (m_frame_update_dt < details.frame_duration)
+    {
         return;
     }
 
     m_frame_update_dt = 0.0;
     m_current_frame += 1;
-    if (m_current_frame == details.frames) {
+    if (m_current_frame == details.frames)
+    {
         m_current_frame = 0;
     }
 }
@@ -88,24 +93,28 @@ void Circle::draw_lines(const ::Color color) const
 
 void BBox::sync(const Tform transform)
 {
-    std::visit(overloaded{
-                   [transform](RRectangle& bbox) {
-                       bbox.SetPosition(transform.pos);
-                       bbox.x += (TILE_SIZE - bbox.width) / 2;
-                       bbox.y += (TILE_SIZE - bbox.height);
-                   },
-                   [transform](Circle& bbox) {
-                       bbox.pos = transform.pos;
-                       bbox.pos.x += TILE_SIZE / 2;
-                       bbox.pos.y += TILE_SIZE / 2;
-                   },
-               },
-               m_bounding_box);
+    std::visit(
+        overloaded{
+            [transform](RRectangle& bbox)
+            {
+                bbox.SetPosition(transform.pos);
+                bbox.x += (TILE_SIZE - bbox.width) / 2;
+                bbox.y += (TILE_SIZE - bbox.height);
+            },
+            [transform](Circle& bbox)
+            {
+                bbox.pos = transform.pos;
+                bbox.pos.x += TILE_SIZE / 2;
+                bbox.pos.y += TILE_SIZE / 2;
+            },
+        },
+        m_bounding_box);
 }
 
 bool BBox::collides(const BBox other_bbox) const
 {
-    const auto rect_bbox = [other_bbox](RRectangle bbox) {
+    const auto rect_bbox = [other_bbox](RRectangle bbox)
+    {
         return std::visit(
             overloaded{
                 [bbox](const RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
@@ -113,7 +122,9 @@ bool BBox::collides(const BBox other_bbox) const
             },
             other_bbox.m_bounding_box);
     };
-    const auto circle_bbox = [other_bbox](Circle bbox) {
+    const auto circle_bbox = [other_bbox](Circle bbox)
+
+    {
         return std::visit(
             overloaded{
                 [bbox](const RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
@@ -136,18 +147,20 @@ bool BBox::x_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return std::visit(overloaded{
-                          [bbox](const RRectangle other_bbox) {
-                              return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
-                                     || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
-                          },
-                          [bbox](const Circle other_bbox) {
-                              return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
-                                     || (other_bbox.pos.x >= bbox.x
-                                         && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
-                          },
-                      },
-                      other_bbox.m_bounding_box);
+    return std::visit(
+        overloaded{
+            [bbox](const RRectangle other_bbox)
+            {
+                return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
+                       || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
+            },
+            [bbox](const Circle other_bbox)
+            {
+                return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
+                       || (other_bbox.pos.x >= bbox.x && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
+            },
+        },
+        other_bbox.m_bounding_box);
 }
 
 bool BBox::y_overlaps(const BBox other_bbox) const
@@ -156,18 +169,20 @@ bool BBox::y_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return std::visit(overloaded{
-                          [bbox](const RRectangle other_bbox) {
-                              return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
-                                     || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
-                          },
-                          [bbox](const Circle other_bbox) {
-                              return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
-                                     || (other_bbox.pos.y >= bbox.y
-                                         && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
-                          },
-                      },
-                      other_bbox.m_bounding_box);
+    return std::visit(
+        overloaded{
+            [bbox](const RRectangle other_bbox)
+            {
+                return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
+                       || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
+            },
+            [bbox](const Circle other_bbox)
+            {
+                return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
+                       || (other_bbox.pos.y >= bbox.y && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
+            },
+        },
+        other_bbox.m_bounding_box);
 }
 
 void BBox::set(Tform transform, RVector2 size)
@@ -203,15 +218,18 @@ float Health::percentage() const
 
 std::optional<SpriteType> components::lookup_movement_sprite(const Entity entity, const RVector2 vel)
 {
-    if (vel.y < 0) {
+    if (vel.y < 0)
+    {
         return lookup_jump_sprite(entity);
     }
 
-    if (vel.y > 0) {
+    if (vel.y > 0)
+    {
         return lookup_fall_sprite(entity);
     }
 
-    if (vel.x != 0) {
+    if (vel.x != 0)
+    {
         return lookup_walk_sprite(entity);
     }
 
@@ -220,7 +238,8 @@ std::optional<SpriteType> components::lookup_movement_sprite(const Entity entity
 
 std::optional<SpriteType> lookup_idle_sprite(const Entity entity)
 {
-    switch (entity) {
+    switch (entity)
+    {
     case Entity::Player:
         return SpriteType::PlayerIdle;
     default:
@@ -230,7 +249,8 @@ std::optional<SpriteType> lookup_idle_sprite(const Entity entity)
 
 std::optional<SpriteType> lookup_walk_sprite(const Entity entity)
 {
-    switch (entity) {
+    switch (entity)
+    {
     case Entity::Player:
         return SpriteType::PlayerWalk;
     default:
@@ -240,7 +260,8 @@ std::optional<SpriteType> lookup_walk_sprite(const Entity entity)
 
 std::optional<SpriteType> lookup_jump_sprite(const Entity entity)
 {
-    switch (entity) {
+    switch (entity)
+    {
     case Entity::Player:
         return SpriteType::PlayerJump;
     default:
@@ -250,7 +271,8 @@ std::optional<SpriteType> lookup_jump_sprite(const Entity entity)
 
 std::optional<SpriteType> lookup_fall_sprite(const Entity entity)
 {
-    switch (entity) {
+    switch (entity)
+    {
     case Entity::Player:
         return SpriteType::PlayerFall;
     default:

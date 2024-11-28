@@ -7,14 +7,16 @@
 #include <unordered_map>
 #include <vector>
 
-enum class Entity {
+enum class Entity
+{
     Player,
     Tile,
     Projectile,
     Enemy
 };
 
-enum class Tile {
+enum class Tile
+{
     Brick
 };
 

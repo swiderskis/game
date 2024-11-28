@@ -9,13 +9,17 @@ int main()
 
 #ifndef NDEBUG
     GameFuncs game_funcs;
-    if (!hot_reload::reload_lib(game_funcs)) {
+    if (!hot_reload::reload_lib(game_funcs))
+    {
         return -1;
     }
 
-    while (!game.window().ShouldClose()) {
-        if (game_funcs.check_reload_lib()) {
-            if (!hot_reload::reload_lib(game_funcs)) {
+    while (!game.window().ShouldClose())
+    {
+        if (game_funcs.check_reload_lib())
+        {
+            if (!hot_reload::reload_lib(game_funcs))
+            {
                 return -1;
             }
 
@@ -25,7 +29,8 @@ int main()
         game_funcs.run(&game);
     }
 #else
-    while (!game.window().ShouldClose()) {
+    while (!game.window().ShouldClose())
+    {
         game.run();
     }
 #endif

@@ -15,7 +15,8 @@ inline constexpr unsigned WINDOW_HALF_HEIGHT = WINDOW_HEIGHT / 2;
 
 inline constexpr float CAMERA_ZOOM = 2.0;
 
-struct Inputs {
+struct Inputs
+{
     bool left = false;
     bool right = false;
     bool up = false;
@@ -28,7 +29,8 @@ private:
     friend class Game;
 };
 
-struct Coordinates {
+struct Coordinates
+{
     RVector2 m_pos;
 
     Coordinates(int x, int y);
