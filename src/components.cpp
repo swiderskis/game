@@ -29,10 +29,13 @@ static constexpr struct
 
 inline constexpr int RECTANGLE_BBOX_INDEX = 0;
 
+namespace
+{
 std::optional<SpriteType> lookup_idle_sprite(Entity entity);
 std::optional<SpriteType> lookup_walk_sprite(Entity entity);
 std::optional<SpriteType> lookup_jump_sprite(Entity entity);
 std::optional<SpriteType> lookup_fall_sprite(Entity entity);
+} // namespace
 
 void Sprite::set(const SpriteType sprite_type)
 {
@@ -236,6 +239,8 @@ std::optional<SpriteType> components::lookup_movement_sprite(const Entity entity
     return lookup_idle_sprite(entity);
 }
 
+namespace
+{
 std::optional<SpriteType> lookup_idle_sprite(const Entity entity)
 {
     switch (entity)
@@ -279,3 +284,4 @@ std::optional<SpriteType> lookup_fall_sprite(const Entity entity)
         return std::nullopt;
     }
 }
+} // namespace
