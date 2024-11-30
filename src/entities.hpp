@@ -12,12 +12,12 @@ enum class Entity
     Player,
     Tile,
     Projectile,
-    Enemy
+    Enemy,
 };
 
 enum class Tile
 {
-    Brick
+    Brick,
 };
 
 class Entities

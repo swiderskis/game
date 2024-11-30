@@ -28,6 +28,7 @@ unsigned Entities::spawn(const Entity type)
         entity = type;
         entity_id = id + 1; // enumerate will start at 0, subspan starts loop from m_entitites[1]
         m_entity_ids[type].push_back(entity_id);
+
         break;
     }
 

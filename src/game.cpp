@@ -33,9 +33,6 @@ void Game::spawn_player()
     unsigned id = m_entities.spawn(Entity::Player);
     auto& transform = m_components.transforms[id];
     transform.pos = Coordinates(0, 2);
-    transform.vel = RVector2(0.0, 0.0);
-
-    m_components.sprites[id].set(SpriteType::PlayerIdle);
     m_components.bounding_boxes[id].set(transform, RVector2(PLAYER_BBOX_SIZE_X, PLAYER_BBOX_SIZE_Y));
     m_components.health[id].set_health(PLAYER_HEALTH);
 }
@@ -50,7 +47,7 @@ void Game::spawn_tile(const Tile tile, const RVector2 pos)
     switch (tile)
     {
     case Tile::Brick:
-        m_components.sprites[id].set(SpriteType::TileBrick);
+        m_components.sprites[id].base.set(SpriteBase::TileBrick);
         break;
     }
 }
@@ -69,7 +66,7 @@ void Game::spawn_projectile(const RVector2 pos)
     const float angle = atan2(diff.y, diff.x);
     transform.vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
 
-    m_components.sprites[id].set(SpriteType::Projectile);
+    m_components.sprites[id].base.set(SpriteBase::Projectile);
     m_components.bounding_boxes[id].set(transform, 4); // NOLINT
     m_components.lifespans[id].current = PROJECTILE_LIFESPAN;
 }
@@ -84,7 +81,7 @@ void Game::spawn_enemy(const RVector2 pos)
     const unsigned id = m_entities.spawn(Entity::Enemy);
     auto& transform = m_components.transforms[id];
     transform.pos = pos;
-    m_components.sprites[id].set(SpriteType::Enemy);
+    m_components.sprites[id].base.set(SpriteBase::Enemy);
     m_components.bounding_boxes[id].set(transform, RVector2(ENEMY_BBOX_SIZE_X, ENEMY_BBOX_SIZE_Y));
     m_components.health[id].set_health(ENEMY_HEALTH);
 }
@@ -98,6 +95,7 @@ Game::Game()
     {
         spawn_tile(Tile::Brick, Coordinates(-3, i)); // NOLINT
     }
+
     for (int i = -10; i < 10; i++) // NOLINT
     {
         spawn_tile(Tile::Brick, Coordinates(i, 0)); // NOLINT

@@ -53,27 +53,16 @@ void Game::render()
 
         const auto transform = m_components.transforms[id];
         auto& sprite = m_components.sprites[id];
-        if (transform.vel.x != 0)
-        {
-            sprite.flipped = transform.vel.x < 0;
-        }
-
-        const auto new_sprite = components::lookup_movement_sprite(entity.value(), transform.vel);
-        if (new_sprite != std::nullopt)
-        {
-            sprite.set(new_sprite.value());
-        }
-
-        sprite.check_update_frame(dt());
-        m_texture_sheet.Draw(sprite.sprite(), transform.pos);
+        sprite.lookup_set_movement_parts(entity.value(), transform.vel);
+        sprite.check_update_frames(dt());
+        sprite.draw(m_texture_sheet, transform);
 
         const auto health = m_components.health[id];
         if (health.max != std::nullopt && health.current != health.max)
         {
             const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
-            RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)).Draw(RED);
-
             const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
+            RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)).Draw(RED);
             RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT)).Draw(GREEN);
         }
 
@@ -194,6 +183,11 @@ void Game::destroy_entities()
     for (const unsigned id : m_entities.to_destroy())
     {
         m_components.transforms[id].vel = RVector2(0.0, 0.0);
+        m_components.sprites[id].base.set(SpriteBase::None);
+        m_components.sprites[id].head.set(SpriteHead::None);
+        m_components.sprites[id].arms.set(SpriteArms::None);
+        m_components.sprites[id].legs.set(SpriteLegs::None);
+        m_components.sprites[id].extra.set(SpriteExtra::None);
         m_components.lifespans[id].current = std::nullopt;
         m_components.health[id].max = std::nullopt;
     }
