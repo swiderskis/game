@@ -3,81 +3,142 @@
 #include "overloaded.hpp"
 
 #include <cassert>
-#include <cstddef>
-
-// NOLINTBEGIN(*avoid-c-arrays)
-static constexpr struct
-{
-    float x;
-    float y;
-    float size;
-    unsigned frames;
-    float frame_duration;
-} SPRITE_DETAILS[] = {
-    [(size_t)SpriteType::PlayerIdle] = { 128.0, 0.0, TILE_SIZE, 2, 0.5 },
-    [(size_t)SpriteType::PlayerWalk] = { 128.0, 32.0, TILE_SIZE, 4, 0.16 },
-    [(size_t)SpriteType::PlayerJump] = { 128.0, 64.0, TILE_SIZE, 1, 0.0 },
-    [(size_t)SpriteType::PlayerFall] = { 128.0, 96.0, TILE_SIZE, 4, 0.1 },
-    [(size_t)SpriteType::Projectile] = { 128.0, 128.0, TILE_SIZE, 1, 0.0 },
-    [(size_t)SpriteType::Enemy] = { 128.0, 160.0, TILE_SIZE, 1, 0.0 },
-
-    // tiles
-    [(size_t)SpriteType::TileBrick] = { 0.0, 0.0, TILE_SIZE, 1, 0.0 },
-};
-
-// NOLINTEND(*avoid-c-arrays)
+#include <optional>
+#include <utility>
 
 inline constexpr int RECTANGLE_BBOX_INDEX = 0;
 
-namespace
+void Sprite::check_update_frames(const float dt)
 {
-std::optional<SpriteType> lookup_idle_sprite(Entity entity);
-std::optional<SpriteType> lookup_walk_sprite(Entity entity);
-std::optional<SpriteType> lookup_jump_sprite(Entity entity);
-std::optional<SpriteType> lookup_fall_sprite(Entity entity);
-} // namespace
-
-void Sprite::set(const SpriteType sprite_type)
-{
-    if (m_type == sprite_type)
-    {
-        return;
-    }
-
-    m_type = sprite_type;
-    m_current_frame = 0;
-    m_frame_update_dt = 0.0;
+    base.check_update_frame(dt);
+    head.check_update_frame(dt);
+    arms.check_update_frame(dt);
+    legs.check_update_frame(dt);
+    extra.check_update_frame(dt);
 }
 
-void Sprite::check_update_frame(const float dt)
+void Sprite::draw(RTexture const& texture_sheet, const Tform transform)
 {
-    const auto details = SPRITE_DETAILS[(size_t)m_type];
-    if (details.frames == 1)
+    if (transform.vel.x != 0)
     {
-        return;
+        flipped = transform.vel.x < 0;
     }
 
-    m_frame_update_dt += dt;
-    if (m_frame_update_dt < details.frame_duration)
-    {
-        return;
-    }
+    const float y_offset = (legs.current_frame() % 2 != 0 ? alternate_frame_y_offset() : 0.0F);
+    const auto pos = transform.pos + RVector2(0.0, y_offset);
+    const auto leg_pos = transform.pos;
+    texture_sheet.Draw(base.sprite(flipped), pos);
+    texture_sheet.Draw(head.sprite(flipped), pos);
+    texture_sheet.Draw(arms.sprite(flipped), pos);
+    texture_sheet.Draw(legs.sprite(flipped), leg_pos);
+    texture_sheet.Draw(extra.sprite(flipped), pos);
+}
 
-    m_frame_update_dt = 0.0;
-    m_current_frame += 1;
-    if (m_current_frame == details.frames)
+void Sprite::lookup_set_movement_parts(const Entity entity, const RVector2 vel)
+{
+    if (vel.y > 0)
     {
-        m_current_frame = 0;
+        lookup_set_fall_parts(entity);
+    }
+    else if (vel.y < 0)
+    {
+        lookup_set_jump_parts(entity);
+    }
+    else if (vel.x != 0)
+    {
+        lookup_set_walk_parts(entity);
+    }
+    else
+    {
+        lookup_set_idle_parts(entity);
     }
 }
 
-RRectangle Sprite::sprite() const
+float Sprite::alternate_frame_y_offset() const
 {
-    const auto details = SPRITE_DETAILS[(size_t)m_type];
-    const auto pos = RVector2(details.x + (details.size * (float)m_current_frame), details.y);
-    const auto size = RVector2(details.size * (float)(flipped ? -1 : 1), details.size);
+    switch (legs.type())
+    {
+    case SpriteLegs::None:
+    case SpriteLegs::PlayerJump:
+        return 0.0;
+    case SpriteLegs::PlayerIdle:
+    case SpriteLegs::PlayerWalk:
+        return 1.0;
+    }
 
-    return { pos, size };
+    std::unreachable();
+}
+
+void Sprite::lookup_set_fall_parts(const Entity entity)
+{
+    switch (entity)
+    {
+    case Entity::Player:
+        base.movement_set(SpriteBase::PlayerIdle);
+        head.movement_set(SpriteHead::PlayerIdle);
+        arms.movement_set(SpriteArms::PlayerJump);
+        legs.movement_set(SpriteLegs::PlayerJump);
+        extra.movement_set(SpriteExtra::PlayerScarfFall);
+        break;
+    case Entity::Tile:
+    case Entity::Projectile:
+    case Entity::Enemy:
+        break;
+    }
+}
+
+void Sprite::lookup_set_jump_parts(const Entity entity)
+{
+    switch (entity)
+    {
+    case Entity::Player:
+        base.movement_set(SpriteBase::PlayerIdle);
+        head.movement_set(SpriteHead::PlayerIdle);
+        arms.movement_set(SpriteArms::PlayerJump);
+        legs.movement_set(SpriteLegs::PlayerJump);
+        extra.movement_set(SpriteExtra::None);
+        break;
+    case Entity::Tile:
+    case Entity::Projectile:
+    case Entity::Enemy:
+        break;
+    }
+}
+
+void Sprite::lookup_set_walk_parts(const Entity entity)
+{
+    switch (entity)
+    {
+    case Entity::Player:
+        base.movement_set(SpriteBase::PlayerIdle);
+        head.movement_set(SpriteHead::PlayerIdle);
+        arms.movement_set(SpriteArms::PlayerIdle);
+        legs.movement_set(SpriteLegs::PlayerWalk);
+        extra.movement_set(SpriteExtra::PlayerScarfWalk);
+        break;
+    case Entity::Tile:
+    case Entity::Projectile:
+    case Entity::Enemy:
+        break;
+    }
+}
+
+void Sprite::lookup_set_idle_parts(const Entity entity)
+{
+    switch (entity)
+    {
+    case Entity::Player:
+        base.movement_set(SpriteBase::PlayerIdle);
+        head.movement_set(SpriteHead::PlayerIdle);
+        arms.movement_set(SpriteArms::PlayerIdle);
+        legs.movement_set(SpriteLegs::PlayerIdle);
+        extra.movement_set(SpriteExtra::None);
+        break;
+    case Entity::Tile:
+    case Entity::Projectile:
+    case Entity::Enemy:
+        break;
+    }
 }
 
 Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
@@ -188,13 +249,13 @@ bool BBox::y_overlaps(const BBox other_bbox) const
         other_bbox.m_bounding_box);
 }
 
-void BBox::set(Tform transform, RVector2 size)
+void BBox::set(const Tform transform, const RVector2 size)
 {
     m_bounding_box = RRectangle(RVector2(0.0, 0.0), size);
     sync(transform);
 }
 
-void BBox::set(Tform transform, float radius)
+void BBox::set(const Tform transform, const float radius)
 {
     m_bounding_box = Circle(RVector2(0.0, 0.0), radius);
     sync(transform);
@@ -213,75 +274,91 @@ void Health::set_health(const int health)
 
 float Health::percentage() const
 {
-    const auto current_health = (float)current;
-    const auto max_health = (float)max.value();
+    assert(max != std::nullopt);
 
-    return current_health / max_health;
+    return (float)current / (float)max.value();
 }
 
-std::optional<SpriteType> components::lookup_movement_sprite(const Entity entity, const RVector2 vel)
+namespace components
 {
-    if (vel.y < 0)
-    {
-        return lookup_jump_sprite(entity);
-    }
+SpriteDetails sprite_details(const SpriteBase sprite)
+{
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteBase::None:
+        return { 0.0, 0.0, 0.0, 1, 0.0, true };
+    case SpriteBase::PlayerIdle:
+        return { 128.0, 32.0, TILE_SIZE, 1, 0.0, true };
+    case SpriteBase::Projectile:
+        return { 128.0, 224.0, TILE_SIZE, 1, 0.0, true };
+    case SpriteBase::Enemy:
+        return { 128.0, 256.0, TILE_SIZE, 1, 0.0, true };
 
-    if (vel.y > 0)
-    {
-        return lookup_fall_sprite(entity);
-    }
+    // tiles
+    case SpriteBase::TileBrick:
+        return { 0.0, 0.0, TILE_SIZE, 1, 0.0, true };
+    } // NOLINTEND(*magic-numbers)
 
-    if (vel.x != 0)
-    {
-        return lookup_walk_sprite(entity);
-    }
-
-    return lookup_idle_sprite(entity);
+    std::unreachable();
 }
 
-namespace
+SpriteDetails sprite_details(const SpriteHead sprite)
 {
-std::optional<SpriteType> lookup_idle_sprite(const Entity entity)
-{
-    switch (entity)
-    {
-    case Entity::Player:
-        return SpriteType::PlayerIdle;
-    default:
-        return std::nullopt;
-    }
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteHead::None:
+        return { 0.0, 0.0, 0.0, 1, 0.0, true };
+    case SpriteHead::PlayerIdle:
+        return { 128.0, 0.0, TILE_SIZE, 1, 0.0, true };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
 }
 
-std::optional<SpriteType> lookup_walk_sprite(const Entity entity)
+SpriteDetails sprite_details(const SpriteArms sprite)
 {
-    switch (entity)
-    {
-    case Entity::Player:
-        return SpriteType::PlayerWalk;
-    default:
-        return std::nullopt;
-    }
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteArms::None:
+        return { 0.0, 0.0, 0.0, 1, 0.0, true };
+    case SpriteArms::PlayerIdle:
+        return { 128.0, 64.0, TILE_SIZE, 1, 0.0, true };
+    case SpriteArms::PlayerJump:
+        return { 160.0, 64.0, TILE_SIZE, 1, 0.0, true };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
 }
 
-std::optional<SpriteType> lookup_jump_sprite(const Entity entity)
+SpriteDetails sprite_details(const SpriteLegs sprite)
 {
-    switch (entity)
-    {
-    case Entity::Player:
-        return SpriteType::PlayerJump;
-    default:
-        return std::nullopt;
-    }
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteLegs::None:
+        return { 0.0, 0.0, 0.0, 1, 0.0, true };
+    case SpriteLegs::PlayerIdle:
+        return { 128.0, 96.0, TILE_SIZE, 2, 0.5, true };
+    case SpriteLegs::PlayerWalk:
+        return { 128.0, 128.0, TILE_SIZE, 4, 0.16, true };
+    case SpriteLegs::PlayerJump:
+        return { 128.0, 96.0, TILE_SIZE, 1, 0.0, true };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
 }
 
-std::optional<SpriteType> lookup_fall_sprite(const Entity entity)
+SpriteDetails sprite_details(const SpriteExtra sprite)
 {
-    switch (entity)
-    {
-    case Entity::Player:
-        return SpriteType::PlayerFall;
-    default:
-        return std::nullopt;
-    }
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteExtra::None:
+        return { 0.0, 0.0, 0.0, 1, 0.0, true };
+    case SpriteExtra::PlayerScarfWalk:
+        return { 128.0, 160.0, TILE_SIZE, 4, 0.16, true };
+    case SpriteExtra::PlayerScarfFall:
+        return { 128.0, 192.0, TILE_SIZE, 4, 0.1, true };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
 }
-} // namespace
+} // namespace components
