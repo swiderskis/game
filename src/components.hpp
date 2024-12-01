@@ -79,35 +79,35 @@ SpriteDetails sprite_details(SpriteLegs sprite);
 SpriteDetails sprite_details(SpriteExtra sprite);
 } // namespace components
 
-template <typename S>
+template <typename Part>
 class SpritePart
 {
-    S m_type;
+    Part m_part;
     float m_frame_update_dt = 0.0;
     unsigned m_current_frame = 0;
 
 public:
     SpritePart() = delete;
 
-    explicit SpritePart(S type) : m_type(type)
+    explicit SpritePart(Part part) : m_part(part)
     {
     }
 
-    void set(S type)
+    void set(Part part)
     {
-        if (m_type == type)
+        if (m_part == part)
         {
             return;
         }
 
-        m_type = type;
+        m_part = part;
         m_current_frame = 0;
         m_frame_update_dt = 0.0;
     }
 
     void check_update_frame(float dt)
     {
-        const auto details = components::sprite_details(m_type);
+        const auto details = components::sprite_details(m_part);
         if (details.frames == 1)
         {
             return;
@@ -129,16 +129,16 @@ public:
 
     [[nodiscard]] RRectangle sprite(bool flipped) const
     {
-        const auto details = components::sprite_details(m_type);
+        const auto details = components::sprite_details(m_part);
         const auto pos = RVector2(details.x + (details.size * (float)m_current_frame), details.y);
         const auto size = RVector2(details.size * (flipped ? -1.0 : 1.0), details.size);
 
         return { pos, size };
     }
 
-    [[nodiscard]] S type() const
+    [[nodiscard]] Part part() const
     {
-        return m_type;
+        return m_part;
     }
 
     [[nodiscard]] unsigned current_frame()
@@ -146,11 +146,11 @@ public:
         return m_current_frame;
     }
 
-    void movement_set(S type)
+    void movement_set(Part part)
     {
-        if (components::sprite_details(m_type).allow_movement_override)
+        if (components::sprite_details(m_part).allow_movement_override)
         {
-            set(type);
+            set(part);
         }
     }
 };
