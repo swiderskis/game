@@ -56,7 +56,7 @@ void Sprite::lookup_set_movement_parts(const Entity entity, const RVector2 vel)
 
 float Sprite::alternate_frame_y_offset() const
 {
-    switch (legs.type())
+    switch (legs.part())
     {
     case SpriteLegs::None:
     case SpriteLegs::PlayerJump:
