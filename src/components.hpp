@@ -4,11 +4,16 @@
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "settings.hpp"
+#include "utils.hpp"
 
+#include <bitset>
 #include <optional>
 #include <variant>
 
 inline constexpr float TILE_SIZE = 32.0;
+inline constexpr float SPRITE_SIZE = 32.0;
+
+inline constexpr unsigned FLAG_COUNT = 8;
 
 struct Tform
 {
@@ -22,7 +27,7 @@ enum class SpriteBase
 
     PlayerIdle,
     Projectile,
-    Enemy,
+    EnemyDuck,
 
     // tiles
     TileBrick,
@@ -41,6 +46,7 @@ enum class SpriteArms
 
     PlayerIdle,
     PlayerJump,
+    PlayerAttack,
 };
 
 enum class SpriteLegs
@@ -62,9 +68,8 @@ enum class SpriteExtra
 
 struct SpriteDetails
 {
-    float x;
-    float y;
-    float size;
+    SimpleVec2 pos;
+    SimpleVec2 size;
     unsigned frames;
     float frame_duration;
     bool allow_movement_override;
@@ -89,11 +94,11 @@ class SpritePart
 public:
     SpritePart() = delete;
 
-    explicit SpritePart(Part part) : m_part(part)
+    explicit SpritePart(const Part part) : m_part(part)
     {
     }
 
-    void set(Part part)
+    void set(const Part part)
     {
         if (m_part == part)
         {
@@ -105,10 +110,10 @@ public:
         m_frame_update_dt = 0.0;
     }
 
-    void check_update_frame(float dt)
+    void check_update_frame(const float dt)
     {
         const auto details = components::sprite_details(m_part);
-        if (details.frames == 1)
+        if (details.frames == 1 && details.frame_duration == 0.0)
         {
             return;
         }
@@ -123,15 +128,15 @@ public:
         m_current_frame += 1;
         if (m_current_frame == details.frames)
         {
-            m_current_frame = 0;
+            set((Part)-1);
         }
     }
 
-    [[nodiscard]] RRectangle sprite(bool flipped) const
+    [[nodiscard]] RRectangle sprite(const bool flipped) const
     {
         const auto details = components::sprite_details(m_part);
-        const auto pos = RVector2(details.x + (details.size * (float)m_current_frame), details.y);
-        const auto size = RVector2(details.size * (flipped ? -1.0 : 1.0), details.size);
+        const auto pos = RVector2(details.size.x * m_current_frame, 0.0) + details.pos;
+        const auto size = RVector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
 
         return { pos, size };
     }
@@ -141,12 +146,12 @@ public:
         return m_part;
     }
 
-    [[nodiscard]] unsigned current_frame()
+    [[nodiscard]] unsigned current_frame() const
     {
         return m_current_frame;
     }
 
-    void movement_set(Part part)
+    void movement_set(const Part part)
     {
         if (components::sprite_details(m_part).allow_movement_override)
         {
@@ -162,10 +167,9 @@ struct Sprite
     SpritePart<SpriteArms> arms{ SpriteArms::None };
     SpritePart<SpriteLegs> legs{ SpriteLegs::None };
     SpritePart<SpriteExtra> extra{ SpriteExtra::None };
-    bool flipped = false;
 
     void check_update_frames(float dt);
-    void draw(RTexture const& texture_sheet, Tform transform);
+    void draw(RTexture const& texture_sheet, Tform transform, bool flipped);
     void lookup_set_movement_parts(Entity entity, RVector2 vel);
 
 private:
@@ -174,6 +178,14 @@ private:
     void lookup_set_jump_parts(Entity entity);
     void lookup_set_walk_parts(Entity entity);
     void lookup_set_idle_parts(Entity entity);
+
+    template <typename Part>
+    [[nodiscard]] RVector2 render_pos(const SpritePart<Part> part, const RVector2 pos, const bool flipped) const
+    { // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
+        const float x_offset = (components::sprite_details(part.part()).size.x - SPRITE_SIZE) * flipped;
+
+        return pos - RVector2(x_offset, 0.0);
+    }
 };
 
 struct Circle
@@ -187,31 +199,34 @@ struct Circle
     void draw_lines(::Color color) const;
 };
 
+using BBoxVariant = std::variant<RRectangle, Circle>;
+
 class BBox
 {
-    std::variant<RRectangle, Circle> m_bounding_box = RRectangle{ RVector2(0.0, 0.0), RVector2(TILE_SIZE, TILE_SIZE) };
+    BBoxVariant m_bounding_box{ RRectangle{ RVector2(0.0, 0.0), RVector2(SPRITE_SIZE, SPRITE_SIZE) } };
 
 public:
+    RVector2 offset{ 0.0, 0.0 };
+
     BBox() = default;
 
-    void sync(Tform transform);
+    void sync(Tform transform, bool flipped);
     [[nodiscard]] bool collides(BBox other_bbox) const;
     [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
     [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
     void set(Tform transform, RVector2 size);
     void set(Tform transform, float radius);
-    [[nodiscard]] std::variant<RRectangle, Circle> bounding_box() const;
+    [[nodiscard]] BBoxVariant bounding_box() const;
 };
 
-struct Grounded
+namespace flag
 {
-    bool grounded = false;
-};
-
-struct Lifespan
+enum Flag
 {
-    std::optional<float> current = std::nullopt;
+    GROUNDED,
+    FLIPPED,
 };
+} // namespace flag
 
 struct Health
 {
@@ -226,10 +241,21 @@ struct Components
 {
     std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
     std::vector<Sprite> sprites{ MAX_ENTITIES, Sprite() };
-    std::vector<BBox> bounding_boxes{ MAX_ENTITIES, BBox() };
-    std::vector<Grounded> grounded{ MAX_ENTITIES, Grounded() };
-    std::vector<Lifespan> lifespans{ MAX_ENTITIES, Lifespan() };
-    std::vector<Health> health{ MAX_ENTITIES, Health() };
+    std::vector<BBox> collision_boxes{ MAX_ENTITIES, BBox() };
+    std::vector<std::bitset<FLAG_COUNT>> flags;
+    std::vector<std::optional<float>> lifespans;
+    std::vector<Health> healths{ MAX_ENTITIES, Health() };
+    std::vector<BBox> hitboxes{ MAX_ENTITIES, BBox() };
+    std::vector<std::optional<unsigned>> parents;
+
+    Components();
+
+    void init_player(unsigned id, RVector2 pos);
+    void init_tile(unsigned id, RVector2 pos, Tile tile);
+    void init_projectile(unsigned id, RVector2 source_pos, RVector2 target_pos);
+    void init_enemy(unsigned id, RVector2 pos, Enemy enemy);
+    void init_melee(unsigned id, RVector2 pos, unsigned parent_id);
+    void uninit_destroyed_entity(unsigned id);
 };
 
 #endif

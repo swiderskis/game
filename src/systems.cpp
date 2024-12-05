@@ -1,14 +1,19 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
-#include "overloaded.hpp"
+#include "settings.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <optional>
 #include <ranges>
+#include <utility>
 
-#define SHOW_BBOXES
-#undef SHOW_BBOXES
+#define SHOW_CBOXES
+#define SHOW_HITBOXES
+#undef SHOW_CBOXES
+#undef SHOW_HITBOXES
 
 static constexpr auto GRAVITY_AFFECTED_ENTITIES = {
     Entity::Player,
@@ -17,16 +22,25 @@ static constexpr auto GRAVITY_AFFECTED_ENTITIES = {
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
 };
+static constexpr auto DAMAGING_ENTITIES = {
+    Entity::Projectile,
+    Entity::Melee,
+};
+
+inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float JUMP_SPEED = 450.0;
 inline constexpr float GRAVITY_ACCELERATION = 1000.0;
 inline constexpr float MAX_FALL_SPEED = 500.0;
-inline constexpr float HEALTH_BAR_WIDTH = 32.0;
-inline constexpr float HEALTH_BAR_HEIGHT = 4.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
 inline constexpr int PROJECTILE_DAMAGE = 25;
+
+namespace
+{
+int damage(Entity entity);
+} // namespace
 
 void Game::poll_inputs()
 {
@@ -40,11 +54,11 @@ void Game::poll_inputs()
 void Game::render()
 {
     const auto player_pos = m_components.transforms[PLAYER_ID].pos;
-    m_camera.SetTarget(player_pos + RVector2(TILE_SIZE, TILE_SIZE) / 2);
+    m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
 
     m_camera.BeginMode();
 
-    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
+    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate | std::views::reverse)
     {
         if (entity == std::nullopt)
         {
@@ -53,26 +67,35 @@ void Game::render()
 
         const auto transform = m_components.transforms[id];
         auto& sprite = m_components.sprites[id];
-        sprite.lookup_set_movement_parts(entity.value(), transform.vel);
         sprite.check_update_frames(dt());
-        sprite.draw(m_texture_sheet, transform);
+        sprite.lookup_set_movement_parts(entity.value(), transform.vel);
+        sprite.draw(m_texture_sheet, transform, m_components.flags[id][flag::FLIPPED]);
 
-        const auto health = m_components.health[id];
+        const auto health = m_components.healths[id];
         if (health.max != std::nullopt && health.current != health.max)
         {
             const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
-            const float current_bar_width = HEALTH_BAR_WIDTH * health.percentage();
-            RRectangle(pos, RVector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)).Draw(RED);
-            RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_HEIGHT)).Draw(GREEN);
+            const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
+            RRectangle(pos, HEALTH_BAR_SIZE).Draw(RED);
+            RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(GREEN);
         }
 
-#ifdef SHOW_BBOXES
+#ifdef SHOW_HITBOXES
+        std::visit(
+            overloaded{
+                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
+                [](const Circle bbox) { bbox.draw_lines(GREEN); },
+            },
+            m_components.hitboxes[id].bounding_box());
+#endif
+
+#ifdef SHOW_CBOXES
         std::visit(
             overloaded{
                 [](const RRectangle bbox) { bbox.DrawLines(RED); },
                 [](const Circle bbox) { bbox.draw_lines(RED); },
             },
-            m_components.bounding_boxes[id].bounding_box());
+            m_components.collision_boxes[id].bounding_box());
 #endif
     }
 
@@ -92,10 +115,10 @@ void Game::set_player_vel()
         player_vel.x -= PLAYER_SPEED;
     }
 
-    if (m_inputs.up && m_components.grounded[PLAYER_ID].grounded)
+    if (m_inputs.up && m_components.flags[PLAYER_ID][flag::GROUNDED])
     {
         player_vel.y = -JUMP_SPEED;
-        m_components.grounded[PLAYER_ID].grounded = false;
+        m_components.flags[PLAYER_ID][flag::GROUNDED] = false;
     }
 }
 
@@ -109,23 +132,26 @@ void Game::move_entities()
         }
 
         auto& transform = m_components.transforms[id];
-        const float vel_y = transform.vel.y;
-
         if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity))
         {
-            transform.vel.y = std::min(MAX_FALL_SPEED, vel_y + GRAVITY_ACCELERATION * dt());
-            m_components.grounded[id].grounded = false;
+            transform.vel.y = std::min(MAX_FALL_SPEED, transform.vel.y + GRAVITY_ACCELERATION * dt());
+            m_components.flags[id][flag::GROUNDED] = false;
         }
 
-        auto& bbox = m_components.bounding_boxes[id];
-        const auto prev_bbox = bbox;
         transform.pos += transform.vel * dt();
-        bbox.sync(transform);
+        if (transform.vel.x != 0.0)
+        {
+            m_components.flags[id][flag::FLIPPED] = transform.vel.x < 0;
+        }
 
+        auto& cbox = m_components.collision_boxes[id];
+        const auto prev_cbox = cbox;
+        const auto flipped = m_components.flags[id][flag::FLIPPED];
+        cbox.sync(transform, flipped);
         for (const unsigned tile_id : m_entities.entity_ids(Entity::Tile)) // resolve tile collisions
         {
-            const auto tile_bbox = m_components.bounding_boxes[tile_id];
-            if (!bbox.collides(tile_bbox))
+            const auto tile_cbox = m_components.collision_boxes[tile_id];
+            if (!cbox.collides(tile_cbox))
             {
                 continue;
             }
@@ -136,33 +162,33 @@ void Game::move_entities()
                 continue;
             }
 
-            const auto tile_rbbox = std::get<RRectangle>(tile_bbox.bounding_box());
+            const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
             const float x_adjust = std::visit(
                 overloaded{
-                    [tile_rbbox](const RRectangle bbox)
-                    { return tile_rbbox.x - bbox.x + (tile_rbbox.x > bbox.x ? -bbox.width : tile_rbbox.width); },
-                    [tile_rbbox](const Circle bbox)
-                    { return tile_rbbox.x - bbox.pos.x + (bbox.pos.x > tile_rbbox.x ? bbox.radius : -bbox.radius); },
+                    [tile_rcbox](const RRectangle cbox)
+                    { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
+                    [tile_rcbox](const Circle cbox)
+                    { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
                 },
-                bbox.bounding_box());
-            if (tile_bbox.y_overlaps(prev_bbox) && tile_bbox.x_overlaps(bbox))
+                cbox.bounding_box());
+            if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
             {
                 transform.pos.x += x_adjust;
-                bbox.sync(transform);
+                cbox.sync(transform, flipped);
             }
 
             const float y_adjust = std::visit(
                 overloaded{
-                    [tile_rbbox](const RRectangle bbox)
-                    { return tile_rbbox.y - bbox.y + (tile_rbbox.y > bbox.y ? -bbox.height : tile_rbbox.height); },
-                    [tile_rbbox](const Circle bbox)
-                    { return tile_rbbox.y - bbox.pos.y + (bbox.pos.y > tile_rbbox.y ? bbox.radius : -bbox.radius); },
+                    [tile_rcbox](const RRectangle cbox)
+                    { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
+                    [tile_rcbox](const Circle cbox)
+                    { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
                 },
-                bbox.bounding_box());
-            if (tile_bbox.x_overlaps(prev_bbox) && tile_bbox.y_overlaps(bbox))
+                cbox.bounding_box());
+            if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
             {
                 transform.pos.y += y_adjust;
-                bbox.sync(transform);
+                cbox.sync(transform, flipped);
 
                 if (y_adjust != 0.0)
                 {
@@ -171,10 +197,12 @@ void Game::move_entities()
 
                 if (y_adjust < 0.0)
                 {
-                    m_components.grounded[id].grounded = true;
+                    m_components.flags[id][flag::GROUNDED] = true;
                 }
             }
         }
+
+        m_components.hitboxes[id].sync(transform, flipped);
     }
 }
 
@@ -182,17 +210,10 @@ void Game::destroy_entities()
 {
     for (const unsigned id : m_entities.to_destroy())
     {
-        m_components.transforms[id].vel = RVector2(0.0, 0.0);
-        m_components.sprites[id].base.set(SpriteBase::None);
-        m_components.sprites[id].head.set(SpriteHead::None);
-        m_components.sprites[id].arms.set(SpriteArms::None);
-        m_components.sprites[id].legs.set(SpriteLegs::None);
-        m_components.sprites[id].extra.set(SpriteExtra::None);
-        m_components.lifespans[id].current = std::nullopt;
-        m_components.health[id].max = std::nullopt;
+        destroy_entity(id);
     }
 
-    m_entities.destroy_queued();
+    m_entities.clear_to_destroy();
 }
 
 void Game::player_attack()
@@ -202,14 +223,15 @@ void Game::player_attack()
         return;
     }
 
-    spawn_projectile(m_components.transforms[PLAYER_ID].pos);
+    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
+    spawn_attack(Attack::Melee, PLAYER_ID);
 }
 
 void Game::update_lifespans()
 {
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
     {
-        auto& lifespan = m_components.lifespans[id].current;
+        auto& lifespan = m_components.lifespans[id];
         if (entity == std::nullopt || lifespan == std::nullopt)
         {
             continue;
@@ -223,28 +245,72 @@ void Game::update_lifespans()
     }
 }
 
-void Game::check_projectiles_hit()
+void Game::damage_entities()
 {
-    for (const unsigned projectile_id : m_entities.entity_ids(Entity::Projectile))
+    for (const auto entity : DAMAGING_ENTITIES)
     {
-        const auto projectile_bbox = m_components.bounding_boxes[projectile_id];
-        for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
+        for (const unsigned id : m_entities.entity_ids(entity))
         {
-            const auto enemy_bbox = m_components.bounding_boxes[enemy_id];
-            if (!enemy_bbox.collides(projectile_bbox))
+            const auto projectile_bbox = m_components.hitboxes[id];
+            for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
             {
-                continue;
-            }
+                const auto enemy_bbox = m_components.hitboxes[enemy_id];
+                if (!enemy_bbox.collides(projectile_bbox))
+                {
+                    continue;
+                }
 
-            int& current_health = m_components.health[enemy_id].current;
-            current_health -= PROJECTILE_DAMAGE;
-            m_entities.queue_destroy(projectile_id);
-            if (current_health <= 0)
-            {
-                m_entities.queue_destroy(enemy_id);
-            }
+                int& current_health = m_components.healths[enemy_id].current;
+                current_health -= damage(entity);
+                m_entities.queue_destroy(id);
+                if (current_health <= 0)
+                {
+                    m_entities.queue_destroy(enemy_id);
+                }
 
-            break;
+                break;
+            }
         }
     }
 }
+
+void Game::sync_children()
+{
+    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
+    {
+        if (m_components.parents[id] == std::nullopt)
+        {
+            continue;
+        }
+
+        const unsigned parent_id = m_components.parents[id].value();
+        m_components.flags[id][flag::FLIPPED] = m_components.flags[PLAYER_ID][flag::FLIPPED];
+        const bool flipped = m_components.flags[id][flag::FLIPPED];
+        auto& transform = m_components.transforms[id];
+        transform.pos = m_components.transforms[parent_id].pos;
+        m_components.collision_boxes[id].sync(transform, flipped);
+        m_components.hitboxes[id].sync(transform, flipped);
+    }
+}
+
+namespace
+{
+int damage(Entity entity)
+{
+    assert(std::ranges::contains(DAMAGING_ENTITIES, entity));
+
+    switch (entity)
+    { // NOLINTBEGIN(*magic-numbers)
+    case Entity::Projectile:
+        return 25;
+    case Entity::Melee:
+        return 34;
+    case Entity::Player:
+    case Entity::Tile:
+    case Entity::Enemy:
+        std::unreachable();
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
+}
+} // namespace

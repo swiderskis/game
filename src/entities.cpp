@@ -57,20 +57,20 @@ std::vector<unsigned> const& Entities::to_destroy() const
     return m_to_destroy;
 }
 
-void Entities::destroy_queued()
+void Entities::destroy_entity(const unsigned id)
 {
-    for (const unsigned id : m_to_destroy)
-    {
-        auto& entity = m_entities[id];
-        if (entity == std::nullopt) // possible for an entity to be queued for destruction multiple times,
-        {                           // leads to already being nullopt
-            continue;
-        }
-
-        auto& entity_ids = m_entity_ids[entity.value()];
-        entity_ids.erase(std::ranges::find(entity_ids, id));
-        entity = std::nullopt;
+    auto& entity = m_entities[id];
+    if (entity == std::nullopt) // possible for an entity to be queued for destruction multiple times,
+    {                           // leads to already being nullopt
+        return;
     }
 
+    auto& entity_ids = m_entity_ids[entity.value()];
+    entity_ids.erase(std::ranges::find(entity_ids, id));
+    entity = std::nullopt;
+}
+
+void Entities::clear_to_destroy()
+{
     m_to_destroy.clear();
 }
