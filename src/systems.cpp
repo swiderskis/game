@@ -35,8 +35,6 @@ inline constexpr float GRAVITY_ACCELERATION = 1000.0;
 inline constexpr float MAX_FALL_SPEED = 500.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 
-inline constexpr int PROJECTILE_DAMAGE = 25;
-
 namespace
 {
 int damage(Entity entity);
