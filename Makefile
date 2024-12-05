@@ -9,7 +9,7 @@ RAYLIB := $(RAYLIB_DIR)/libraylib.a
 RAYLIB_SO := $(RAYLIB_DIR)/libraylibdll.a
 
 CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
-CXXFLAGS := -O3 -Wall -Wextra -Werror -std=c++23
+CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 LDFLAGS := -L$(RAYLIB_DIR)
 LDLIBS := -lraylib -lopengl32 -lgdi32 -lwinmm
 LDLIBS_SO := -lraylibdll -lopengl32 -lgdi32 -lwinmm
