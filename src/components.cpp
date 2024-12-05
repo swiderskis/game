@@ -20,7 +20,6 @@ inline constexpr auto MELEE_HITBOX_OFFSET = SimpleVec2(24.0, 9);
 inline constexpr float PROJECTILE_SPEED = 500.0;
 inline constexpr float PROJECTILE_LIFESPAN = 0.3;
 
-inline constexpr int RECTANGLE_BBOX_INDEX = 0;
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
 
@@ -226,7 +225,7 @@ bool BBox::collides(const BBox other_bbox) const
 
 bool BBox::x_overlaps(const BBox other_bbox) const
 {
-    assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
+    assert(m_bounding_box.index() == RECTANGLE);
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
@@ -248,7 +247,7 @@ bool BBox::x_overlaps(const BBox other_bbox) const
 
 bool BBox::y_overlaps(const BBox other_bbox) const
 {
-    assert(m_bounding_box.index() == RECTANGLE_BBOX_INDEX);
+    assert(m_bounding_box.index() == RECTANGLE);
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 

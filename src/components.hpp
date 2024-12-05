@@ -205,6 +205,12 @@ class BBox
 {
     BBoxVariant m_bounding_box{ RRectangle{ RVector2(0.0, 0.0), RVector2(SPRITE_SIZE, SPRITE_SIZE) } };
 
+    enum Variant
+    {
+        RECTANGLE = 0,
+        CIRCLE = 1,
+    };
+
 public:
     RVector2 offset{ 0.0, 0.0 };
 
