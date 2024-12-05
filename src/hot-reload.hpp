@@ -19,14 +19,14 @@
 
 namespace fs = std::filesystem;
 
-using run_t = void (*)(Game*);
-using check_reload_lib_t = bool (*)();
+using RunFunc = void (*)(Game*);
+using CheckReloadLibFunc = bool (*)();
 
 struct GameFuncs
 {
     HMODULE lib = nullptr;
-    run_t run = nullptr;
-    check_reload_lib_t check_reload_lib = nullptr;
+    RunFunc run = nullptr;
+    CheckReloadLibFunc check_reload_lib = nullptr;
 };
 
 namespace hot_reload
@@ -59,7 +59,7 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT(misc-definitions-in-headers)
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"
     // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
-    game_funcs.run = (run_t)GetProcAddress(game_funcs.lib, "run");
+    game_funcs.run = (RunFunc)GetProcAddress(game_funcs.lib, "run");
     if (game_funcs.run == nullptr)
     {
         std::cerr << "Failed to get run function address\n";
@@ -67,7 +67,7 @@ bool reload_lib(GameFuncs& game_funcs) // NOLINT(misc-definitions-in-headers)
         return false;
     }
 
-    game_funcs.check_reload_lib = (check_reload_lib_t)GetProcAddress(game_funcs.lib, "check_reload_lib");
+    game_funcs.check_reload_lib = (CheckReloadLibFunc)GetProcAddress(game_funcs.lib, "check_reload_lib");
     if (game_funcs.check_reload_lib == nullptr)
     {
         std::cerr << "Failed to get check_reload_lib function address\n";

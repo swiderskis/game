@@ -13,11 +13,23 @@ enum class Entity
     Tile,
     Projectile,
     Enemy,
+    Melee,
 };
 
 enum class Tile
 {
     Brick,
+};
+
+enum class Attack
+{
+    Melee,
+    Projectile,
+};
+
+enum class Enemy
+{
+    Duck,
 };
 
 class Entities
@@ -32,7 +44,8 @@ public:
     [[nodiscard]] std::vector<std::optional<Entity>> const& entities() const;
     [[nodiscard]] std::vector<unsigned> const& entity_ids(Entity entity);
     [[nodiscard]] std::vector<unsigned> const& to_destroy() const;
-    void destroy_queued();
+    void destroy_entity(unsigned id);
+    void clear_to_destroy();
 };
 
 #endif
