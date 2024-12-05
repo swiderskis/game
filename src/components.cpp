@@ -15,7 +15,7 @@ inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
 inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto MELEE_HITBOX_SIZE = SimpleVec2(18.0, 7.0);
-inline constexpr auto MELEE_HITBOX_OFFSET = SimpleVec2(24.0, 9);
+inline constexpr auto MELEE_HITBOX_OFFSET = SimpleVec2(24.0, 9.0);
 
 inline constexpr float PROJECTILE_SPEED = 500.0;
 inline constexpr float PROJECTILE_LIFESPAN = 0.3;
