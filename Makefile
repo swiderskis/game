@@ -6,7 +6,8 @@
 RAYLIB_DIR := ext-lib/raylib/src
 RAYLIB_CPP_DIR := ext-lib/raylib-cpp/include
 RAYLIB := $(RAYLIB_DIR)/libraylib.a
-RAYLIB_SO := $(RAYLIB_DIR)/libraylibdll.a
+RAYLIB_SO := $(RAYLIB_DIR)/raylib.dll
+RAYLIB_SO_STUB := $(RAYLIB_DIR)/libraylibdll.a
 
 CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR) -iquote$(RAYLIB_CPP_DIR)
 CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
@@ -38,7 +39,7 @@ all: debug
 debug: $(DEBUG_BIN)
 
 run: $(DEBUG_BIN)
-	cp $(RAYLIB_DIR)/raylib.dll $(DEBUG_BIN_DIR)
+	cp $(RAYLIB_SO) $(DEBUG_BIN_DIR)
 	$(DEBUG_BIN)
 
 release: $(BIN)
@@ -54,14 +55,16 @@ clean:
 clean_raylib:
 	$(RM) -r $(BIN_DIR)
 	$(MAKE) clean_shell_sh -C $(RAYLIB_DIR)
+	$(RM) $(RAYLIB_SO)
+	$(RM) $(RAYLIB_SO_STUB)
 
 $(BIN): $(RAYLIB) $(OBJ) | $(BIN_DIR)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(DEBUG_BIN): $(RAYLIB_SO) $(DEBUG_OBJ) | $(BIN_DIR) $(SO)
+$(DEBUG_BIN): $(RAYLIB_SO_STUB) $(DEBUG_OBJ) | $(BIN_DIR) $(SO)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
-$(SO): $(RAYLIB_SO) $(DEBUG_OBJ) | $(BIN_DIR)
+$(SO): $(RAYLIB_SO_STUB) $(DEBUG_OBJ) | $(BIN_DIR)
 	$(CXX) -fPIC -shared $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
 $(RELEASE_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(RELEASE_BIN_DIR)
@@ -73,7 +76,7 @@ $(DEBUG_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEBUG_BIN_DIR)
 $(RAYLIB):
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C $(RAYLIB_DIR)
 
-$(RAYLIB_SO):
+$(RAYLIB_SO_STUB):
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED -C $(RAYLIB_DIR)
 
 $(RELEASE_BIN_DIR): | $(BIN_DIR)
