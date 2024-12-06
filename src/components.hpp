@@ -93,71 +93,14 @@ class SpritePart
 
 public:
     SpritePart() = delete;
+    explicit SpritePart(Part part);
 
-    explicit SpritePart(const Part part) : m_part(part)
-    {
-    }
-
-    void set(const Part part)
-    {
-        if (m_part == part)
-        {
-            return;
-        }
-
-        m_part = part;
-        m_current_frame = 0;
-        m_frame_update_dt = 0.0;
-    }
-
-    void check_update_frame(const float dt)
-    {
-        const auto details = components::sprite_details(m_part);
-        if (details.frames == 1 && details.frame_duration == 0.0)
-        {
-            return;
-        }
-
-        m_frame_update_dt += dt;
-        if (m_frame_update_dt < details.frame_duration)
-        {
-            return;
-        }
-
-        m_frame_update_dt = 0.0;
-        m_current_frame += 1;
-        if (m_current_frame == details.frames)
-        {
-            set((Part)-1);
-        }
-    }
-
-    [[nodiscard]] RRectangle sprite(const bool flipped) const
-    {
-        const auto details = components::sprite_details(m_part);
-        const auto pos = RVector2(details.size.x * m_current_frame, 0.0) + details.pos;
-        const auto size = RVector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
-
-        return { pos, size };
-    }
-
-    [[nodiscard]] Part part() const
-    {
-        return m_part;
-    }
-
-    [[nodiscard]] unsigned current_frame() const
-    {
-        return m_current_frame;
-    }
-
-    void movement_set(const Part part)
-    {
-        if (components::sprite_details(m_part).allow_movement_override)
-        {
-            set(part);
-        }
-    }
+    void set(Part part);
+    void check_update_frame(float dt);
+    [[nodiscard]] RRectangle sprite(bool flipped) const;
+    [[nodiscard]] Part part() const;
+    [[nodiscard]] unsigned current_frame() const;
+    void movement_set(Part part);
 };
 
 struct Sprite
@@ -178,14 +121,8 @@ private:
     void lookup_set_jump_parts(Entity entity);
     void lookup_set_walk_parts(Entity entity);
     void lookup_set_idle_parts(Entity entity);
-
     template <typename Part>
-    [[nodiscard]] RVector2 render_pos(const SpritePart<Part> part, const RVector2 pos, const bool flipped) const
-    { // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
-        const float x_offset = (components::sprite_details(part.part()).size.x - SPRITE_SIZE) * flipped;
-
-        return pos - RVector2(x_offset, 0.0);
-    }
+    [[nodiscard]] RVector2 render_pos(SpritePart<Part> part, RVector2 pos, bool flipped) const;
 };
 
 struct Circle
@@ -263,5 +200,85 @@ struct Components
     void init_melee(unsigned id, RVector2 pos, unsigned parent_id);
     void uninit_destroyed_entity(unsigned id);
 };
+
+template <typename Part>
+SpritePart<Part>::SpritePart(const Part part) : m_part(part)
+{
+}
+
+template <typename Part>
+void SpritePart<Part>::set(const Part part)
+{
+    if (m_part == part)
+    {
+        return;
+    }
+
+    m_part = part;
+    m_current_frame = 0;
+    m_frame_update_dt = 0.0;
+}
+
+template <typename Part>
+void SpritePart<Part>::check_update_frame(const float dt)
+{
+    const auto details = components::sprite_details(m_part);
+    if (details.frames == 1 && details.frame_duration == 0.0)
+    {
+        return;
+    }
+
+    m_frame_update_dt += dt;
+    if (m_frame_update_dt < details.frame_duration)
+    {
+        return;
+    }
+
+    m_frame_update_dt = 0.0;
+    m_current_frame += 1;
+    if (m_current_frame == details.frames)
+    {
+        set((Part)-1);
+    }
+}
+
+template <typename Part>
+RRectangle SpritePart<Part>::sprite(const bool flipped) const
+{
+    const auto details = components::sprite_details(m_part);
+    const auto pos = RVector2(details.size.x * m_current_frame, 0.0) + details.pos;
+    const auto size = RVector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
+
+    return { pos, size };
+}
+
+template <typename Part>
+Part SpritePart<Part>::part() const
+{
+    return m_part;
+}
+
+template <typename Part>
+unsigned SpritePart<Part>::current_frame() const
+{
+    return m_current_frame;
+}
+
+template <typename Part>
+void SpritePart<Part>::movement_set(const Part part)
+{
+    if (components::sprite_details(m_part).allow_movement_override)
+    {
+        set(part);
+    }
+}
+
+template <typename Part>
+RVector2 Sprite::render_pos(const SpritePart<Part> part, const RVector2 pos, const bool flipped) const
+{ // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
+    const float x_offset = (components::sprite_details(part.part()).size.x - SPRITE_SIZE) * flipped;
+
+    return pos - RVector2(x_offset, 0.0);
+}
 
 #endif
