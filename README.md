@@ -1,4 +1,4 @@
-# Game Engine
+# Game
 
 A C++ game, powered by [raylib](https://www.raylib.com/) using [raylib-cpp](https://github.com/RobLoach/raylib-cpp) bindings.
 
