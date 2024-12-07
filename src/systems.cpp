@@ -53,7 +53,6 @@ void Game::render()
 {
     const auto player_pos = m_components.transforms[PLAYER_ID].pos;
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
-
     m_camera.BeginMode();
 
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate | std::views::reverse)
@@ -78,15 +77,6 @@ void Game::render()
             RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(GREEN);
         }
 
-#ifdef SHOW_HITBOXES
-        std::visit(
-            overloaded{
-                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
-                [](const Circle bbox) { bbox.draw_lines(GREEN); },
-            },
-            m_components.hitboxes[id].bounding_box());
-#endif
-
 #ifdef SHOW_CBOXES
         std::visit(
             overloaded{
@@ -94,6 +84,15 @@ void Game::render()
                 [](const Circle bbox) { bbox.draw_lines(RED); },
             },
             m_components.collision_boxes[id].bounding_box());
+#endif
+
+#ifdef SHOW_HITBOXES
+        std::visit(
+            overloaded{
+                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
+                [](const Circle bbox) { bbox.draw_lines(GREEN); },
+            },
+            m_components.hitboxes[id].bounding_box());
 #endif
     }
 
