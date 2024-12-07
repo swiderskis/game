@@ -16,7 +16,7 @@ LDLIBS := -lraylib -lopengl32 -lgdi32 -lwinmm
 LDLIBS_SO := -lraylibdll -lopengl32 -lgdi32 -lwinmm
 
 SRC_DIR := src
-BIN_DIR := build
+BIN_DIR := make-build
 RELEASE_BIN_DIR = $(BIN_DIR)/release
 DEBUG_BIN_DIR = $(BIN_DIR)/debug
 
