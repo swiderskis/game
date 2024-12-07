@@ -67,10 +67,10 @@ $(DEBUG_BIN): $(RAYLIB_SO_STUB) $(DEBUG_OBJ) | $(BIN_DIR) $(SO)
 $(SO): $(RAYLIB_SO_STUB) $(DEBUG_OBJ) | $(BIN_DIR)
 	$(CXX) -fPIC -shared $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
-$(RELEASE_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp ${wildcard $(SRC_DIR)/%.hpp} | $(RELEASE_BIN_DIR)
+$(RELEASE_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(RELEASE_BIN_DIR)
 	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
 
-$(DEBUG_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp ${wildcard $(SRC_DIR)/%.hpp} | $(DEBUG_BIN_DIR)
+$(DEBUG_BIN_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEBUG_BIN_DIR)
 	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(RAYLIB):
@@ -89,3 +89,4 @@ $(BIN_DIR):
 	mkdir $@
 
 -include $(OBJ:.o=.d)
+-include $(DEBUG_OBJ.o=.d)
