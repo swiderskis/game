@@ -103,15 +103,8 @@ void Game::set_player_vel()
 {
     auto& player_vel = m_components.transforms[PLAYER_ID].vel;
     player_vel.x = 0.0;
-    if (m_inputs.right)
-    {
-        player_vel.x += PLAYER_SPEED;
-    }
-    if (m_inputs.left)
-    {
-        player_vel.x -= PLAYER_SPEED;
-    }
-
+    player_vel.x += (m_inputs.right ? PLAYER_SPEED : 0.0F);
+    player_vel.x -= (m_inputs.left ? PLAYER_SPEED : 0.0F);
     if (m_inputs.up && m_components.flags[PLAYER_ID][flag::GROUNDED])
     {
         player_vel.y = -JUMP_SPEED;
@@ -138,7 +131,7 @@ void Game::move_entities()
         transform.pos += transform.vel * dt();
         if (transform.vel.x != 0.0)
         {
-            m_components.flags[id][flag::FLIPPED] = transform.vel.x < 0;
+            m_components.flags[id][flag::FLIPPED] = transform.vel.x < 0.0;
         }
 
         auto& cbox = m_components.collision_boxes[id];
