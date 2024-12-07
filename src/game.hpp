@@ -27,6 +27,8 @@ struct Coordinates
 {
     SimpleVec2 pos;
 
+    Coordinates() = delete;
+
     constexpr Coordinates(int x, int y) : pos((float)x * TILE_SIZE, (float)-y * TILE_SIZE)
     {
     }
