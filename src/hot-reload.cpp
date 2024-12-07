@@ -41,7 +41,9 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         return false;
     }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
     game_funcs.run = (RunFunc)GetProcAddress(lib, "run");
     if (game_funcs.run == nullptr)
@@ -59,7 +61,9 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         return false;
     }
     // NOLINTEND(cppcoreguidelines-pro-type-cstyle-cast)
+#ifdef __GNUC__
 #pragma GCC diagnostic error "-Wcast-function-type"
+#endif
 
     std::cout << "Loaded library successfully\n";
 
