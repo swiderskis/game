@@ -89,4 +89,4 @@ $(BIN_DIR):
 	mkdir $@
 
 -include $(OBJ:.o=.d)
--include $(DEBUG_OBJ.o=.d)
+-include $(DEBUG_OBJ:.o=.d)
