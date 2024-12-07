@@ -15,8 +15,8 @@ cmake -B cmake-build
 cmake --build cmake-build
 ```
 to build the project.
-Note that it isn't my primary build tool and so will throw some warnings during the build - it also doesn't support hot reloading _yet_.
-I plan to address all of this at some point (likely when I add cross-platform support).
+Note that it isn't my primary build tool and so will throw some warnings during the build.
+It also doesn't support hot reloading _yet_ - I plan to address this at some point (likely when I add cross-platform support).
 
 ## Credits
 
