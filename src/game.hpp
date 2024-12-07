@@ -25,15 +25,15 @@ struct Inputs
 
 struct Coordinates
 {
-    SimpleVec2 m_pos;
+    SimpleVec2 pos;
 
-    constexpr Coordinates(int x, int y) : m_pos((float)x * TILE_SIZE, (float)-y * TILE_SIZE)
+    constexpr Coordinates(int x, int y) : pos((float)x * TILE_SIZE, (float)-y * TILE_SIZE)
     {
     }
 
     operator RVector2() const // NOLINT(hicpp-explicit-conversions)
     {
-        return m_pos;
+        return pos;
     }
 };
 
