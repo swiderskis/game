@@ -225,11 +225,12 @@ void Game::player_attack()
         return;
     }
 
-    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
-    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Melee).cooldown;
 #ifdef RANGED
+    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Projectile).cooldown;
     spawn_attack(Attack::Projectile, PLAYER_ID);
 #else
+    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
+    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Melee).cooldown;
     spawn_attack(Attack::Melee, PLAYER_ID);
 #endif
 }
