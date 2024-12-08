@@ -14,6 +14,7 @@ inline constexpr auto PLAYER_HITBOX_SIZE = SimpleVec2(12.0, 21.0);
 inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
 inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
+inline constexpr auto TILE_CBOX_OFFSET = SimpleVec2(-8.0, 16.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -312,6 +313,7 @@ void Components::init_player(const unsigned id, const RVector2 pos)
 void Components::init_tile(const unsigned id, const RVector2 pos, const Tile tile)
 {
     transforms[id].pos = pos;
+    collision_boxes[id].offset = TILE_CBOX_OFFSET;
     collision_boxes[id].set(transforms[id], RVector2(TILE_SIZE, TILE_SIZE));
 
     switch (tile)

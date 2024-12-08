@@ -10,7 +10,7 @@
 #include <optional>
 #include <variant>
 
-inline constexpr float TILE_SIZE = 32.0;
+inline constexpr float TILE_SIZE = 16.0;
 inline constexpr float SPRITE_SIZE = 32.0;
 
 inline constexpr unsigned FLAG_COUNT = 8;
