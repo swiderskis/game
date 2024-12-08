@@ -14,6 +14,8 @@
 #undef SHOW_CBOXES
 #define SHOW_HITBOXES
 #undef SHOW_HITBOXES
+#define RANGED
+#undef RANGED
 
 static constexpr auto GRAVITY_AFFECTED_ENTITIES = {
     Entity::Player,
@@ -225,7 +227,11 @@ void Game::player_attack()
 
     m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
     m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Melee).cooldown;
+#ifdef RANGED
+    spawn_attack(Attack::Projectile, PLAYER_ID);
+#else
     spawn_attack(Attack::Melee, PLAYER_ID);
+#endif
 }
 
 void Game::update_lifespans()
@@ -256,20 +262,26 @@ void Game::damage_entities()
             for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
             {
                 const auto enemy_bbox = m_components.hitboxes[enemy_id];
-                if (!enemy_bbox.collides(projectile_bbox))
+                const bool damaged = std::ranges::contains(m_entities.damaged[id], enemy_id);
+                if (!enemy_bbox.collides(projectile_bbox) || damaged)
                 {
                     continue;
                 }
 
                 int& current_health = m_components.healths[enemy_id].current;
                 current_health -= damage(entity);
-                m_entities.queue_destroy(id);
                 if (current_health <= 0)
                 {
                     m_entities.queue_destroy(enemy_id);
                 }
 
-                break;
+                if (entity == Entity::Projectile)
+                {
+                    m_entities.queue_destroy(id);
+                    break;
+                }
+
+                m_entities.damaged[id].push_back(enemy_id);
             }
         }
     }
