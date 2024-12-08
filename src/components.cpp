@@ -299,6 +299,7 @@ Components::Components()
     lifespans.resize(MAX_ENTITIES, std::nullopt);
     parents.resize(MAX_ENTITIES, std::nullopt);
     attack_cooldown.resize(MAX_ENTITIES, std::nullopt);
+    damaged.resize(MAX_ENTITIES, {});
 }
 
 void Components::init_player(const unsigned id, const RVector2 pos)
@@ -384,6 +385,7 @@ void Components::uninit_destroyed_entity(const unsigned id)
     healths[id].max = std::nullopt;
     hitboxes[id].offset = RVector2(0.0, 0.0);
     parents[id] = std::nullopt;
+    damaged[id].clear();
 }
 
 namespace components

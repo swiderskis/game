@@ -262,7 +262,7 @@ void Game::damage_entities()
             for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
             {
                 const auto enemy_bbox = m_components.hitboxes[enemy_id];
-                const bool damaged = std::ranges::contains(m_entities.damaged[id], enemy_id);
+                const bool damaged = std::ranges::contains(m_components.damaged[id], enemy_id);
                 if (!enemy_bbox.collides(projectile_bbox) || damaged)
                 {
                     continue;
@@ -281,7 +281,7 @@ void Game::damage_entities()
                     break;
                 }
 
-                m_entities.damaged[id].push_back(enemy_id);
+                m_components.damaged[id].push_back(enemy_id);
             }
         }
     }
