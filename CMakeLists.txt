@@ -10,6 +10,7 @@ set(BIN_NAME game)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(${BIN_NAME})
+add_definitions(/DNDEBUG)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext-lib/raylib)
 target_link_libraries(${BIN_NAME} PRIVATE raylib)
