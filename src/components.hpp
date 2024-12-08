@@ -190,14 +190,15 @@ struct Components
     std::vector<Health> healths{ MAX_ENTITIES, Health() };
     std::vector<BBox> hitboxes{ MAX_ENTITIES, BBox() };
     std::vector<std::optional<unsigned>> parents;
+    std::vector<std::optional<float>> attack_cooldown;
 
     Components();
 
     void init_player(unsigned id, RVector2 pos);
     void init_tile(unsigned id, RVector2 pos, Tile tile);
-    void init_projectile(unsigned id, RVector2 source_pos, RVector2 target_pos);
+    void init_projectile(unsigned id, RVector2 pos, RVector2 target, AttackDetails details);
     void init_enemy(unsigned id, RVector2 pos, Enemy enemy);
-    void init_melee(unsigned id, RVector2 pos, unsigned parent_id);
+    void init_melee(unsigned id, RVector2 pos, unsigned parent_id, AttackDetails details);
     void uninit_destroyed_entity(unsigned id);
 };
 
