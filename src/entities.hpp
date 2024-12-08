@@ -4,7 +4,6 @@
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "settings.hpp"
 
-#include <map>
 #include <optional>
 #include <unordered_map>
 #include <variant>
@@ -61,8 +60,6 @@ class Entities
     std::vector<unsigned> m_to_destroy;
 
 public:
-    std::map<unsigned, std::vector<unsigned>> damaged;
-
     [[nodiscard]] unsigned spawn(Entity type);
     void queue_destroy(unsigned id);
     [[nodiscard]] std::vector<std::optional<Entity>> const& entities() const;

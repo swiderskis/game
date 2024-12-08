@@ -191,6 +191,7 @@ struct Components
     std::vector<BBox> hitboxes{ MAX_ENTITIES, BBox() };
     std::vector<std::optional<unsigned>> parents;
     std::vector<std::optional<float>> attack_cooldown;
+    std::vector<std::vector<unsigned>> damaged;
 
     Components();
 

@@ -71,7 +71,6 @@ void Entities::destroy_entity(const unsigned id)
     auto& entity_ids = m_entity_ids[entity.value()];
     entity_ids.erase(std::ranges::find(entity_ids, id));
     entity = std::nullopt;
-    damaged[id].clear();
 }
 
 void Entities::clear_to_destroy()
