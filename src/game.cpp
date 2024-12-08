@@ -8,6 +8,7 @@
 #include <cmath>
 #include <optional>
 #include <ranges>
+#include <utility>
 
 inline constexpr unsigned TARGET_FPS = 60;
 
@@ -55,18 +56,19 @@ void Game::destroy_entity(const unsigned id) // NOLINT(misc-no-recursion)
 
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
+    const auto details = entities::attack_details(attack);
     const auto source_pos = m_components.transforms[parent_id].pos;
     unsigned id = 0;
     switch (attack)
     {
     case Attack::Melee:
         id = m_entities.spawn(Entity::Melee);
-        m_components.init_melee(id, source_pos, parent_id);
+        m_components.init_melee(id, source_pos, parent_id, details);
         break;
     case Attack::Projectile:
         const auto target_pos = (parent_id == PLAYER_ID ? get_mouse_pos() : m_components.transforms[PLAYER_ID].pos);
         id = m_entities.spawn(Entity::Projectile);
-        m_components.init_projectile(id, source_pos, target_pos);
+        m_components.init_projectile(id, source_pos, target_pos, details);
         break;
     }
 }
@@ -142,3 +144,22 @@ extern "C" __declspec(dllexport) bool check_reload_lib()
     return RKeyboard::IsKeyPressed(KEY_R);
 }
 #endif
+
+namespace entities
+{
+AttackDetails attack_details(const Attack attack)
+{
+    switch (attack)
+    { // NOLINTBEGIN(*magic-numbers)
+    case Attack::Melee:
+        return { MeleeDetails{ { 18.0, 7.0 }, { 24.0, 9.0 } },
+                 components::sprite_details(SpriteArms::PlayerAttack).frame_duration,
+                 0.0,
+                 0.5 };
+    case Attack::Projectile:
+        return { ProjectileDetails{ 500.0 }, 0.3, 0.0, 0.5 };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
+}
+} // namespace entities

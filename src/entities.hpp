@@ -1,10 +1,12 @@
 #ifndef ENTITIES_HPP_
 #define ENTITIES_HPP_
 
+#include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "settings.hpp"
 
 #include <optional>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 enum class Entity
@@ -27,6 +29,25 @@ enum class Attack
     Projectile,
 };
 
+struct MeleeDetails
+{
+    RVector2 size;
+    RVector2 offset;
+};
+
+struct ProjectileDetails
+{
+    float speed;
+};
+
+struct AttackDetails
+{
+    std::variant<MeleeDetails, ProjectileDetails> details;
+    float lifespan;
+    float delay;
+    float cooldown;
+};
+
 enum class Enemy
 {
     Duck,
@@ -47,5 +68,10 @@ public:
     void destroy_entity(unsigned id);
     void clear_to_destroy();
 };
+
+namespace entities
+{
+AttackDetails attack_details(Attack attack);
+} // namespace entities
 
 #endif

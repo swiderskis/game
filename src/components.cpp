@@ -14,11 +14,6 @@ inline constexpr auto PLAYER_HITBOX_SIZE = SimpleVec2(12.0, 21.0);
 inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
 inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
-inline constexpr auto MELEE_HITBOX_SIZE = SimpleVec2(18.0, 7.0);
-inline constexpr auto MELEE_HITBOX_OFFSET = SimpleVec2(24.0, 9.0);
-
-inline constexpr float PROJECTILE_SPEED = 500.0;
-inline constexpr float PROJECTILE_LIFESPAN = 0.3;
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -302,6 +297,7 @@ Components::Components()
     flags.resize(MAX_ENTITIES, 0);
     lifespans.resize(MAX_ENTITIES, std::nullopt);
     parents.resize(MAX_ENTITIES, std::nullopt);
+    attack_cooldown.resize(MAX_ENTITIES, std::nullopt);
 }
 
 void Components::init_player(const unsigned id, const RVector2 pos)
@@ -326,15 +322,19 @@ void Components::init_tile(const unsigned id, const RVector2 pos, const Tile til
     }
 }
 
-void Components::init_projectile(const unsigned id, const RVector2 source_pos, const RVector2 target_pos)
+void Components::init_projectile(const unsigned id,
+                                 const RVector2 pos,
+                                 const RVector2 target,
+                                 const AttackDetails details)
 {
-    const auto diff = target_pos - source_pos;
+    const auto proj_details = std::get<ProjectileDetails>(details.details);
+    const auto diff = target - pos;
     const float angle = atan2(diff.y, diff.x);
-    transforms[id].pos = source_pos;
-    transforms[id].vel = RVector2(cos(angle), sin(angle)) * PROJECTILE_SPEED;
+    transforms[id].pos = pos;
+    transforms[id].vel = RVector2(cos(angle), sin(angle)) * proj_details.speed;
     sprites[id].base.set(SpriteBase::Projectile);
     collision_boxes[id].set(transforms[id], 4);
-    lifespans[id] = PROJECTILE_LIFESPAN;
+    lifespans[id] = details.lifespan;
     hitboxes[id].set(transforms[id], 4);
 }
 
@@ -354,13 +354,17 @@ void Components::init_enemy(const unsigned id, const RVector2 pos, const Enemy e
     }
 }
 
-void Components::init_melee(const unsigned id, const RVector2 pos, const unsigned parent_id)
+void Components::init_melee(const unsigned id,
+                            const RVector2 pos,
+                            const unsigned parent_id,
+                            const AttackDetails details)
 {
+    const auto melee_details = std::get<MeleeDetails>(details.details);
     transforms[id].pos = pos;
     collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
-    lifespans[id] = components::sprite_details(SpriteArms::PlayerAttack).frame_duration;
-    hitboxes[id].set(transforms[id], MELEE_HITBOX_SIZE);
-    hitboxes[id].offset = MELEE_HITBOX_OFFSET;
+    lifespans[id] = details.lifespan;
+    hitboxes[id].set(transforms[id], melee_details.size);
+    hitboxes[id].offset = melee_details.offset;
     parents[id] = parent_id;
 }
 

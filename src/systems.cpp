@@ -11,8 +11,8 @@
 #include <utility>
 
 #define SHOW_CBOXES
-#define SHOW_HITBOXES
 #undef SHOW_CBOXES
+#define SHOW_HITBOXES
 #undef SHOW_HITBOXES
 
 static constexpr auto GRAVITY_AFFECTED_ENTITIES = {
@@ -208,12 +208,23 @@ void Game::destroy_entities()
 
 void Game::player_attack()
 {
-    if (!m_inputs.attack)
+    auto& attack_cooldown = m_components.attack_cooldown[PLAYER_ID];
+    if (attack_cooldown != std::nullopt)
+    {
+        attack_cooldown.value() -= dt();
+        if (m_components.attack_cooldown[PLAYER_ID] <= 0.0)
+        {
+            attack_cooldown = std::nullopt;
+        }
+    }
+
+    if (!m_inputs.attack || attack_cooldown != std::nullopt)
     {
         return;
     }
 
     m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
+    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Melee).cooldown;
     spawn_attack(Attack::Melee, PLAYER_ID);
 }
 
