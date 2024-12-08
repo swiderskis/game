@@ -56,7 +56,7 @@ void Game::render()
     m_camera.BeginMode();
 
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate | std::views::reverse)
-    {
+    { // reverse to always have player sprite render on top
         if (entity == std::nullopt)
         {
             continue;
@@ -268,7 +268,7 @@ void Game::sync_children()
 {
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
     {
-        if (m_components.parents[id] == std::nullopt)
+        if (entity == std::nullopt || m_components.parents[id] == std::nullopt)
         {
             continue;
         }
