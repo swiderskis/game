@@ -57,8 +57,9 @@ void Game::render()
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
 
+    // reverse to always have player sprite render on top
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate | std::views::reverse)
-    { // reverse to always have player sprite render on top
+    {
         if (entity == std::nullopt)
         {
             continue;
@@ -140,7 +141,8 @@ void Game::move_entities()
         const auto prev_cbox = cbox;
         const auto flipped = m_components.flags[id][flag::FLIPPED];
         cbox.sync(transform, flipped);
-        for (const unsigned tile_id : m_entities.entity_ids(Entity::Tile)) // resolve tile collisions
+        // resolve tile collisions
+        for (const unsigned tile_id : m_entities.entity_ids(Entity::Tile))
         {
             const auto tile_cbox = m_components.collision_boxes[tile_id];
             if (!cbox.collides(tile_cbox))

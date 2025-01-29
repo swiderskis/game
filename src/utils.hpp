@@ -3,14 +3,15 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
-// Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
+// taken from https://en.cppreference.com/w/cpp/utility/variant/visit
 template <typename... Ts>
 struct overloaded : Ts... // NOLINT(readability-identifier-naming)
 {
     using Ts::operator()...;
 };
 
-struct SimpleVec2 // exists to allow constexpr vec declarations
+// exists to allow constexpr vec declarations
+struct SimpleVec2
 {
     float x;
     float y;

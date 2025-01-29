@@ -50,8 +50,9 @@ std::vector<std::optional<Entity>> const& Entities::entities() const
     return m_entities;
 }
 
-std::vector<unsigned> const& Entities::entity_ids(Entity entity) // not marked const to allow creating vector for key
-{                                                                // if it doesn't exist already
+// not marked const to allow creating vector for key if it doesn't exist already
+std::vector<unsigned> const& Entities::entity_ids(Entity entity)
+{
     return m_entity_ids[entity];
 }
 
@@ -63,8 +64,9 @@ std::vector<unsigned> const& Entities::to_destroy() const
 void Entities::destroy_entity(const unsigned id)
 {
     auto& entity = m_entities[id];
-    if (entity == std::nullopt) // possible for an entity to be queued for destruction multiple times,
-    {                           // leads to already being nullopt
+    // possible for an entity to be queued for destruction multiple times, leads to already being nullopt
+    if (entity == std::nullopt)
+    {
         return;
     }
 

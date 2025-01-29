@@ -277,7 +277,8 @@ void SpritePart<Part>::movement_set(const Part part)
 
 template <typename Part>
 RVector2 Sprite::render_pos(const SpritePart<Part> part, const RVector2 pos, const bool flipped) const
-{ // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
+{
+    // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
     const float x_offset = (components::sprite_details(part.part()).size.x - SPRITE_SIZE) * flipped;
 
     return pos - RVector2(x_offset, 0.0);
