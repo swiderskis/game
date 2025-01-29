@@ -41,8 +41,9 @@ RVector2 Game::get_mouse_pos() const
 
 void Game::destroy_entity(const unsigned id) // NOLINT(misc-no-recursion)
 {
+    // destroy any child entities
     for (const auto [child_id, parent_id] : m_components.parents | std::views::enumerate | std::views::as_const)
-    { // destroy any child entities
+    {
         if (parent_id != std::nullopt && parent_id.value() == id)
         {
             destroy_entity(child_id);
