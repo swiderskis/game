@@ -19,6 +19,7 @@ struct Inputs
     bool left = false;
     bool right = false;
     bool up = false;
+    bool down = false;
     bool attack = false;
     bool spawn_enemy = false;
 };
