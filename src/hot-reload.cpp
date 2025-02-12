@@ -1,6 +1,8 @@
 #include "hot-reload.hpp"
 
 #ifndef NDEBUG
+#include "logging.hpp"
+
 #include <filesystem>
 #include <iostream>
 #include <system_error>
@@ -28,7 +30,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
 
     if (ec.value() != 0)
     {
-        std::cerr << "Failed to copy shared library file\n";
+        LOG_ERR("Failed to copy shared library file");
 
         return false;
     }
@@ -36,7 +38,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     lib = LoadLibrary(SO_TEMP_NAME);
     if (lib == nullptr)
     {
-        std::cerr << "Failed to load library\n";
+        LOG_ERR("Failed to load library");
 
         return false;
     }
@@ -48,7 +50,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     game_funcs.run = (RunFunc)GetProcAddress(lib, "run");
     if (game_funcs.run == nullptr)
     {
-        std::cerr << "Failed to get run function address\n";
+        LOG_ERR("Failed to get run function address");
 
         return false;
     }
@@ -56,7 +58,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     game_funcs.check_reload_lib = (CheckReloadLibFunc)GetProcAddress(lib, "check_reload_lib");
     if (game_funcs.check_reload_lib == nullptr)
     {
-        std::cerr << "Failed to get check_reload_lib function address\n";
+        LOG_ERR("Failed to get check_reload_lib function address");
 
         return false;
     }
@@ -64,8 +66,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
 #ifdef __GNUC__
 #pragma GCC diagnostic error "-Wcast-function-type"
 #endif
-
-    std::cout << "Loaded library successfully\n";
+    LOG_INF("Loaded library successfully");
 
     return true;
 }
