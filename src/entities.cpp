@@ -1,7 +1,5 @@
 #include "entities.hpp"
 
-#include "components.hpp"
-
 #include <cassert>
 #include <ranges>
 #include <span>
@@ -84,12 +82,10 @@ namespace entities
 {
 AttackDetails attack_details(const Attack attack)
 {
-    float duration = 0.0;
     switch (attack)
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
-        duration = components::sprite_details(SpriteArms::PlayerAttack).frame_duration;
-        return { MeleeDetails{ { 18.0, 7.0 }, { 24.0, 9.0 } }, duration, 0.0, 0.5 };
+        return { MeleeDetails{ { 18.0, 7.0 }, { 24.0, 9.0 } }, 0.3, 0.0, 0.5 };
     case Attack::Projectile:
         return { ProjectileDetails{ 500.0 }, 0.3, 0.0, 0.5 };
     } // NOLINTEND(*magic-numbers)

@@ -1,10 +1,9 @@
-#include "hot-reload.hpp"
+#include "hot-reload.hpp" // IWYU pragma: keep
 
 #ifndef NDEBUG
 #include "logging.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <system_error>
 #include <windows.h>
 

@@ -8,32 +8,17 @@
 #define LOGLVL 3
 #define FILENAME_WIDTH 8
 
-#define LOG_ERR(...)                                                                                                   \
-    if (LOGLVL > 0)                                                                                                    \
+#define LOG(text_lvl, lvl, ...)                                                                                        \
+    if (LOGLVL > lvl)                                                                                                  \
     {                                                                                                                  \
-        std::clog << "[ERR] " << std::string(__FILE__).substr(std::string(__FILE__).size() - FILENAME_WIDTH)           \
+        const auto filename = std::string(__FILE__);                                                                   \
+        std::clog << "[" text_lvl "] " << filename.substr(filename.size() - FILENAME_WIDTH)                            \
                   << std::format(" {:>5}: ", __LINE__) << std::format(__VA_ARGS__) << "\n";                            \
     }
 
-#define LOG_WRN(...)                                                                                                   \
-    if (LOGLVL > 1)                                                                                                    \
-    {                                                                                                                  \
-        std::clog << "[WRN] " << std::string(__FILE__).substr(std::string(__FILE__).size() - FILENAME_WIDTH)           \
-                  << std::format(" {:>5}: ", __LINE__) << std::format(__VA_ARGS__) << "\n";                            \
-    }
-
-#define LOG_INF(...)                                                                                                   \
-    if (LOGLVL > 2)                                                                                                    \
-    {                                                                                                                  \
-        std::clog << "[INF] " << std::string(__FILE__).substr(std::string(__FILE__).size() - FILENAME_WIDTH)           \
-                  << std::format(" {:>5}: ", __LINE__) << std::format(__VA_ARGS__) << "\n";                            \
-    }
-
-#define LOG_TRC(...)                                                                                                   \
-    if (LOGLVL > 3)                                                                                                    \
-    {                                                                                                                  \
-        std::clog << "[TRC] " << std::string(__FILE__).substr(std::string(__FILE__).size() - FILENAME_WIDTH)           \
-                  << std::format(" {:>5}: ", __LINE__) << std::format(__VA_ARGS__) << "\n";                            \
-    }
+#define LOG_ERR(...) LOG("ERR", 0, __VA_ARGS__)
+#define LOG_WRN(...) LOG("WRN", 1, __VA_ARGS__)
+#define LOG_INF(...) LOG("INF", 2, __VA_ARGS__)
+#define LOG_TRC(...) LOG("TRC", 3, __VA_ARGS__)
 
 #endif

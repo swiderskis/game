@@ -241,12 +241,13 @@ void Game::player_attack()
         return;
     }
 
+    const auto attack_details = entities::attack_details(Attack::Melee);
 #ifdef RANGED
-    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Projectile).cooldown;
+    m_components.attack_cooldown[PLAYER_ID] = attack_details.cooldown;
     spawn_attack(Attack::Projectile, PLAYER_ID);
 #else
-    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack);
-    m_components.attack_cooldown[PLAYER_ID] = entities::attack_details(Attack::Melee).cooldown;
+    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
+    m_components.attack_cooldown[PLAYER_ID] = attack_details.cooldown;
     spawn_attack(Attack::Melee, PLAYER_ID);
 #endif
 }
