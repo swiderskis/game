@@ -90,12 +90,14 @@ class SpritePart
     Part m_part;
     float m_frame_update_dt = 0.0;
     unsigned m_current_frame = 0;
+    float m_frame_duration = 0.0;
 
 public:
     SpritePart() = delete;
     explicit SpritePart(Part part);
 
     void set(Part part);
+    void set(Part part, float frame_duration);
     void check_update_frame(float dt);
     [[nodiscard]] RRectangle sprite(bool flipped) const;
     [[nodiscard]] Part part() const;
@@ -218,27 +220,43 @@ void SpritePart<Part>::set(const Part part)
         return;
     }
 
+    const auto details = components::sprite_details(part);
     m_part = part;
     m_current_frame = 0;
-    m_frame_update_dt = 0.0;
+    m_frame_update_dt = details.frame_duration;
+    m_frame_duration = details.frame_duration;
+}
+
+template <typename Part>
+void SpritePart<Part>::set(const Part part, const float frame_duration)
+{
+    if (m_part == part)
+    {
+        return;
+    }
+
+    m_part = part;
+    m_current_frame = 0;
+    m_frame_update_dt = frame_duration;
+    m_frame_duration = frame_duration;
 }
 
 template <typename Part>
 void SpritePart<Part>::check_update_frame(const float dt)
 {
     const auto details = components::sprite_details(m_part);
-    if (details.frames == 1 && details.frame_duration == 0.0)
+    if (details.frame_duration == 0.0)
     {
         return;
     }
 
-    m_frame_update_dt += dt;
-    if (m_frame_update_dt < details.frame_duration)
+    m_frame_update_dt -= dt;
+    if (m_frame_update_dt > 0)
     {
         return;
     }
 
-    m_frame_update_dt = 0.0;
+    m_frame_update_dt = m_frame_duration;
     m_current_frame += 1;
     if (m_current_frame == details.frames)
     {
