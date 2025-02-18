@@ -231,17 +231,16 @@ void Game::player_attack()
     if (attack_cooldown > 0.0)
     {
         attack_cooldown -= dt();
-        return;
     }
 
-    if (!m_inputs.attack)
+    if (!m_inputs.attack || attack_cooldown > 0.0)
     {
         return;
     }
 
     const auto attack_details = entities::attack_details(Attack::Melee);
 #ifdef RANGED
-    m_components.attack_cooldown[PLAYER_ID] = attack_details.cooldown;
+    m_components.attack_cooldowns[PLAYER_ID] = attack_details.cooldown;
     spawn_attack(Attack::Projectile, PLAYER_ID);
 #else
     m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
@@ -252,10 +251,9 @@ void Game::player_attack()
 
 void Game::update_lifespans()
 {
-    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
+    for (const auto& [id, lifespan] : m_components.lifespans | std::views::enumerate)
     {
-        auto& lifespan = m_components.lifespans[id];
-        if (entity == std::nullopt || lifespan == std::nullopt)
+        if (lifespan == std::nullopt)
         {
             continue;
         }
@@ -324,9 +322,8 @@ void Game::sync_children()
 
 void Game::update_invuln_times()
 {
-    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
+    for (const auto& [id, invuln_time] : m_components.invuln_times | std::views::enumerate)
     {
-        float& invuln_time = m_components.invuln_times[id];
         if (invuln_time > 0.0)
         {
             invuln_time -= dt();
