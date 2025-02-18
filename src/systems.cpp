@@ -38,6 +38,7 @@ inline constexpr float JUMP_SPEED = 450.0;
 inline constexpr float GRAVITY_ACCELERATION = 1000.0;
 inline constexpr float MAX_FALL_SPEED = 500.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
+inline constexpr float INVULN_TIME = 0.5;
 
 namespace
 {
@@ -280,8 +281,8 @@ void Game::damage_entities()
             for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
             {
                 const auto enemy_bbox = m_components.hitboxes[enemy_id];
-                const bool damaged = std::ranges::contains(m_components.damaged[id], enemy_id);
-                if (!enemy_bbox.collides(projectile_bbox) || damaged)
+                float& invuln_time = m_components.invuln_times[enemy_id];
+                if (invuln_time > 0.0 || !enemy_bbox.collides(projectile_bbox))
                 {
                     continue;
                 }
@@ -299,7 +300,7 @@ void Game::damage_entities()
                     break;
                 }
 
-                m_components.damaged[id].push_back(enemy_id);
+                invuln_time = INVULN_TIME;
             }
         }
     }
@@ -321,6 +322,18 @@ void Game::sync_children()
         transform.pos = m_components.transforms[parent_id].pos;
         m_components.collision_boxes[id].sync(transform, flipped);
         m_components.hitboxes[id].sync(transform, flipped);
+    }
+}
+
+void Game::update_invuln_times()
+{
+    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
+    {
+        float& invuln_time = m_components.invuln_times[id];
+        if (invuln_time > 0.0)
+        {
+            invuln_time -= dt();
+        }
     }
 }
 

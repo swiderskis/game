@@ -39,7 +39,7 @@ RVector2 Game::get_mouse_pos() const
     return m_camera.GetScreenToWorld(RMouse::GetPosition()) - RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2;
 }
 
-void Game::destroy_entity(const unsigned id) // NOLINT(misc-no-recursion)
+void Game::destroy_entity(const unsigned id)
 {
     // destroy any child entities
     for (const auto [child_id, parent_id] : m_components.parents | std::views::enumerate | std::views::as_const)
@@ -107,6 +107,7 @@ void Game::run()
     move_entities();
     sync_children();
     update_lifespans();
+    update_invuln_times();
     damage_entities();
     destroy_entities();
     render();
