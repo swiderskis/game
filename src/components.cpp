@@ -1,6 +1,7 @@
 #include "components.hpp"
 
 #include "entities.hpp"
+#include "logging.hpp"
 #include "settings.hpp"
 #include "utils.hpp"
 
@@ -305,7 +306,12 @@ Components::Components()
     lifespans.resize(MAX_ENTITIES, std::nullopt);
     parents.resize(MAX_ENTITIES, std::nullopt);
     attack_cooldown.resize(MAX_ENTITIES, std::nullopt);
-    damaged.resize(MAX_ENTITIES, {});
+    invuln_times.resize(MAX_ENTITIES, 0.0);
+
+    for (size_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        LOG_TRC("Invuln time [{}]: {}", i, invuln_times[i]);
+    }
 }
 
 void Components::init_player(const unsigned id, const RVector2 pos)
@@ -391,7 +397,7 @@ void Components::uninit_destroyed_entity(const unsigned id)
     healths[id].max = std::nullopt;
     hitboxes[id].offset = RVector2(0.0, 0.0);
     parents[id] = std::nullopt;
-    damaged[id].clear();
+    invuln_times[id] = 0.0;
 }
 
 namespace components

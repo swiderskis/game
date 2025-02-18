@@ -67,6 +67,7 @@ class Game
     void update_lifespans();
     void damage_entities();
     void sync_children();
+    void update_invuln_times();
 
 public:
     Game();
