@@ -194,7 +194,7 @@ struct Components
     std::vector<Health> healths{ MAX_ENTITIES, Health() };
     std::vector<BBox> hitboxes{ MAX_ENTITIES, BBox() };
     std::vector<std::optional<unsigned>> parents;
-    std::vector<std::optional<float>> attack_cooldown;
+    std::vector<float> attack_cooldowns;
     std::vector<float> invuln_times;
 
     Components();

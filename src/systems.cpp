@@ -227,17 +227,14 @@ void Game::destroy_entities()
 
 void Game::player_attack()
 {
-    auto& attack_cooldown = m_components.attack_cooldown[PLAYER_ID];
-    if (attack_cooldown != std::nullopt)
+    auto& attack_cooldown = m_components.attack_cooldowns[PLAYER_ID];
+    if (attack_cooldown > 0.0)
     {
-        attack_cooldown.value() -= dt();
-        if (m_components.attack_cooldown[PLAYER_ID] <= 0.0)
-        {
-            attack_cooldown = std::nullopt;
-        }
+        attack_cooldown -= dt();
+        return;
     }
 
-    if (!m_inputs.attack || attack_cooldown != std::nullopt)
+    if (!m_inputs.attack)
     {
         return;
     }
@@ -248,7 +245,7 @@ void Game::player_attack()
     spawn_attack(Attack::Projectile, PLAYER_ID);
 #else
     m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
-    m_components.attack_cooldown[PLAYER_ID] = attack_details.cooldown;
+    m_components.attack_cooldowns[PLAYER_ID] = attack_details.cooldown;
     spawn_attack(Attack::Melee, PLAYER_ID);
 #endif
 }

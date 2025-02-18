@@ -305,7 +305,7 @@ Components::Components()
     flags.resize(MAX_ENTITIES, 0);
     lifespans.resize(MAX_ENTITIES, std::nullopt);
     parents.resize(MAX_ENTITIES, std::nullopt);
-    attack_cooldown.resize(MAX_ENTITIES, std::nullopt);
+    attack_cooldowns.resize(MAX_ENTITIES, 0.0);
     invuln_times.resize(MAX_ENTITIES, 0.0);
 
     for (size_t i = 0; i < MAX_ENTITIES; i++)
