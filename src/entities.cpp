@@ -85,7 +85,7 @@ AttackDetails attack_details(const Attack attack)
     switch (attack)
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
-        return { MeleeDetails{ { 18.0, 7.0 }, { 24.0, 9.0 } }, 0.3, 0.0, 0.5 };
+        return { MeleeDetails{ { 18.0, 7.0 } }, 0.3, 0.0, 0.5 };
     case Attack::Projectile:
         return { ProjectileDetails{ 500.0 }, 0.3, 0.0, 0.5 };
     } // NOLINTEND(*magic-numbers)

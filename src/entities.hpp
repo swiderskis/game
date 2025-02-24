@@ -32,7 +32,6 @@ enum class Attack
 struct MeleeDetails
 {
     RVector2 size;
-    RVector2 offset;
 };
 
 struct ProjectileDetails
