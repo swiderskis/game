@@ -16,6 +16,7 @@ inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
 inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
 inline constexpr auto TILE_CBOX_OFFSET = SimpleVec2(-8.0, 16.0);
+inline constexpr auto MELEE_OFFSET = SimpleVec2(24.0, 9.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -379,7 +380,7 @@ void Components::init_melee(const unsigned id,
     collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
     lifespans[id] = details.lifespan;
     hitboxes[id].set(transforms[id], melee_details.size);
-    hitboxes[id].offset = melee_details.offset;
+    hitboxes[id].offset = MELEE_OFFSET;
     parents[id] = parent_id;
 }
 
