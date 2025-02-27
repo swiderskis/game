@@ -39,9 +39,16 @@ struct ProjectileDetails
     float speed;
 };
 
+struct SectorDetails
+{
+    float radius;
+    float central_angle;
+    float direction_angle;
+};
+
 struct AttackDetails
 {
-    std::variant<MeleeDetails, ProjectileDetails> details;
+    std::variant<MeleeDetails, ProjectileDetails, SectorDetails> details;
     float lifespan;
     float delay;
     float cooldown;
