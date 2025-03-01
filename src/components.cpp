@@ -2,10 +2,13 @@
 
 #include "entities.hpp"
 #include "logging.hpp"
+#include "raylib.h"
 #include "settings.hpp"
 #include "utils.hpp"
+#include "Vector2.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <optional>
 #include <utility>
 
@@ -20,6 +23,19 @@ inline constexpr auto MELEE_OFFSET = SimpleVec2(24.0, 9.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
+
+namespace
+{
+bool check_collision(RRectangle rectangle1, RRectangle rectangle2);
+bool check_collision(RRectangle rectangle, Circle circle);
+bool check_collision(RRectangle rectangle, Line line);
+bool check_collision(Circle circle, RRectangle rectangle);
+bool check_collision(Circle circle1, Circle circle2);
+bool check_collision(Circle circle, Line line);
+bool check_collision(Line line, RRectangle rectangle);
+bool check_collision(Line line, Circle circle);
+bool check_collision(Line line1, Line line2);
+} // namespace
 
 void Sprite::check_update_frames(const float dt)
 {
@@ -164,14 +180,31 @@ Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius
 {
 }
 
-bool Circle::check_collision(const Circle other_circle) const
-{
-    return radius + other_circle.radius > pos.Distance(other_circle.pos);
-}
-
 void Circle::draw_lines(const ::Color color) const
 {
     DrawCircleLines((int)pos.x, (int)pos.y, radius, color);
+}
+
+Line::Line(const RVector2 pos1, const RVector2 pos2) : pos1(pos1), pos2(pos2)
+{
+}
+
+Line::Line(const RVector2 pos, const float len, const float angle) : pos1(pos)
+{
+    pos2 = pos1 + RVector2(len * cos(angle), len * sin(angle));
+}
+
+float Line::len() const
+{
+    const float x_len = pos2.x - pos1.x;
+    const float y_len = pos2.y - pos1.y;
+
+    return sqrt(x_len * x_len + y_len * y_len);
+}
+
+void Line::draw_line(::Color color) const
+{
+    DrawLine((int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, color);
 }
 
 void BBox::sync(const Tform transform, const bool flipped)
@@ -185,6 +218,7 @@ void BBox::sync(const Tform transform, const bool flipped)
                 bbox.y += (SPRITE_SIZE - bbox.height);
                 bbox.x += offset.x * (flipped ? -1.0F : 1.0F);
                 bbox.y -= offset.y;
+                LOG_TRC("Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
             },
             [transform, this, flipped](Circle& bbox)
             {
@@ -193,6 +227,16 @@ void BBox::sync(const Tform transform, const bool flipped)
                 bbox.pos.y += SPRITE_SIZE / 2;
                 bbox.pos.x += offset.x * (flipped ? -1.0F : 1.0F);
                 bbox.pos.y -= offset.y;
+                LOG_TRC("Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
+            },
+            [transform, this, flipped](Line& bbox)
+            {
+                bbox.pos2 = transform.pos + (bbox.pos2 - bbox.pos1);
+                bbox.pos1 = transform.pos;
+                bbox.pos1.x += offset.x * (flipped ? -1.0F : 1.0F);
+                bbox.pos2.x += offset.x * (flipped ? -1.0F : 1.0F);
+                LOG_TRC("Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
+                LOG_TRC("Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
             },
         },
         m_bounding_box);
@@ -200,35 +244,23 @@ void BBox::sync(const Tform transform, const bool flipped)
 
 bool BBox::collides(const BBox other_bbox) const
 {
-    const auto rect_bbox = [other_bbox](RRectangle bbox)
-    {
-        return std::visit(
-            overloaded{
-                [bbox](const RRectangle other_bbox) { return bbox.CheckCollision(other_bbox); },
-                [bbox](const Circle other_bbox) { return bbox.CheckCollision(other_bbox.pos, other_bbox.radius); },
-            },
-            other_bbox.m_bounding_box);
-    };
-    const auto circle_bbox = [other_bbox](Circle bbox)
-    {
-        return std::visit(
-            overloaded{
-                [bbox](const RRectangle other_bbox) { return other_bbox.CheckCollision(bbox.pos, bbox.radius); },
-                [bbox](const Circle other_bbox) { return bbox.check_collision(other_bbox); },
-            },
-            other_bbox.m_bounding_box);
-    };
-
     return std::visit(
         overloaded{
-            rect_bbox,
-            circle_bbox,
+            [other_bbox](const auto bbox)
+            {
+                return std::visit(
+                    overloaded{
+                        [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); },
+                    },
+                    other_bbox.m_bounding_box);
+            },
         },
         m_bounding_box);
 }
 
 bool BBox::x_overlaps(const BBox other_bbox) const
 {
+    // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bounding_box.index() == RECTANGLE);
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
@@ -245,12 +277,20 @@ bool BBox::x_overlaps(const BBox other_bbox) const
                 return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
                        || (other_bbox.pos.x >= bbox.x && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
             },
+            [bbox](const Line other_bbox)
+            {
+                return (bbox.x <= other_bbox.pos1.x && bbox.x + bbox.width >= other_bbox.pos1.x)
+                       || (bbox.x <= other_bbox.pos2.x && bbox.x + bbox.width >= other_bbox.pos2.x)
+                       || (bbox.x >= other_bbox.pos1.x && bbox.x + bbox.width <= other_bbox.pos2.x)
+                       || (bbox.x >= other_bbox.pos2.x && bbox.x + bbox.width <= other_bbox.pos1.x);
+            },
         },
         other_bbox.m_bounding_box);
 }
 
 bool BBox::y_overlaps(const BBox other_bbox) const
 {
+    // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bounding_box.index() == RECTANGLE);
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
@@ -267,6 +307,13 @@ bool BBox::y_overlaps(const BBox other_bbox) const
                 return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
                        || (other_bbox.pos.y >= bbox.y && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
             },
+            [bbox](const Line other_bbox)
+            {
+                return (bbox.y <= other_bbox.pos1.y && bbox.y + bbox.height >= other_bbox.pos1.y)
+                       || (bbox.y <= other_bbox.pos2.y && bbox.y + bbox.height >= other_bbox.pos2.y)
+                       || (bbox.y >= other_bbox.pos1.y && bbox.y + bbox.height <= other_bbox.pos2.y)
+                       || (bbox.y >= other_bbox.pos2.y && bbox.y + bbox.height <= other_bbox.pos1.y);
+            },
         },
         other_bbox.m_bounding_box);
 }
@@ -280,6 +327,12 @@ void BBox::set(const Tform transform, const RVector2 size)
 void BBox::set(const Tform transform, const float radius)
 {
     m_bounding_box = Circle(RVector2(0.0, 0.0), radius);
+    sync(transform, false);
+}
+
+void BBox::set(const Tform transform, const float len, const float angle)
+{
+    m_bounding_box = Line(RVector2(0.0, 0.0), len, angle);
     sync(transform, false);
 }
 
@@ -486,3 +539,60 @@ SpriteDetails sprite_details(const SpriteExtra sprite)
     std::unreachable();
 }
 } // namespace components
+
+namespace
+{
+bool check_collision(const RRectangle rectangle1, const RRectangle rectangle2)
+{
+    return rectangle1.CheckCollision(rectangle2);
+}
+
+bool check_collision(const RRectangle rectangle, const Circle circle)
+{
+    return rectangle.CheckCollision(circle.pos, circle.radius);
+}
+
+bool check_collision(const RRectangle rectangle, const Line line)
+{
+    const auto rect_pos = rectangle.GetPosition();
+    const auto rect_size = rectangle.GetSize();
+    const auto rect_line1 = Line(rect_pos, rect_pos + RVector2(rectangle.width, 0.0));
+    const auto rect_line2 = Line(rect_pos, rect_pos + RVector2(0.0, rectangle.height));
+    const auto rect_line3 = Line(rect_pos + RVector2(rectangle.width, 0.0), rect_pos + rect_size);
+    const auto rect_line4 = Line(rect_pos + RVector2(0.0, rectangle.height), rect_pos + rect_size);
+
+    return rectangle.CheckCollision(line.pos1) || rectangle.CheckCollision(line.pos2)
+           || check_collision(rect_line1, line) || check_collision(rect_line2, line)
+           || check_collision(rect_line3, line) || check_collision(rect_line4, line);
+}
+
+bool check_collision(const Circle circle, const RRectangle rectangle)
+{
+    return check_collision(rectangle, circle);
+}
+
+bool check_collision(const Circle circle1, const Circle circle2)
+{
+    return circle1.radius + circle2.radius > circle1.pos.Distance(circle2.pos);
+}
+
+bool check_collision(const Circle circle, const Line line)
+{
+    return CheckCollisionCircleLine(circle.pos, circle.radius, line.pos1, line.pos2);
+}
+
+bool check_collision(const Line line, const RRectangle rectangle)
+{
+    return check_collision(rectangle, line);
+}
+
+bool check_collision(const Line line, const Circle circle)
+{
+    return check_collision(circle, line);
+}
+
+bool check_collision(const Line line1, const Line line2)
+{
+    return line1.pos1.CheckCollisionLines(line1.pos2, line2.pos1, line2.pos2, nullptr);
+}
+} // namespace

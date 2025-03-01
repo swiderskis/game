@@ -42,8 +42,8 @@ struct ProjectileDetails
 struct SectorDetails
 {
     float radius;
-    float central_angle;
-    float direction_angle;
+    float central_ang;
+    float direction_ang;
 };
 
 struct AttackDetails

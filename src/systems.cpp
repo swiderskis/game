@@ -93,6 +93,7 @@ void Game::render()
             overloaded{
                 [](const RRectangle bbox) { bbox.DrawLines(RED); },
                 [](const Circle bbox) { bbox.draw_lines(RED); },
+                [](const Line bbox) { bbox.draw_line(RED); },
             },
             m_components.collision_boxes[id].bounding_box());
 #endif
@@ -101,6 +102,7 @@ void Game::render()
             overloaded{
                 [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
                 [](const Circle bbox) { bbox.draw_lines(GREEN); },
+                [](const Line bbox) { bbox.draw_line(GREEN); },
             },
             m_components.hitboxes[id].bounding_box());
 #endif
@@ -177,6 +179,7 @@ void Game::move_entities()
                     { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
                     [tile_rcbox](const Circle cbox)
                     { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
+                    [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
                 },
                 cbox.bounding_box());
             if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
@@ -191,6 +194,7 @@ void Game::move_entities()
                     { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
                     [tile_rcbox](const Circle cbox)
                     { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
+                    [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
                 },
                 cbox.bounding_box());
             if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
@@ -301,6 +305,7 @@ void Game::damage_entities()
     }
 }
 
+// child entities are assumed to have no velocity, this system will override it
 void Game::sync_children()
 {
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
