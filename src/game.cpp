@@ -125,14 +125,24 @@ RWindow& Game::window()
     return m_window;
 }
 
+Entities& Game::entities()
+{
+    return m_entities;
+}
+
+Components& Game::components()
+{
+    return m_components;
+}
+
 #ifndef NDEBUG
-#include <iostream>
+#include "logging.hpp"
 
 void Game::reload_texture_sheet()
 {
     m_texture_sheet.Unload();
     m_texture_sheet.Load(TEXTURE_SHEET);
-    std::cout << "Texture sheet reloaded\n";
+    LOG_INF("Texture sheet reloaded");
 }
 
 extern "C" __declspec(dllexport) void run(Game& game)

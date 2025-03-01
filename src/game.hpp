@@ -74,6 +74,8 @@ public:
 
     void run();
     RWindow& window();
+    [[nodiscard]] Entities& entities();
+    [[nodiscard]] Components& components();
 #ifndef NDEBUG
     void reload_texture_sheet();
 #endif

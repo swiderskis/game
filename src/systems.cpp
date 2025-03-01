@@ -43,6 +43,7 @@ inline constexpr float INVULN_TIME = 0.5;
 namespace
 {
 int damage(Entity entity);
+void resolve_tile_collisions(Game& game, unsigned id, BBox prev_cbox);
 } // namespace
 
 void Game::poll_inputs()
@@ -157,64 +158,7 @@ void Game::move_entities()
         const auto prev_cbox = cbox;
         const auto flipped = m_components.flags[id][flag::FLIPPED];
         cbox.sync(transform, flipped);
-        // resolve tile collisions
-        for (const unsigned tile_id : m_entities.entity_ids(Entity::Tile))
-        {
-            const auto tile_cbox = m_components.collision_boxes[tile_id];
-            if (!cbox.collides(tile_cbox))
-            {
-                continue;
-            }
-
-            if (std::ranges::contains(DESTROY_ON_COLLISION, entity))
-            {
-                m_entities.queue_destroy(id);
-                continue;
-            }
-
-            const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
-            const float x_adjust = std::visit(
-                overloaded{
-                    [tile_rcbox](const RRectangle cbox)
-                    { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
-                    [tile_rcbox](const Circle cbox)
-                    { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
-                    [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
-                },
-                cbox.bounding_box());
-            if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
-            {
-                transform.pos.x += x_adjust;
-                cbox.sync(transform, flipped);
-            }
-
-            const float y_adjust = std::visit(
-                overloaded{
-                    [tile_rcbox](const RRectangle cbox)
-                    { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
-                    [tile_rcbox](const Circle cbox)
-                    { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
-                    [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
-                },
-                cbox.bounding_box());
-            if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
-            {
-                transform.pos.y += y_adjust;
-                cbox.sync(transform, flipped);
-#ifdef GRAVITY
-                if (y_adjust != 0.0)
-                {
-                    transform.vel.y = 0.0;
-                }
-
-                if (y_adjust < 0.0)
-                {
-                    m_components.flags[id][flag::GROUNDED] = true;
-                }
-#endif
-            }
-        }
-
+        resolve_tile_collisions(*this, id, prev_cbox);
         m_components.hitboxes[id].sync(transform, flipped);
     }
 }
@@ -355,5 +299,69 @@ int damage(Entity entity)
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
+}
+
+void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox)
+{
+    const auto entity = game.entities().entities()[id];
+    auto& transform = game.components().transforms[id];
+    auto& cbox = game.components().collision_boxes[id];
+    const auto flipped = game.components().flags[id][flag::FLIPPED];
+    for (const unsigned tile_id : game.entities().entity_ids(Entity::Tile))
+    {
+        const auto tile_cbox = game.components().collision_boxes[tile_id];
+        if (!cbox.collides(tile_cbox))
+        {
+            continue;
+        }
+
+        if (std::ranges::contains(DESTROY_ON_COLLISION, entity))
+        {
+            game.entities().queue_destroy(id);
+            continue;
+        }
+
+        const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
+        const float x_adjust = std::visit(
+            overloaded{
+                [tile_rcbox](const RRectangle cbox)
+                { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
+                [tile_rcbox](const Circle cbox)
+                { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
+                [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
+            },
+            cbox.bounding_box());
+        if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
+        {
+            transform.pos.x += x_adjust;
+            cbox.sync(transform, flipped);
+        }
+
+        const float y_adjust = std::visit(
+            overloaded{
+                [tile_rcbox](const RRectangle cbox)
+                { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
+                [tile_rcbox](const Circle cbox)
+                { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
+                [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
+            },
+            cbox.bounding_box());
+        if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
+        {
+            transform.pos.y += y_adjust;
+            cbox.sync(transform, flipped);
+#ifdef GRAVITY
+            if (y_adjust != 0.0)
+            {
+                transform.vel.y = 0.0;
+            }
+
+            if (y_adjust < 0.0)
+            {
+                m_components.flags[id][flag::GROUNDED] = true;
+            }
+#endif
+        }
+    }
 }
 } // namespace
