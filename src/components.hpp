@@ -134,21 +134,27 @@ struct Circle
 
     Circle(RVector2 pos, float radius);
 
-    [[nodiscard]] bool check_collision(Circle other_circle) const;
     void draw_lines(::Color color) const;
 };
 
-using BBoxVariant = std::variant<RRectangle, Circle>;
+struct Line
+{
+    RVector2 pos1;
+    RVector2 pos2;
+
+    Line() = delete;
+    Line(RVector2 pos1, RVector2 pos2);
+    Line(RVector2 pos, float len, float angle);
+
+    [[nodiscard]] float len() const;
+    void draw_line(::Color color) const;
+};
+
+using BBoxVariant = std::variant<RRectangle, Circle, Line>;
 
 class BBox
 {
     BBoxVariant m_bounding_box{ RRectangle{ RVector2(0.0, 0.0), RVector2(SPRITE_SIZE, SPRITE_SIZE) } };
-
-    enum Variant
-    {
-        RECTANGLE = 0,
-        CIRCLE = 1,
-    };
 
 public:
     RVector2 offset{ 0.0, 0.0 };
@@ -161,7 +167,15 @@ public:
     [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
     void set(Tform transform, RVector2 size);
     void set(Tform transform, float radius);
+    void set(Tform transform, float len, float angle);
     [[nodiscard]] BBoxVariant bounding_box() const;
+
+    enum Variant
+    {
+        RECTANGLE = 0,
+        CIRCLE = 1,
+        LINE = 2,
+    };
 };
 
 namespace flag
