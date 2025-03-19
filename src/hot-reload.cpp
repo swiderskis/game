@@ -10,16 +10,18 @@
 #include <windows.h>
 
 #define MODULE HMODULE
+#define PROC FARPROC
 #define SO_SUFFIX ".dll"
 #else
 #include <dlfcn.h>
 
 #define MODULE void*
+#define PROC void*
 #define SO_SUFFIX ".so"
 #endif
 
 #ifndef SO_NAME
-#define SO_NAME "build/debug/game" SO_SUFFIX
+#define SO_NAME "make-build/debug/game" SO_SUFFIX
 #endif
 #define SO_TEMP_NAME SO_NAME ".tmp"
 
@@ -30,7 +32,7 @@ namespace
 MODULE lib = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 MODULE load_lib(const char* so_name);
-void* get_func_address(MODULE lib, const char* func_name);
+PROC get_func_address(MODULE lib, const char* func_name);
 void free_lib(MODULE lib);
 } // namespace
 
@@ -99,7 +101,7 @@ MODULE load_lib(const char* so_name)
 #endif
 }
 
-void* get_func_address(MODULE lib, const char* func_name)
+PROC get_func_address(MODULE lib, const char* func_name)
 {
 #if defined(_WIN32) || defined(__CYGWIN__)
     return GetProcAddress(lib, func_name);
