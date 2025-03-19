@@ -3,6 +3,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "settings.hpp"
+#include "utils.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -145,12 +146,12 @@ void Game::reload_texture_sheet()
     LOG_INF("Texture sheet reloaded");
 }
 
-extern "C" __declspec(dllexport) void run(Game& game)
+EXPORT void run(Game& game)
 {
     game.run();
 }
 
-extern "C" __declspec(dllexport) bool check_reload_lib()
+EXPORT bool check_reload_lib()
 {
     return RKeyboard::IsKeyPressed(KEY_R);
 }

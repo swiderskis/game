@@ -1,7 +1,6 @@
 #ifndef HOT_RELOAD_HPP_
 #define HOT_RELOAD_HPP_
 
-// TODO make this cross-platform
 #ifndef NDEBUG
 class Game;
 

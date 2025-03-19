@@ -5,22 +5,42 @@
 
 #include <filesystem>
 #include <system_error>
+
+#if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 
+#define MODULE HMODULE
+#define PROC FARPROC
+#define SO_SUFFIX ".dll"
+#else
+#include <dlfcn.h>
+
+#define MODULE void*
+#define PROC void*
+#define SO_SUFFIX ".so"
+#endif
+
 #ifndef SO_NAME
-#define SO_NAME "build/debug/game.dll"
+#define SO_NAME "make-build/debug/game" SO_SUFFIX
 #endif
 #define SO_TEMP_NAME SO_NAME ".tmp"
 
 namespace fs = std::filesystem;
 
-HMODULE lib = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+namespace
+{
+MODULE lib = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
+MODULE load_lib(const char* so_name);
+PROC get_func_address(MODULE lib, const char* func_name);
+void free_lib(MODULE lib);
+} // namespace
 
 bool hot_reload::reload_lib(GameFuncs& game_funcs)
 {
     if (lib != nullptr)
     {
-        FreeLibrary(lib);
+        free_lib(lib);
     }
 
     std::error_code ec;
@@ -34,7 +54,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         return false;
     }
 
-    lib = LoadLibrary(SO_TEMP_NAME);
+    lib = load_lib(SO_TEMP_NAME);
     if (lib == nullptr)
     {
         LOG_ERR("Failed to load library");
@@ -46,7 +66,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
     // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast)
-    game_funcs.run = (RunFunc)GetProcAddress(lib, "run");
+    game_funcs.run = (RunFunc)get_func_address(lib, "run");
     if (game_funcs.run == nullptr)
     {
         LOG_ERR("Failed to get run function address");
@@ -54,7 +74,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         return false;
     }
 
-    game_funcs.check_reload_lib = (CheckReloadLibFunc)GetProcAddress(lib, "check_reload_lib");
+    game_funcs.check_reload_lib = (CheckReloadLibFunc)get_func_address(lib, "check_reload_lib");
     if (game_funcs.check_reload_lib == nullptr)
     {
         LOG_ERR("Failed to get check_reload_lib function address");
@@ -69,4 +89,34 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
 
     return true;
 }
+
+namespace
+{
+MODULE load_lib(const char* so_name)
+{
+#if defined(_WIN32) || defined(__CYGWIN__)
+    return LoadLibrary(so_name);
+#else
+    return dlopen(so_name, RTLD_LAZY);
+#endif
+}
+
+PROC get_func_address(MODULE lib, const char* func_name)
+{
+#if defined(_WIN32) || defined(__CYGWIN__)
+    return GetProcAddress(lib, func_name);
+#else
+    return dlsym(lib, func_name);
+#endif
+}
+
+void free_lib(MODULE lib)
+{
+#if defined(_WIN32) || defined(__CYGWIN__)
+    FreeLibrary(lib);
+#else
+    dlclose(lib);
+#endif
+}
+} // namespace
 #endif
