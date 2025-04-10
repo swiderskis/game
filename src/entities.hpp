@@ -4,12 +4,13 @@
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "settings.hpp"
 
+#include <cstdint>
 #include <optional>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
-enum class Entity
+enum class Entity : uint8_t
 {
     Player,
     Tile,
@@ -18,12 +19,12 @@ enum class Entity
     Melee,
 };
 
-enum class Tile
+enum class Tile : uint8_t
 {
     Brick,
 };
 
-enum class Attack
+enum class Attack : uint8_t
 {
     Melee,
     Projectile,
@@ -54,7 +55,7 @@ struct AttackDetails
     float cooldown;
 };
 
-enum class Enemy
+enum class Enemy : uint8_t
 {
     Duck,
 };
