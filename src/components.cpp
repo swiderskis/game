@@ -60,29 +60,7 @@ void Sprite::draw(RTexture const& texture_sheet, const Tform transform, const bo
 
 void Sprite::lookup_set_movement_parts(const Entity entity, const RVector2 vel)
 {
-#ifdef GRAVITY
-    if (vel.y > 0)
-    {
-        lookup_set_fall_parts(entity);
-    }
-    else if (vel.y < 0)
-    {
-        lookup_set_jump_parts(entity);
-    }
-    else if (vel.x != 0)
-    {
-        lookup_set_walk_parts(entity);
-    }
-#else
-    if (vel.y != 0 || vel.x != 0)
-    {
-        lookup_set_walk_parts(entity);
-    }
-#endif
-    else
-    {
-        lookup_set_idle_parts(entity);
-    }
+    (vel.y != 0 || vel.x != 0) ? lookup_set_walk_parts(entity) : lookup_set_idle_parts(entity);
 }
 
 float Sprite::alternate_frame_y_offset() const
