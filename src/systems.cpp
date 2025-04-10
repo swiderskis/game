@@ -17,12 +17,6 @@
 #define RANGED
 #undef RANGED
 
-#ifdef GRAVITY
-static constexpr auto GRAVITY_AFFECTED_ENTITIES = {
-    Entity::Player,
-    Entity::Enemy,
-};
-#endif
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
 };
@@ -35,8 +29,6 @@ inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float JUMP_SPEED = 450.0;
-inline constexpr float GRAVITY_ACCELERATION = 1000.0;
-inline constexpr float MAX_FALL_SPEED = 500.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 inline constexpr float INVULN_TIME = 0.5;
 
@@ -50,12 +42,8 @@ void Game::poll_inputs()
 {
     m_inputs.left = RKeyboard::IsKeyDown(KEY_A);
     m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
-#ifdef GRAVITY
-    m_inputs.up = RKeyboard::IsKeyPressed(KEY_W) || RKeyboard::IsKeyPressed(KEY_SPACE);
-#else
     m_inputs.up = RKeyboard::IsKeyDown(KEY_W);
     m_inputs.down = RKeyboard::IsKeyDown(KEY_S);
-#endif
     m_inputs.attack = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
     m_inputs.spawn_enemy = RKeyboard::IsKeyPressed(KEY_P);
 }
@@ -118,17 +106,9 @@ void Game::set_player_vel()
     player_vel.x = 0.0;
     player_vel.x += (m_inputs.right ? PLAYER_SPEED : 0.0F);
     player_vel.x -= (m_inputs.left ? PLAYER_SPEED : 0.0F);
-#ifdef GRAVITY
-    if (m_inputs.up && m_components.flags[PLAYER_ID][flag::GROUNDED])
-    {
-        player_vel.y = -JUMP_SPEED;
-        m_components.flags[PLAYER_ID][flag::GROUNDED] = false;
-    }
-#else
     player_vel.y = 0.0;
     player_vel.y -= (m_inputs.up ? PLAYER_SPEED : 0.0F);
     player_vel.y += (m_inputs.down ? PLAYER_SPEED : 0.0F);
-#endif
 }
 
 void Game::move_entities()
@@ -141,13 +121,6 @@ void Game::move_entities()
         }
 
         auto& transform = m_components.transforms[id];
-#ifdef GRAVITY
-        if (std::ranges::contains(GRAVITY_AFFECTED_ENTITIES, entity))
-        {
-            transform.vel.y = std::min(MAX_FALL_SPEED, transform.vel.y + GRAVITY_ACCELERATION * dt());
-            m_components.flags[id][flag::GROUNDED] = false;
-        }
-#endif
         transform.pos += transform.vel * dt();
         if (transform.vel.x != 0.0)
         {
@@ -350,17 +323,6 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
         {
             transform.pos.y += y_adjust;
             cbox.sync(transform, flipped);
-#ifdef GRAVITY
-            if (y_adjust != 0.0)
-            {
-                transform.vel.y = 0.0;
-            }
-
-            if (y_adjust < 0.0)
-            {
-                m_components.flags[id][flag::GROUNDED] = true;
-            }
-#endif
         }
     }
 }

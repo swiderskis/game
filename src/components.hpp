@@ -182,9 +182,6 @@ namespace flag
 {
 enum Flag
 {
-#ifdef GRAVITY
-    GROUNDED,
-#endif
     FLIPPED,
 };
 } // namespace flag
