@@ -7,6 +7,7 @@
 #include "utils.hpp"
 
 #include <bitset>
+#include <cstdint>
 #include <optional>
 #include <variant>
 
@@ -21,7 +22,7 @@ struct Tform
     RVector2 vel;
 };
 
-enum class SpriteBase
+enum class SpriteBase : int8_t
 {
     None = -1,
 
@@ -33,14 +34,14 @@ enum class SpriteBase
     TileBrick,
 };
 
-enum class SpriteHead
+enum class SpriteHead : int8_t
 {
     None = -1,
 
     PlayerIdle,
 };
 
-enum class SpriteArms
+enum class SpriteArms : int8_t
 {
     None = -1,
 
@@ -49,7 +50,7 @@ enum class SpriteArms
     PlayerAttack,
 };
 
-enum class SpriteLegs
+enum class SpriteLegs : int8_t
 {
     None = -1,
 
@@ -58,7 +59,7 @@ enum class SpriteLegs
     PlayerJump,
 };
 
-enum class SpriteExtra
+enum class SpriteExtra : int8_t
 {
     None = -1,
 
@@ -170,7 +171,7 @@ public:
     void set(Tform transform, float len, float angle);
     [[nodiscard]] BBoxVariant bounding_box() const;
 
-    enum Variant
+    enum Variant : uint8_t
     {
         RECTANGLE = 0,
         CIRCLE = 1,
@@ -180,7 +181,7 @@ public:
 
 namespace flag
 {
-enum Flag
+enum Flag : uint8_t
 {
     FLIPPED,
 };

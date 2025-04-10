@@ -177,7 +177,7 @@ float Line::len() const
     const float x_len = pos2.x - pos1.x;
     const float y_len = pos2.y - pos1.y;
 
-    return sqrt(x_len * x_len + y_len * y_len);
+    return sqrt((x_len * x_len) + (y_len * y_len));
 }
 
 void Line::draw_line(::Color color) const
@@ -439,17 +439,47 @@ SpriteDetails sprite_details(const SpriteBase sprite)
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
     case SpriteBase::None:
-        return { { 0.0, 0.0 }, { 0.0, 0.0 }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteBase::PlayerIdle:
-        return { { 128.0, 32.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 32.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteBase::Projectile:
-        return { { 128.0, 224.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 224.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteBase::EnemyDuck:
-        return { { 128.0, 256.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 256.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
 
     // tiles
     case SpriteBase::TileBrick:
-        return { { 0.0, 0.0 }, { TILE_SIZE, TILE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { TILE_SIZE, TILE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
@@ -460,9 +490,21 @@ SpriteDetails sprite_details(const SpriteHead sprite)
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
     case SpriteHead::None:
-        return { { 0.0, 0.0 }, { 0.0, 0.0 }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteHead::PlayerIdle:
-        return { { 128.0, 0.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 0.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
@@ -473,13 +515,37 @@ SpriteDetails sprite_details(const SpriteArms sprite)
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
     case SpriteArms::None:
-        return { { 0.0, 0.0 }, { 0.0, 0.0 }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteArms::PlayerIdle:
-        return { { 128.0, 64.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 64.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteArms::PlayerJump:
-        return { { 160.0, 64.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 160.0, 64.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteArms::PlayerAttack:
-        return { { 192.0, 64.0 }, { 2 * SPRITE_SIZE, SPRITE_SIZE }, 1, 0.3, false };
+        return {
+            .pos = { 192.0, 64.0 },
+            .size = { 2 * SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.3,
+            .allow_movement_override = false,
+        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
@@ -490,13 +556,37 @@ SpriteDetails sprite_details(const SpriteLegs sprite)
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
     case SpriteLegs::None:
-        return { { 0.0, 0.0 }, { 0.0, 0.0 }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteLegs::PlayerIdle:
-        return { { 128.0, 96.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 2, 0.5, true };
+        return {
+            .pos = { 128.0, 96.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 2,
+            .frame_duration = 0.5,
+            .allow_movement_override = true,
+        };
     case SpriteLegs::PlayerWalk:
-        return { { 128.0, 128.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 4, 0.16, true };
+        return {
+            .pos = { 128.0, 128.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 4,
+            .frame_duration = 0.16,
+            .allow_movement_override = true,
+        };
     case SpriteLegs::PlayerJump:
-        return { { 128.0, 96.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 1, 0.0, true };
+        return {
+            .pos = { 128.0, 96.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
@@ -507,11 +597,29 @@ SpriteDetails sprite_details(const SpriteExtra sprite)
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
     case SpriteExtra::None:
-        return { { 0.0, 0.0 }, { 0.0, 0.0 }, 1, 0.0, true };
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+            .frames = 1,
+            .frame_duration = 0.0,
+            .allow_movement_override = true,
+        };
     case SpriteExtra::PlayerScarfWalk:
-        return { { 128.0, 160.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 4, 0.16, true };
+        return {
+            .pos = { 128.0, 160.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 4,
+            .frame_duration = 0.16,
+            .allow_movement_override = true,
+        };
     case SpriteExtra::PlayerScarfFall:
-        return { { 128.0, 192.0 }, { SPRITE_SIZE, SPRITE_SIZE }, 4, 0.1, true };
+        return {
+            .pos = { 128.0, 192.0 },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
+            .frames = 4,
+            .frame_duration = 0.1,
+            .allow_movement_override = true,
+        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
