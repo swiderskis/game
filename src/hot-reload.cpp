@@ -1,5 +1,8 @@
 #include "hot-reload.hpp" // IWYU pragma: keep
 
+#include <cstdlib>
+#include <string>
+
 #ifndef NDEBUG
 #include "logging.hpp"
 
@@ -29,7 +32,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-MODULE lib = nullptr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+MODULE lib = nullptr;       // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+unsigned rand_num = rand(); // NOLINT
 
 MODULE load_lib(const char* so_name);
 PROC get_func_address(MODULE lib, const char* func_name);
@@ -43,10 +47,18 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         free_lib(lib);
     }
 
+    std::string so_temp_name = SO_TEMP_NAME + std::to_string(rand_num);
     std::error_code ec;
-    fs::remove(SO_TEMP_NAME);
-    fs::copy(SO_NAME, SO_TEMP_NAME, ec);
+    fs::remove(so_temp_name, ec);
+    if (ec.value() != 0)
+    {
+        LOG_ERR("Failed to delete shared library file");
 
+        return false;
+    }
+
+    rand_num = rand(); // NOLINT
+    fs::copy(SO_NAME, so_temp_name, ec);
     if (ec.value() != 0)
     {
         LOG_ERR("Failed to copy shared library file");
@@ -54,7 +66,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
         return false;
     }
 
-    lib = load_lib(SO_TEMP_NAME);
+    lib = load_lib(so_temp_name.c_str());
     if (lib == nullptr)
     {
         LOG_ERR("Failed to load library");
