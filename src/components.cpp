@@ -10,18 +10,6 @@
 #include <optional>
 #include <utility>
 
-inline constexpr auto PLAYER_CBOX_SIZE = SimpleVec2(20.0, 29.0);
-inline constexpr auto ENEMY_CBOX_SIZE = SimpleVec2(30.0, 24.0);
-inline constexpr auto PLAYER_HITBOX_SIZE = SimpleVec2(12.0, 21.0);
-inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
-inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
-inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
-inline constexpr auto TILE_CBOX_OFFSET = SimpleVec2(-8.0, 16.0);
-inline constexpr auto MELEE_OFFSET = SimpleVec2(24.0, 9.0);
-
-inline constexpr int PLAYER_HEALTH = 100;
-inline constexpr int ENEMY_HEALTH = 100;
-
 namespace
 {
 bool check_collision(RRectangle rectangle1, RRectangle rectangle2);
@@ -338,100 +326,6 @@ Components::Components()
     }
 }
 
-void Components::init_player(const unsigned id, const RVector2 pos)
-{
-    transforms[id].pos = pos;
-    collision_boxes[id].set(transforms[id], PLAYER_CBOX_SIZE);
-    healths[id].set_health(PLAYER_HEALTH);
-    hitboxes[id].set(transforms[id], PLAYER_HITBOX_SIZE);
-    hitboxes[id].offset = PLAYER_HITBOX_OFFSET;
-}
-
-void Components::init_tile(const unsigned id, const RVector2 pos, const Tile tile)
-{
-    transforms[id].pos = pos;
-    collision_boxes[id].offset = TILE_CBOX_OFFSET;
-    collision_boxes[id].set(transforms[id], RVector2(TILE_SIZE, TILE_SIZE));
-
-    switch (tile)
-    {
-    case Tile::Brick:
-        sprites[id].base.set(SpriteBase::TileBrick);
-        break;
-    }
-}
-
-void Components::init_projectile(const unsigned id, const RVector2 pos, const RVector2 target, const Attack attack)
-{
-    const auto details = entities::attack_details(attack);
-    const auto proj_details = std::get<ProjectileDetails>(details.details);
-    const auto diff = target - pos;
-    const float angle = atan2(diff.y, diff.x);
-    transforms[id].pos = pos;
-    transforms[id].vel = RVector2(cos(angle), sin(angle)) * proj_details.speed;
-    sprites[id].base.set(SpriteBase::Projectile);
-    collision_boxes[id].set(transforms[id], 4);
-    lifespans[id] = details.lifespan;
-    hitboxes[id].set(transforms[id], 4);
-    hit_damage[id] = details.damage;
-}
-
-void Components::init_enemy(const unsigned id, const RVector2 pos, const Enemy enemy)
-{
-    transforms[id].pos = pos;
-    collision_boxes[id].set(transforms[id], ENEMY_CBOX_SIZE);
-    healths[id].set_health(ENEMY_HEALTH);
-    hitboxes[id].set(transforms[id], ENEMY_HITBOX_SIZE);
-    hitboxes[id].offset = ENEMY_HITBOX_OFFSET;
-
-    switch (enemy)
-    {
-    case Enemy::Duck:
-        sprites[id].base.set(SpriteBase::EnemyDuck);
-        break;
-    }
-}
-
-void Components::init_melee(const unsigned id, const RVector2 pos, const unsigned parent_id, const Attack attack)
-{
-    const auto details = entities::attack_details(attack);
-    const auto melee_details = std::get<MeleeDetails>(details.details);
-    transforms[id].pos = pos;
-    collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
-    lifespans[id] = details.lifespan;
-    hitboxes[id].set(transforms[id], melee_details.size);
-    hitboxes[id].offset = MELEE_OFFSET;
-    parents[id] = parent_id;
-    hit_damage[id] = details.damage;
-}
-
-void Components::init_sector(const unsigned id, const unsigned parent_id, const Attack attack)
-{
-    const auto details = entities::attack_details(attack);
-    collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
-    lifespans[id] = details.lifespan;
-    hitboxes[id].set(transforms[id], RVector2(0.0, 0.0));
-    parents[id] = parent_id;
-}
-
-void Components::init_damage_line(const unsigned id,
-                                  const RVector2 pos,
-                                  const float ang,
-                                  const RVector2 ext_offset,
-                                  const Attack attack,
-                                  const std::optional<unsigned> parent_id)
-{
-    const auto details = entities::attack_details(attack);
-    const auto sector_details = std::get<SectorDetails>(details.details);
-    const auto offset = ext_offset + RVector2(cos(ang), sin(ang)) * sector_details.internal_offset;
-    LOG_TRC("Offsetting damage line by ({}, {})", offset.x, offset.y);
-    transforms[id].pos = pos;
-    hitboxes[id].set(transforms[id], sector_details.radius, ang);
-    hitboxes[id].offset = offset;
-    parents[id] = parent_id;
-    hit_damage[id] = details.damage;
-}
-
 void Components::uninit_destroyed_entity(const unsigned id)
 {
     transforms[id].vel = RVector2(0.0, 0.0);
@@ -440,13 +334,155 @@ void Components::uninit_destroyed_entity(const unsigned id)
     sprites[id].arms.set(SpriteArms::None);
     sprites[id].legs.set(SpriteLegs::None);
     sprites[id].extra.set(SpriteExtra::None);
+    collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
     collision_boxes[id].offset = RVector2(0.0, 0.0);
     flags[id] = 0;
     lifespans[id] = std::nullopt;
     healths[id].max = std::nullopt;
+    hitboxes[id].set(transforms[id], RVector2(0.0, 0.0));
     hitboxes[id].offset = RVector2(0.0, 0.0);
     parents[id] = std::nullopt;
     invuln_times[id] = 0.0;
+}
+
+EntityComponents& EntityComponents::set_pos(const RVector2 pos)
+{
+    components->transforms[id].pos = pos;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_vel(const RVector2 vel)
+{
+    components->transforms[id].vel = vel;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_cbox_size(const RVector2 cbox_size)
+{
+    const auto transform = components->transforms[id];
+    components->collision_boxes[id].set(transform, cbox_size);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_cbox_size(const float radius)
+{
+    const auto transform = components->transforms[id];
+    components->collision_boxes[id].set(transform, radius);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_cbox_size(const float len, const float angle)
+{
+    const auto transform = components->transforms[id];
+    components->collision_boxes[id].set(transform, len, angle);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_cbox_offset(const RVector2 offset)
+{
+    components->collision_boxes[id].offset = offset;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_health(const int health)
+{
+    components->healths[id].current = health;
+    components->healths[id].max = health;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_hitbox_size(const RVector2 hbox_size)
+{
+    const auto transform = components->transforms[id];
+    components->hitboxes[id].set(transform, hbox_size);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_hitbox_size(const float radius)
+{
+    const auto transform = components->transforms[id];
+    components->hitboxes[id].set(transform, radius);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_hitbox_size(const float len, const float angle)
+{
+    const auto transform = components->transforms[id];
+    components->hitboxes[id].set(transform, len, angle);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_hitbox_offset(const RVector2 offset)
+{
+    components->hitboxes[id].offset = offset;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_sprite_base(const SpriteBase sprite)
+{
+    components->sprites[id].base.set(sprite);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_sprite_head(const SpriteHead sprite)
+{
+    components->sprites[id].head.set(sprite);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_sprite_arms(const SpriteArms sprite)
+{
+    components->sprites[id].arms.set(sprite);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_sprite_legs(const SpriteLegs sprite)
+{
+    components->sprites[id].legs.set(sprite);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_sprite_extra(const SpriteExtra sprite)
+{
+    components->sprites[id].extra.set(sprite);
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_lifespan(const float lifespan)
+{
+    components->lifespans[id] = lifespan;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_parent(const unsigned parent)
+{
+    components->parents[id] = parent;
+
+    return *this;
+}
+
+EntityComponents& EntityComponents::set_hit_damage(const unsigned damage)
+{
+    components->hit_damage[id] = damage;
+
+    return *this;
 }
 
 namespace components
