@@ -212,15 +212,33 @@ struct Components
 
     Components();
 
-    void init_player(unsigned id, RVector2 pos);
-    void init_tile(unsigned id, RVector2 pos, Tile tile);
-    void init_projectile(unsigned id, RVector2 pos, RVector2 target, Attack attack);
-    void init_enemy(unsigned id, RVector2 pos, Enemy enemy);
-    void init_melee(unsigned id, RVector2 pos, unsigned parent_id, Attack attack);
-    void init_sector(unsigned id, unsigned parent_id, Attack attack);
-    void init_damage_line(
-        unsigned id, RVector2 pos, float angle, RVector2 ext_offset, Attack attack, std::optional<unsigned> parent_id);
     void uninit_destroyed_entity(unsigned id);
+};
+
+struct EntityComponents
+{
+    Components* components;
+    unsigned id;
+
+    EntityComponents& set_pos(RVector2 pos);
+    EntityComponents& set_vel(RVector2 vel);
+    EntityComponents& set_cbox_size(RVector2 cbox_size);
+    EntityComponents& set_cbox_size(float radius);
+    EntityComponents& set_cbox_size(float len, float angle);
+    EntityComponents& set_cbox_offset(RVector2 offset);
+    EntityComponents& set_health(int health);
+    EntityComponents& set_hitbox_size(RVector2 hbox_size);
+    EntityComponents& set_hitbox_size(float radius);
+    EntityComponents& set_hitbox_size(float len, float angle);
+    EntityComponents& set_hitbox_offset(RVector2 offset);
+    EntityComponents& set_sprite_base(SpriteBase sprite);
+    EntityComponents& set_sprite_head(SpriteHead sprite);
+    EntityComponents& set_sprite_arms(SpriteArms sprite);
+    EntityComponents& set_sprite_legs(SpriteLegs sprite);
+    EntityComponents& set_sprite_extra(SpriteExtra sprite);
+    EntityComponents& set_lifespan(float lifespan);
+    EntityComponents& set_parent(unsigned parent);
+    EntityComponents& set_hit_damage(unsigned damage);
 };
 
 template <typename Part>
