@@ -2,10 +2,8 @@
 
 #include "entities.hpp"
 #include "logging.hpp"
-#include "raylib.h"
 #include "settings.hpp"
 #include "utils.hpp"
-#include "Vector2.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -60,7 +58,7 @@ void Sprite::draw(RTexture const& texture_sheet, const Tform transform, const bo
 
 void Sprite::lookup_set_movement_parts(const Entity entity, const RVector2 vel)
 {
-    (vel.y != 0 || vel.x != 0) ? lookup_set_walk_parts(entity) : lookup_set_idle_parts(entity);
+    vel != RVector2(0.0, 0.0) ? lookup_set_walk_parts(entity) : lookup_set_idle_parts(entity);
 }
 
 float Sprite::alternate_frame_y_offset() const
@@ -89,10 +87,7 @@ void Sprite::lookup_set_fall_parts(const Entity entity)
         legs.movement_set(SpriteLegs::PlayerJump);
         extra.movement_set(SpriteExtra::PlayerScarfFall);
         break;
-    case Entity::Tile:
-    case Entity::Projectile:
-    case Entity::Enemy:
-    case Entity::Melee:
+    default:
         break;
     }
 }
@@ -108,10 +103,7 @@ void Sprite::lookup_set_jump_parts(const Entity entity)
         legs.movement_set(SpriteLegs::PlayerJump);
         extra.movement_set(SpriteExtra::None);
         break;
-    case Entity::Tile:
-    case Entity::Projectile:
-    case Entity::Enemy:
-    case Entity::Melee:
+    default:
         break;
     }
 }
@@ -127,10 +119,7 @@ void Sprite::lookup_set_walk_parts(const Entity entity)
         legs.movement_set(SpriteLegs::PlayerWalk);
         extra.movement_set(SpriteExtra::PlayerScarfWalk);
         break;
-    case Entity::Tile:
-    case Entity::Projectile:
-    case Entity::Enemy:
-    case Entity::Melee:
+    default:
         break;
     }
 }
@@ -146,10 +135,7 @@ void Sprite::lookup_set_idle_parts(const Entity entity)
         legs.movement_set(SpriteLegs::PlayerIdle);
         extra.movement_set(SpriteExtra::None);
         break;
-    case Entity::Tile:
-    case Entity::Projectile:
-    case Entity::Enemy:
-    case Entity::Melee:
+    default:
         break;
     }
 }
@@ -212,7 +198,13 @@ void BBox::sync(const Tform transform, const bool flipped)
                 bbox.pos2 = transform.pos + (bbox.pos2 - bbox.pos1);
                 bbox.pos1 = transform.pos;
                 bbox.pos1.x += offset.x * (flipped ? -1.0F : 1.0F);
+                bbox.pos1.y += offset.y * (flipped ? -1.0F : 1.0F);
                 bbox.pos2.x += offset.x * (flipped ? -1.0F : 1.0F);
+                bbox.pos2.y += offset.y * (flipped ? -1.0F : 1.0F);
+                bbox.pos1.x += SPRITE_SIZE / 2;
+                bbox.pos1.y += SPRITE_SIZE / 2;
+                bbox.pos2.x += SPRITE_SIZE / 2;
+                bbox.pos2.y += SPRITE_SIZE / 2;
                 LOG_TRC("Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
                 LOG_TRC("Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
             },
@@ -339,7 +331,7 @@ Components::Components()
     parents.resize(MAX_ENTITIES, std::nullopt);
     attack_cooldowns.resize(MAX_ENTITIES, 0.0);
     invuln_times.resize(MAX_ENTITIES, 0.0);
-
+    hit_damage.resize(MAX_ENTITIES, 0);
     for (size_t i = 0; i < MAX_ENTITIES; i++)
     {
         LOG_TRC("Invuln time [{}]: {}", i, invuln_times[i]);
@@ -369,11 +361,9 @@ void Components::init_tile(const unsigned id, const RVector2 pos, const Tile til
     }
 }
 
-void Components::init_projectile(const unsigned id,
-                                 const RVector2 pos,
-                                 const RVector2 target,
-                                 const AttackDetails details)
+void Components::init_projectile(const unsigned id, const RVector2 pos, const RVector2 target, const Attack attack)
 {
+    const auto details = entities::attack_details(attack);
     const auto proj_details = std::get<ProjectileDetails>(details.details);
     const auto diff = target - pos;
     const float angle = atan2(diff.y, diff.x);
@@ -383,6 +373,7 @@ void Components::init_projectile(const unsigned id,
     collision_boxes[id].set(transforms[id], 4);
     lifespans[id] = details.lifespan;
     hitboxes[id].set(transforms[id], 4);
+    hit_damage[id] = details.damage;
 }
 
 void Components::init_enemy(const unsigned id, const RVector2 pos, const Enemy enemy)
@@ -401,11 +392,9 @@ void Components::init_enemy(const unsigned id, const RVector2 pos, const Enemy e
     }
 }
 
-void Components::init_melee(const unsigned id,
-                            const RVector2 pos,
-                            const unsigned parent_id,
-                            const AttackDetails details)
+void Components::init_melee(const unsigned id, const RVector2 pos, const unsigned parent_id, const Attack attack)
 {
+    const auto details = entities::attack_details(attack);
     const auto melee_details = std::get<MeleeDetails>(details.details);
     transforms[id].pos = pos;
     collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
@@ -413,6 +402,34 @@ void Components::init_melee(const unsigned id,
     hitboxes[id].set(transforms[id], melee_details.size);
     hitboxes[id].offset = MELEE_OFFSET;
     parents[id] = parent_id;
+    hit_damage[id] = details.damage;
+}
+
+void Components::init_sector(const unsigned id, const unsigned parent_id, const Attack attack)
+{
+    const auto details = entities::attack_details(attack);
+    collision_boxes[id].set(transforms[id], RVector2(0.0, 0.0));
+    lifespans[id] = details.lifespan;
+    hitboxes[id].set(transforms[id], RVector2(0.0, 0.0));
+    parents[id] = parent_id;
+}
+
+void Components::init_damage_line(const unsigned id,
+                                  const RVector2 pos,
+                                  const float ang,
+                                  const RVector2 ext_offset,
+                                  const Attack attack,
+                                  const std::optional<unsigned> parent_id)
+{
+    const auto details = entities::attack_details(attack);
+    const auto sector_details = std::get<SectorDetails>(details.details);
+    const auto offset = ext_offset + RVector2(cos(ang), sin(ang)) * sector_details.internal_offset;
+    LOG_TRC("Offsetting damage line by ({}, {})", offset.x, offset.y);
+    transforms[id].pos = pos;
+    hitboxes[id].set(transforms[id], sector_details.radius, ang);
+    hitboxes[id].offset = offset;
+    parents[id] = parent_id;
+    hit_damage[id] = details.damage;
 }
 
 void Components::uninit_destroyed_entity(const unsigned id)

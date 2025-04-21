@@ -1,5 +1,7 @@
 #include "entities.hpp"
 
+#include "utils.hpp"
+
 #include <cassert>
 #include <ranges>
 #include <span>
@@ -86,10 +88,11 @@ AttackDetails attack_details(const Attack attack)
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
         return {
-            .details = MeleeDetails{ { 18.0, 7.0 } },
+            .details = MeleeDetails{ RVector2(18.0, 7.0) },
             .lifespan = 0.3,
             .delay = 0.0,
             .cooldown = 0.5,
+            .damage = 34,
         };
     case Attack::Projectile:
         return {
@@ -97,6 +100,18 @@ AttackDetails attack_details(const Attack attack)
             .lifespan = 0.3,
             .delay = 0.0,
             .cooldown = 0.5,
+            .damage = 25,
+        };
+    case Attack::Sector:
+        return {
+            .details = SectorDetails{ .radius = 50.0,
+                                      .ang = utils::degrees_to_radians(40.0),
+                                      .internal_offset = 20.0, 
+                                      .external_offset = 15.0, },
+            .lifespan = 0.3,
+            .delay = 0.0,
+            .cooldown = 0.5,
+            .damage = 25,
         };
     } // NOLINTEND(*magic-numbers)
 
