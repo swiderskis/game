@@ -2,6 +2,7 @@
 
 #include "components.hpp"
 #include "entities.hpp"
+#include "logging.hpp"
 #include "settings.hpp"
 #include "utils.hpp"
 
@@ -11,6 +12,8 @@
 #include <ranges>
 
 inline constexpr unsigned TARGET_FPS = 60;
+
+inline constexpr float DAMAGE_LINES_INV_FREQ = 5.0;
 
 void Game::spawn_player(const RVector2 pos)
 {
@@ -57,20 +60,47 @@ void Game::destroy_entity(const unsigned id)
 
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
-    const auto details = entities::attack_details(attack);
     const auto source_pos = m_components.transforms[parent_id].pos;
-    unsigned id = 0;
+    LOG_TRC("Attack source pos ({}, {})", source_pos.x, source_pos.y);
+    const auto target_pos = (parent_id == PLAYER_ID ? get_mouse_pos() : m_components.transforms[PLAYER_ID].pos);
+    LOG_TRC("Attack target pos ({}, {})", target_pos.x, target_pos.y);
     switch (attack)
     {
     case Attack::Melee:
-        id = m_entities.spawn(Entity::Melee);
-        m_components.init_melee(id, source_pos, parent_id, details);
+    {
+        const unsigned id = m_entities.spawn(Entity::Melee);
+        m_components.init_melee(id, source_pos, parent_id, attack);
         break;
+    }
     case Attack::Projectile:
-        const auto target_pos = (parent_id == PLAYER_ID ? get_mouse_pos() : m_components.transforms[PLAYER_ID].pos);
-        id = m_entities.spawn(Entity::Projectile);
-        m_components.init_projectile(id, source_pos, target_pos, details);
+    {
+        const unsigned id = m_entities.spawn(Entity::Projectile);
+        m_components.init_projectile(id, source_pos, target_pos, attack);
         break;
+    }
+    case Attack::Sector:
+    {
+        const unsigned sector_id = m_entities.spawn(Entity::Sector);
+        const auto diff = target_pos - source_pos;
+        const auto sector_details = std::get<SectorDetails>(entities::attack_details(attack).details);
+        const float angle = atan2(diff.y, diff.x);
+        const float initial_angle = angle - (sector_details.ang / 2);
+        m_components.init_sector(sector_id, parent_id, attack);
+        const unsigned damage_lines
+            = 1 + (unsigned)ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ);
+        LOG_TRC("Spawning {} damage lines", damage_lines);
+        const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
+        LOG_TRC("Angle between damage lines: {}", utils::radians_to_degrees(angle_diff));
+        const auto external_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
+        for (unsigned i = 0; i < damage_lines; i++)
+        {
+            const unsigned line_id = m_entities.spawn(Entity::DamageLine);
+            const auto line_angle = initial_angle + (angle_diff * (float)i);
+            m_components.init_damage_line(line_id, source_pos, line_angle, external_offset, attack, sector_id);
+        }
+
+        break;
+    }
     }
 }
 

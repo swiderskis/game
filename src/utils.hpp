@@ -34,4 +34,11 @@ struct SimpleVec2
     }
 };
 
+// this should be made into a library / libraries if it grows enough
+namespace utils
+{
+float degrees_to_radians(float ang);
+float radians_to_degrees(float ang);
+} // namespace utils
+
 #endif

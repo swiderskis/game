@@ -17,6 +17,8 @@ enum class Entity : uint8_t
     Projectile,
     Enemy,
     Melee,
+    Sector,
+    DamageLine,
 };
 
 enum class Tile : uint8_t
@@ -28,6 +30,7 @@ enum class Attack : uint8_t
 {
     Melee,
     Projectile,
+    Sector,
 };
 
 struct MeleeDetails
@@ -43,8 +46,9 @@ struct ProjectileDetails
 struct SectorDetails
 {
     float radius;
-    float central_ang;
-    float direction_ang;
+    float ang;
+    float internal_offset; // offset from sector origin point
+    float external_offset; // offset from parent entity
 };
 
 struct AttackDetails
@@ -53,6 +57,7 @@ struct AttackDetails
     float lifespan;
     float delay;
     float cooldown;
+    int damage;
 };
 
 enum class Enemy : uint8_t

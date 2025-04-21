@@ -8,14 +8,12 @@
 #include <cassert>
 #include <optional>
 #include <ranges>
-#include <utility>
+#include <raylib.h>
 
 #define SHOW_CBOXES
 #undef SHOW_CBOXES
 #define SHOW_HITBOXES
 #undef SHOW_HITBOXES
-#define RANGED
-#undef RANGED
 
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
@@ -23,18 +21,20 @@ static constexpr auto DESTROY_ON_COLLISION = {
 static constexpr auto DAMAGING_ENTITIES = {
     Entity::Projectile,
     Entity::Melee,
+    Entity::DamageLine,
+};
+static constexpr auto FLIP_ON_SYNC_WITH_PARENT = {
+    Entity::Melee,
 };
 
 inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
-inline constexpr float JUMP_SPEED = 450.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 inline constexpr float INVULN_TIME = 0.5;
 
 namespace
 {
-int damage(Entity entity);
 void resolve_tile_collisions(Game& game, unsigned id, BBox prev_cbox);
 } // namespace
 
@@ -159,15 +159,11 @@ void Game::player_attack()
         return;
     }
 
-    const auto attack_details = entities::attack_details(Attack::Melee);
-#ifdef RANGED
-    m_components.attack_cooldowns[PLAYER_ID] = attack_details.cooldown;
-    spawn_attack(Attack::Projectile, PLAYER_ID);
-#else
+    const auto attack = Attack::Sector;
+    const auto attack_details = entities::attack_details(attack);
     m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
     m_components.attack_cooldowns[PLAYER_ID] = attack_details.cooldown;
-    spawn_attack(Attack::Melee, PLAYER_ID);
-#endif
+    spawn_attack(attack, PLAYER_ID);
 }
 
 void Game::update_lifespans()
@@ -203,9 +199,9 @@ void Game::damage_entities()
                     continue;
                 }
 
-                int& current_health = m_components.healths[enemy_id].current;
-                current_health -= damage(entity);
-                if (current_health <= 0)
+                int& enemy_current_health = m_components.healths[enemy_id].current;
+                enemy_current_health -= (int)m_components.hit_damage[id];
+                if (enemy_current_health <= 0)
                 {
                     m_entities.queue_destroy(enemy_id);
                 }
@@ -233,7 +229,11 @@ void Game::sync_children()
         }
 
         const unsigned parent_id = m_components.parents[id].value();
-        m_components.flags[id][flag::FLIPPED] = m_components.flags[PLAYER_ID][flag::FLIPPED];
+        if (std::ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
+        {
+            m_components.flags[id][flag::FLIPPED] = m_components.flags[PLAYER_ID][flag::FLIPPED];
+        }
+
         const bool flipped = m_components.flags[id][flag::FLIPPED];
         auto& transform = m_components.transforms[id];
         transform.pos = m_components.transforms[parent_id].pos;
@@ -255,25 +255,6 @@ void Game::update_invuln_times()
 
 namespace
 {
-int damage(Entity entity)
-{
-    assert(std::ranges::contains(DAMAGING_ENTITIES, entity));
-
-    switch (entity)
-    { // NOLINTBEGIN(*magic-numbers)
-    case Entity::Projectile:
-        return 25;
-    case Entity::Melee:
-        return 34;
-    case Entity::Player:
-    case Entity::Tile:
-    case Entity::Enemy:
-        std::unreachable();
-    } // NOLINTEND(*magic-numbers)
-
-    std::unreachable();
-}
-
 void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox)
 {
     const auto entity = game.entities().entities()[id];

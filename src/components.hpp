@@ -155,7 +155,7 @@ using BBoxVariant = std::variant<RRectangle, Circle, Line>;
 
 class BBox
 {
-    BBoxVariant m_bounding_box{ RRectangle{ RVector2(0.0, 0.0), RVector2(SPRITE_SIZE, SPRITE_SIZE) } };
+    BBoxVariant m_bounding_box{ RRectangle() };
 
 public:
     RVector2 offset{ 0.0, 0.0 };
@@ -208,14 +208,18 @@ struct Components
     std::vector<std::optional<unsigned>> parents;
     std::vector<float> attack_cooldowns;
     std::vector<float> invuln_times;
+    std::vector<unsigned> hit_damage;
 
     Components();
 
     void init_player(unsigned id, RVector2 pos);
     void init_tile(unsigned id, RVector2 pos, Tile tile);
-    void init_projectile(unsigned id, RVector2 pos, RVector2 target, AttackDetails details);
+    void init_projectile(unsigned id, RVector2 pos, RVector2 target, Attack attack);
     void init_enemy(unsigned id, RVector2 pos, Enemy enemy);
-    void init_melee(unsigned id, RVector2 pos, unsigned parent_id, AttackDetails details);
+    void init_melee(unsigned id, RVector2 pos, unsigned parent_id, Attack attack);
+    void init_sector(unsigned id, unsigned parent_id, Attack attack);
+    void init_damage_line(
+        unsigned id, RVector2 pos, float angle, RVector2 ext_offset, Attack attack, std::optional<unsigned> parent_id);
     void uninit_destroyed_entity(unsigned id);
 };
 

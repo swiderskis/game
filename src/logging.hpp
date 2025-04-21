@@ -1,6 +1,7 @@
 #ifndef LOGGING_HPP_
 #define LOGGING_HPP_
 
+#include <cstdlib>  // IWYU pragma: keep
 #include <format>   // IWYU pragma: keep
 #include <iostream> // IWYU pragma: keep
 #include <string>   // IWYU pragma: keep
@@ -16,6 +17,9 @@
                   << std::format(" {:>5}: ", __LINE__) << std::format(__VA_ARGS__) << "\n";                            \
     }
 
+#define LOG_FTL(...)                                                                                                   \
+    LOG("FTL", -1, __VA_ARGS__)                                                                                        \
+    quick_exit(EXIT_FAILURE);
 #define LOG_ERR(...) LOG("ERR", 0, __VA_ARGS__)
 #define LOG_WRN(...) LOG("WRN", 1, __VA_ARGS__)
 #define LOG_INF(...) LOG("INF", 2, __VA_ARGS__)
