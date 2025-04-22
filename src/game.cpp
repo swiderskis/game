@@ -32,8 +32,8 @@ inline constexpr int ENEMY_HEALTH = 100;
 void Game::spawn_player(const RVector2 pos)
 {
     const unsigned id = m_entities.spawn(Entity::Player);
-    auto components = EntityComponents{ .components = &m_components, .id = id };
-    components.set_pos(pos)
+    m_components.get_by_id(id)
+        .set_pos(pos)
         .set_cbox_size(PLAYER_CBOX_SIZE)
         .set_health(PLAYER_HEALTH)
         .set_hitbox_size(PLAYER_HITBOX_SIZE)
@@ -51,8 +51,8 @@ void Game::spawn_enemy(const Enemy enemy, const RVector2 pos)
     }
 
     const unsigned id = m_entities.spawn(Entity::Enemy);
-    auto components = EntityComponents{ .components = &m_components, .id = id };
-    components.set_pos(pos)
+    m_components.get_by_id(id)
+        .set_pos(pos)
         .set_cbox_size(ENEMY_CBOX_SIZE)
         .set_health(ENEMY_HEALTH)
         .set_hitbox_size(ENEMY_HITBOX_SIZE)
@@ -71,8 +71,11 @@ void Game::spawn_tile(const Tile tile, const RVector2 pos)
     }
 
     const auto id = m_entities.spawn(Entity::Tile);
-    auto components = EntityComponents{ .components = &m_components, .id = id };
-    components.set_pos(pos).set_cbox_offset(TILE_CBOX_OFFSET).set_cbox_size(TILE_CBOX_SIZE).set_sprite_base(sprite);
+    m_components.get_by_id(id)
+        .set_pos(pos)
+        .set_cbox_offset(TILE_CBOX_OFFSET)
+        .set_cbox_size(TILE_CBOX_SIZE)
+        .set_sprite_base(sprite);
 }
 
 float Game::dt() const
@@ -115,8 +118,8 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
     {
         const auto melee_details = std::get<MeleeDetails>(details.details);
         const unsigned id = m_entities.spawn(Entity::Melee);
-        auto components = EntityComponents{ .components = &m_components, .id = id };
-        components.set_pos(source_pos)
+        m_components.get_by_id(id)
+            .set_pos(source_pos)
             .set_lifespan(details.lifespan)
             .set_hitbox_size(melee_details.size)
             .set_hitbox_offset(MELEE_OFFSET)
@@ -129,8 +132,8 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const auto proj_details = std::get<ProjectileDetails>(details.details);
         const auto vel = RVector2(cos(angle), sin(angle)) * proj_details.speed;
         const unsigned id = m_entities.spawn(Entity::Projectile);
-        auto components = EntityComponents{ .components = &m_components, .id = id };
-        components.set_pos(source_pos)
+        m_components.get_by_id(id)
+            .set_pos(source_pos)
             .set_vel(vel)
             .set_sprite_base(SpriteBase::Projectile)
             .set_cbox_size(PROJECTILE_SIZE)
@@ -150,16 +153,15 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         LOG_TRC("Angle between damage lines: {}", utils::radians_to_degrees(angle_diff));
         const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
-        auto sector_components = EntityComponents{ .components = &m_components, .id = sector_id };
-        sector_components.set_lifespan(details.lifespan).set_parent(parent_id);
+        m_components.get_by_id(sector_id).set_lifespan(details.lifespan).set_parent(parent_id);
         for (unsigned i = 0; i < damage_lines; i++)
         {
             const unsigned line_id = m_entities.spawn(Entity::DamageLine);
             const auto line_ang = initial_angle + (angle_diff * (float)i);
             const auto offset = ext_offset + RVector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
             LOG_TRC("Offsetting damage line by ({}, {})", offset.x, offset.y);
-            auto line_components = EntityComponents{ .components = &m_components, .id = line_id };
-            line_components.set_pos(source_pos)
+            m_components.get_by_id(line_id)
+                .set_pos(source_pos)
                 .set_hitbox_size(sector_details.radius, line_ang)
                 .set_hitbox_offset(offset)
                 .set_parent(sector_id)

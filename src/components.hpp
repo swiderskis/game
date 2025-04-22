@@ -196,6 +196,8 @@ struct Health
     [[nodiscard]] float percentage() const;
 };
 
+class EntityComponents;
+
 struct Components
 {
     std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
@@ -213,12 +215,19 @@ struct Components
     Components();
 
     void uninit_destroyed_entity(unsigned id);
+    [[nodiscard]] EntityComponents get_by_id(unsigned id);
 };
 
-struct EntityComponents
+class EntityComponents
 {
-    Components* components;
-    unsigned id;
+    Components* m_components;
+    unsigned m_id;
+
+    EntityComponents(Components& components, unsigned id);
+    friend struct Components;
+
+public:
+    EntityComponents() = delete;
 
     EntityComponents& set_pos(RVector2 pos);
     EntityComponents& set_vel(RVector2 vel);

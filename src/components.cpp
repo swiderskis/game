@@ -345,142 +345,151 @@ void Components::uninit_destroyed_entity(const unsigned id)
     invuln_times[id] = 0.0;
 }
 
+EntityComponents Components::get_by_id(unsigned id)
+{
+    return { *this, id };
+}
+
+EntityComponents::EntityComponents(Components& components, unsigned id) : m_components(&components), m_id(id)
+{
+}
+
 EntityComponents& EntityComponents::set_pos(const RVector2 pos)
 {
-    components->transforms[id].pos = pos;
+    m_components->transforms[m_id].pos = pos;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_vel(const RVector2 vel)
 {
-    components->transforms[id].vel = vel;
+    m_components->transforms[m_id].vel = vel;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_cbox_size(const RVector2 cbox_size)
 {
-    const auto transform = components->transforms[id];
-    components->collision_boxes[id].set(transform, cbox_size);
+    const auto transform = m_components->transforms[m_id];
+    m_components->collision_boxes[m_id].set(transform, cbox_size);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_cbox_size(const float radius)
 {
-    const auto transform = components->transforms[id];
-    components->collision_boxes[id].set(transform, radius);
+    const auto transform = m_components->transforms[m_id];
+    m_components->collision_boxes[m_id].set(transform, radius);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_cbox_size(const float len, const float angle)
 {
-    const auto transform = components->transforms[id];
-    components->collision_boxes[id].set(transform, len, angle);
+    const auto transform = m_components->transforms[m_id];
+    m_components->collision_boxes[m_id].set(transform, len, angle);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_cbox_offset(const RVector2 offset)
 {
-    components->collision_boxes[id].offset = offset;
+    m_components->collision_boxes[m_id].offset = offset;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_health(const int health)
 {
-    components->healths[id].current = health;
-    components->healths[id].max = health;
+    m_components->healths[m_id].current = health;
+    m_components->healths[m_id].max = health;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_hitbox_size(const RVector2 hbox_size)
 {
-    const auto transform = components->transforms[id];
-    components->hitboxes[id].set(transform, hbox_size);
+    const auto transform = m_components->transforms[m_id];
+    m_components->hitboxes[m_id].set(transform, hbox_size);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_hitbox_size(const float radius)
 {
-    const auto transform = components->transforms[id];
-    components->hitboxes[id].set(transform, radius);
+    const auto transform = m_components->transforms[m_id];
+    m_components->hitboxes[m_id].set(transform, radius);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_hitbox_size(const float len, const float angle)
 {
-    const auto transform = components->transforms[id];
-    components->hitboxes[id].set(transform, len, angle);
+    const auto transform = m_components->transforms[m_id];
+    m_components->hitboxes[m_id].set(transform, len, angle);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_hitbox_offset(const RVector2 offset)
 {
-    components->hitboxes[id].offset = offset;
+    m_components->hitboxes[m_id].offset = offset;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_sprite_base(const SpriteBase sprite)
 {
-    components->sprites[id].base.set(sprite);
+    m_components->sprites[m_id].base.set(sprite);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_sprite_head(const SpriteHead sprite)
 {
-    components->sprites[id].head.set(sprite);
+    m_components->sprites[m_id].head.set(sprite);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_sprite_arms(const SpriteArms sprite)
 {
-    components->sprites[id].arms.set(sprite);
+    m_components->sprites[m_id].arms.set(sprite);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_sprite_legs(const SpriteLegs sprite)
 {
-    components->sprites[id].legs.set(sprite);
+    m_components->sprites[m_id].legs.set(sprite);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_sprite_extra(const SpriteExtra sprite)
 {
-    components->sprites[id].extra.set(sprite);
+    m_components->sprites[m_id].extra.set(sprite);
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_lifespan(const float lifespan)
 {
-    components->lifespans[id] = lifespan;
+    m_components->lifespans[m_id] = lifespan;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_parent(const unsigned parent)
 {
-    components->parents[id] = parent;
+    m_components->parents[m_id] = parent;
 
     return *this;
 }
 
 EntityComponents& EntityComponents::set_hit_damage(const unsigned damage)
 {
-    components->hit_damage[id] = damage;
+    m_components->hit_damage[m_id] = damage;
 
     return *this;
 }
