@@ -1,5 +1,6 @@
 #include "entities.hpp"
 
+#include "settings.hpp"
 #include "utils.hpp"
 
 #include <cassert>
@@ -14,6 +15,7 @@ unsigned Entities::spawn(const Entity type)
         assert(m_entities[PLAYER_ID] == std::nullopt);
 
         m_entities[PLAYER_ID] = Entity::Player;
+        m_entity_ids[type].push_back(PLAYER_ID);
 
         return PLAYER_ID;
     }
