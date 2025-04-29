@@ -32,6 +32,7 @@ inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
 inline constexpr float INVULN_TIME = 0.5;
+inline constexpr float DAMAGE_LINE_THICKNESS = 1.33;
 
 namespace
 {
@@ -59,6 +60,13 @@ void Game::render()
     {
         if (entity == std::nullopt)
         {
+            continue;
+        }
+
+        if (entity == Entity::DamageLine)
+        {
+            const auto line = std::get<Line>(m_components.hitboxes[id].bounding_box());
+            line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, LIGHTGRAY);
             continue;
         }
 
