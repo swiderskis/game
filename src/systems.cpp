@@ -8,7 +8,6 @@
 #include <cassert>
 #include <optional>
 #include <ranges>
-#include <raylib.h>
 
 #define SHOW_CBOXES
 #undef SHOW_CBOXES
@@ -25,6 +24,9 @@ static constexpr auto DAMAGING_ENTITIES = {
 };
 static constexpr auto FLIP_ON_SYNC_WITH_PARENT = {
     Entity::Melee,
+};
+static constexpr auto ENTITY_RENDER_ORDER = {
+    Entity::DamageLine, Entity::Tile, Entity::Enemy, Entity::Player, Entity::Projectile,
 };
 
 inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
@@ -55,55 +57,64 @@ void Game::render()
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
 
-    // reverse to always have player sprite render on top
-    for (const auto [id, entity] : m_entities.entities() | std::views::enumerate | std::views::reverse)
+    for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        if (entity == std::nullopt)
+        for (const unsigned id : m_entities.entity_ids(entity))
         {
-            continue;
-        }
+            if (entity == Entity::DamageLine)
+            {
+                const auto line = std::get<Line>(m_components.hitboxes[id].bounding_box());
+                line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, LIGHTGRAY);
+                continue;
+            }
 
-        if (entity == Entity::DamageLine)
-        {
-            const auto line = std::get<Line>(m_components.hitboxes[id].bounding_box());
-            line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, LIGHTGRAY);
-            continue;
-        }
+            const auto transform = m_components.transforms[id];
+            auto& sprite = m_components.sprites[id];
+            sprite.check_update_frames(dt());
+            sprite.lookup_set_movement_parts(entity, transform.vel);
+            sprite.draw(m_texture_sheet, transform, m_components.flags[id][flag::FLIPPED]);
 
-        const auto transform = m_components.transforms[id];
-        auto& sprite = m_components.sprites[id];
-        sprite.check_update_frames(dt());
-        sprite.lookup_set_movement_parts(entity.value(), transform.vel);
-        sprite.draw(m_texture_sheet, transform, m_components.flags[id][flag::FLIPPED]);
-
-        const auto health = m_components.healths[id];
-        if (health.max != std::nullopt && health.current != health.max)
-        {
-            const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
-            const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
-            RRectangle(pos, HEALTH_BAR_SIZE).Draw(RED);
-            RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(GREEN);
+            const auto health = m_components.healths[id];
+            if (health.max != std::nullopt && health.current != health.max)
+            {
+                const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
+                const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
+                RRectangle(pos, HEALTH_BAR_SIZE).Draw(RED);
+                RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(GREEN);
+            }
         }
+    }
 
 #ifdef SHOW_CBOXES
-        std::visit(
-            overloaded{
-                [](const RRectangle bbox) { bbox.DrawLines(RED); },
-                [](const Circle bbox) { bbox.draw_lines(RED); },
-                [](const Line bbox) { bbox.draw_line(RED); },
-            },
-            m_components.collision_boxes[id].bounding_box());
+    for (const auto entity : ENTITY_RENDER_ORDER)
+    {
+        for (const unsigned id : m_entities.entity_ids(entity))
+        {
+            std::visit(
+                overloaded{
+                    [](const RRectangle bbox) { bbox.DrawLines(RED); },
+                    [](const Circle bbox) { bbox.draw_lines(RED); },
+                    [](const Line bbox) { bbox.draw_line(RED); },
+                },
+                m_components.collision_boxes[id].bounding_box());
+        }
+    }
 #endif
 #ifdef SHOW_HITBOXES
-        std::visit(
-            overloaded{
-                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
-                [](const Circle bbox) { bbox.draw_lines(GREEN); },
-                [](const Line bbox) { bbox.draw_line(GREEN); },
-            },
-            m_components.hitboxes[id].bounding_box());
-#endif
+    for (const auto entity : ENTITY_RENDER_ORDER)
+    {
+        for (const unsigned id : m_entities.entity_ids(entity))
+        {
+            std::visit(
+                overloaded{
+                    [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
+                    [](const Circle bbox) { bbox.draw_lines(GREEN); },
+                    [](const Line bbox) { bbox.draw_line(GREEN); },
+                },
+                m_components.hitboxes[id].bounding_box());
+        }
     }
+#endif
 
     m_camera.EndMode();
 }
