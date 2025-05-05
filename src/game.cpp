@@ -3,8 +3,9 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "logging.hpp"
+#include "misc.hpp"
+#include "seb.hpp"
 #include "settings.hpp"
-#include "utils.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -16,15 +17,15 @@ inline constexpr unsigned TARGET_FPS = 60;
 inline constexpr float DAMAGE_LINES_INV_FREQ = 5.0;
 inline constexpr float PROJECTILE_SIZE = 4.0;
 
-inline constexpr auto PLAYER_CBOX_SIZE = SimpleVec2(20.0, 29.0);
-inline constexpr auto ENEMY_CBOX_SIZE = SimpleVec2(30.0, 24.0);
-inline constexpr auto PLAYER_HITBOX_SIZE = SimpleVec2(12.0, 21.0);
-inline constexpr auto PLAYER_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
-inline constexpr auto ENEMY_HITBOX_SIZE = SimpleVec2(22.0, 16.0);
-inline constexpr auto ENEMY_HITBOX_OFFSET = SimpleVec2(0.0, 4.0);
-inline constexpr auto TILE_CBOX_SIZE = SimpleVec2(TILE_SIZE, TILE_SIZE);
-inline constexpr auto TILE_CBOX_OFFSET = SimpleVec2(-8.0, 16.0);
-inline constexpr auto MELEE_OFFSET = SimpleVec2(24.0, 9.0);
+inline constexpr auto PLAYER_CBOX_SIZE = seb::SimpleVec2(20.0, 29.0);
+inline constexpr auto ENEMY_CBOX_SIZE = seb::SimpleVec2(30.0, 24.0);
+inline constexpr auto PLAYER_HITBOX_SIZE = seb::SimpleVec2(12.0, 21.0);
+inline constexpr auto PLAYER_HITBOX_OFFSET = seb::SimpleVec2(0.0, 4.0);
+inline constexpr auto ENEMY_HITBOX_SIZE = seb::SimpleVec2(22.0, 16.0);
+inline constexpr auto ENEMY_HITBOX_OFFSET = seb::SimpleVec2(0.0, 4.0);
+inline constexpr auto TILE_CBOX_SIZE = seb::SimpleVec2(TILE_SIZE, TILE_SIZE);
+inline constexpr auto TILE_CBOX_OFFSET = seb::SimpleVec2(-8.0, 16.0);
+inline constexpr auto MELEE_OFFSET = seb::SimpleVec2(24.0, 9.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -150,7 +151,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
             = 1 + (unsigned)ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ);
         LOG_TRC("Spawning {} damage lines", damage_lines);
         const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
-        LOG_TRC("Angle between damage lines: {}", utils::radians_to_degrees(angle_diff));
+        LOG_TRC("Angle between damage lines: {}", seb::math::radians_to_degrees(angle_diff));
         const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
         m_components.get_by_id(sector_id).set_lifespan(details.lifespan).set_parent(parent_id);

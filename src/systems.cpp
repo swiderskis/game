@@ -1,8 +1,8 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
+#include "misc.hpp"
 #include "settings.hpp"
-#include "utils.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -29,7 +29,7 @@ static constexpr auto ENTITY_RENDER_ORDER = {
     Entity::DamageLine, Entity::Tile, Entity::Enemy, Entity::Player, Entity::Projectile,
 };
 
-inline constexpr auto HEALTH_BAR_SIZE = SimpleVec2(32.0, 4.0);
+inline constexpr auto HEALTH_BAR_SIZE = seb::SimpleVec2(32.0, 4.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;

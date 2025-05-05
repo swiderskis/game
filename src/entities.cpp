@@ -1,7 +1,7 @@
 #include "entities.hpp"
 
+#include "seb.hpp"
 #include "settings.hpp"
-#include "utils.hpp"
 
 #include <cassert>
 #include <ranges>
@@ -107,7 +107,7 @@ AttackDetails attack_details(const Attack attack)
     case Attack::Sector:
         return {
             .details = SectorDetails{ .radius = 50.0,
-                                      .ang = utils::degrees_to_radians(40.0),
+                                      .ang = seb::math::degrees_to_radians(40.0),
                                       .internal_offset = 20.0, 
                                       .external_offset = 15.0, },
             .lifespan = 0.3,

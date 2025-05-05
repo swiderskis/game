@@ -2,8 +2,8 @@
 
 #include "entities.hpp"
 #include "logging.hpp"
+#include "misc.hpp"
 #include "settings.hpp"
-#include "utils.hpp"
 
 #include <cassert>
 #include <cmath>
