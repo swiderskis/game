@@ -161,59 +161,51 @@ void Line::draw_line(::Color color) const
 
 void BBox::sync(const Tform transform, const bool flipped)
 {
-    std::visit(
-        overloaded{
-            [transform, this, flipped](RRectangle& bbox)
-            {
-                bbox.SetPosition(transform.pos);
-                bbox.x += (SPRITE_SIZE - bbox.width) / 2;
-                bbox.y += (SPRITE_SIZE - bbox.height);
-                bbox.x += offset.x * (flipped ? -1.0F : 1.0F);
-                bbox.y -= offset.y;
-                LOG_TRC("Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
-            },
-            [transform, this, flipped](Circle& bbox)
-            {
-                bbox.pos = transform.pos;
-                bbox.pos.x += SPRITE_SIZE / 2;
-                bbox.pos.y += SPRITE_SIZE / 2;
-                bbox.pos.x += offset.x * (flipped ? -1.0F : 1.0F);
-                bbox.pos.y -= offset.y;
-                LOG_TRC("Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
-            },
-            [transform, this, flipped](Line& bbox)
-            {
-                bbox.pos2 = transform.pos + (bbox.pos2 - bbox.pos1);
-                bbox.pos1 = transform.pos;
-                bbox.pos1.x += offset.x * (flipped ? -1.0F : 1.0F);
-                bbox.pos1.y += offset.y * (flipped ? -1.0F : 1.0F);
-                bbox.pos2.x += offset.x * (flipped ? -1.0F : 1.0F);
-                bbox.pos2.y += offset.y * (flipped ? -1.0F : 1.0F);
-                bbox.pos1.x += SPRITE_SIZE / 2;
-                bbox.pos1.y += SPRITE_SIZE / 2;
-                bbox.pos2.x += SPRITE_SIZE / 2;
-                bbox.pos2.y += SPRITE_SIZE / 2;
-                LOG_TRC("Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
-                LOG_TRC("Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
-            },
+    MATCH(
+        m_bounding_box,
+        [transform, this, flipped](RRectangle& bbox)
+        {
+            bbox.SetPosition(transform.pos);
+            bbox.x += (SPRITE_SIZE - bbox.width) / 2;
+            bbox.y += (SPRITE_SIZE - bbox.height);
+            bbox.x += offset.x * (flipped ? -1.0F : 1.0F);
+            bbox.y -= offset.y;
+            LOG_TRC("Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
         },
-        m_bounding_box);
+        [transform, this, flipped](Circle& bbox)
+        {
+            bbox.pos = transform.pos;
+            bbox.pos.x += SPRITE_SIZE / 2;
+            bbox.pos.y += SPRITE_SIZE / 2;
+            bbox.pos.x += offset.x * (flipped ? -1.0F : 1.0F);
+            bbox.pos.y -= offset.y;
+            LOG_TRC("Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
+        },
+        [transform, this, flipped](Line& bbox)
+        {
+            bbox.pos2 = transform.pos + (bbox.pos2 - bbox.pos1);
+            bbox.pos1 = transform.pos;
+            bbox.pos1.x += offset.x * (flipped ? -1.0F : 1.0F);
+            bbox.pos1.y += offset.y * (flipped ? -1.0F : 1.0F);
+            bbox.pos2.x += offset.x * (flipped ? -1.0F : 1.0F);
+            bbox.pos2.y += offset.y * (flipped ? -1.0F : 1.0F);
+            bbox.pos1.x += SPRITE_SIZE / 2;
+            bbox.pos1.y += SPRITE_SIZE / 2;
+            bbox.pos2.x += SPRITE_SIZE / 2;
+            bbox.pos2.y += SPRITE_SIZE / 2;
+            LOG_TRC("Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
+            LOG_TRC("Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
+        });
 }
 
 bool BBox::collides(const BBox other_bbox) const
 {
-    return std::visit(
-        overloaded{
-            [other_bbox](const auto bbox)
-            {
-                return std::visit(
-                    overloaded{
-                        [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); },
-                    },
-                    other_bbox.m_bounding_box);
-            },
-        },
-        m_bounding_box);
+    return MATCH(m_bounding_box,
+                 [other_bbox](const auto bbox)
+                 {
+                     return MATCH(other_bbox.m_bounding_box,
+                                  [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); });
+                 });
 }
 
 bool BBox::x_overlaps(const BBox other_bbox) const
@@ -223,27 +215,25 @@ bool BBox::x_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return std::visit(
-        overloaded{
-            [bbox](const RRectangle other_bbox)
-            {
-                return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
-                       || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
-            },
-            [bbox](const Circle other_bbox)
-            {
-                return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
-                       || (other_bbox.pos.x >= bbox.x && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
-            },
-            [bbox](const Line other_bbox)
-            {
-                return (bbox.x <= other_bbox.pos1.x && bbox.x + bbox.width >= other_bbox.pos1.x)
-                       || (bbox.x <= other_bbox.pos2.x && bbox.x + bbox.width >= other_bbox.pos2.x)
-                       || (bbox.x >= other_bbox.pos1.x && bbox.x + bbox.width <= other_bbox.pos2.x)
-                       || (bbox.x >= other_bbox.pos2.x && bbox.x + bbox.width <= other_bbox.pos1.x);
-            },
+    return MATCH(
+        other_bbox.m_bounding_box,
+        [bbox](const RRectangle other_bbox)
+        {
+            return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
+                   || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
         },
-        other_bbox.m_bounding_box);
+        [bbox](const Circle other_bbox)
+        {
+            return (bbox.x >= other_bbox.pos.x && other_bbox.pos.x + other_bbox.radius > bbox.x)
+                   || (other_bbox.pos.x >= bbox.x && bbox.x + bbox.width > other_bbox.pos.x - other_bbox.radius);
+        },
+        [bbox](const Line other_bbox)
+        {
+            return (bbox.x <= other_bbox.pos1.x && bbox.x + bbox.width >= other_bbox.pos1.x)
+                   || (bbox.x <= other_bbox.pos2.x && bbox.x + bbox.width >= other_bbox.pos2.x)
+                   || (bbox.x >= other_bbox.pos1.x && bbox.x + bbox.width <= other_bbox.pos2.x)
+                   || (bbox.x >= other_bbox.pos2.x && bbox.x + bbox.width <= other_bbox.pos1.x);
+        });
 }
 
 bool BBox::y_overlaps(const BBox other_bbox) const
@@ -253,27 +243,25 @@ bool BBox::y_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return std::visit(
-        overloaded{
-            [bbox](const RRectangle other_bbox)
-            {
-                return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
-                       || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
-            },
-            [bbox](const Circle other_bbox)
-            {
-                return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
-                       || (other_bbox.pos.y >= bbox.y && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
-            },
-            [bbox](const Line other_bbox)
-            {
-                return (bbox.y <= other_bbox.pos1.y && bbox.y + bbox.height >= other_bbox.pos1.y)
-                       || (bbox.y <= other_bbox.pos2.y && bbox.y + bbox.height >= other_bbox.pos2.y)
-                       || (bbox.y >= other_bbox.pos1.y && bbox.y + bbox.height <= other_bbox.pos2.y)
-                       || (bbox.y >= other_bbox.pos2.y && bbox.y + bbox.height <= other_bbox.pos1.y);
-            },
+    return MATCH(
+        other_bbox.m_bounding_box,
+        [bbox](const RRectangle other_bbox)
+        {
+            return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
+                   || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
         },
-        other_bbox.m_bounding_box);
+        [bbox](const Circle other_bbox)
+        {
+            return (bbox.y >= other_bbox.pos.y && other_bbox.pos.y + other_bbox.radius > bbox.y)
+                   || (other_bbox.pos.y >= bbox.y && bbox.y + bbox.height > other_bbox.pos.y - other_bbox.radius);
+        },
+        [bbox](const Line other_bbox)
+        {
+            return (bbox.y <= other_bbox.pos1.y && bbox.y + bbox.height >= other_bbox.pos1.y)
+                   || (bbox.y <= other_bbox.pos2.y && bbox.y + bbox.height >= other_bbox.pos2.y)
+                   || (bbox.y >= other_bbox.pos1.y && bbox.y + bbox.height <= other_bbox.pos2.y)
+                   || (bbox.y >= other_bbox.pos2.y && bbox.y + bbox.height <= other_bbox.pos1.y);
+        });
 }
 
 void BBox::set(const Tform transform, const RVector2 size)

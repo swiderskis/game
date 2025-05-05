@@ -90,13 +90,11 @@ void Game::render()
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
-            std::visit(
-                overloaded{
-                    [](const RRectangle bbox) { bbox.DrawLines(RED); },
-                    [](const Circle bbox) { bbox.draw_lines(RED); },
-                    [](const Line bbox) { bbox.draw_line(RED); },
-                },
-                m_components.collision_boxes[id].bounding_box());
+            MATCH(
+                m_components.collision_boxes[id].bounding_box(),
+                [](const RRectangle bbox) { bbox.DrawLines(RED); },
+                [](const Circle bbox) { bbox.draw_lines(RED); },
+                [](const Line bbox) { bbox.draw_line(RED); });
         }
     }
 #endif
@@ -105,13 +103,11 @@ void Game::render()
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
-            std::visit(
-                overloaded{
-                    [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
-                    [](const Circle bbox) { bbox.draw_lines(GREEN); },
-                    [](const Line bbox) { bbox.draw_line(GREEN); },
-                },
-                m_components.hitboxes[id].bounding_box());
+            MATCH(
+                m_components.hitboxes[id].bounding_box(),
+                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
+                [](const Circle bbox) { bbox.draw_lines(GREEN); },
+                [](const Line bbox) { bbox.draw_line(GREEN); });
         }
     }
 #endif
@@ -295,30 +291,26 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
         }
 
         const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
-        const float x_adjust = std::visit(
-            overloaded{
-                [tile_rcbox](const RRectangle cbox)
-                { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
-                [tile_rcbox](const Circle cbox)
-                { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
-                [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
-            },
-            cbox.bounding_box());
+        const float x_adjust = MATCH(
+            cbox.bounding_box(),
+            [tile_rcbox](const RRectangle cbox)
+            { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
+            [tile_rcbox](const Circle cbox)
+            { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
+            [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
         {
             transform.pos.x += x_adjust;
             cbox.sync(transform, flipped);
         }
 
-        const float y_adjust = std::visit(
-            overloaded{
-                [tile_rcbox](const RRectangle cbox)
-                { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
-                [tile_rcbox](const Circle cbox)
-                { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
-                [tile_rcbox, prev_cbox](const auto) { return 0.0F; },
-            },
-            cbox.bounding_box());
+        const float y_adjust = MATCH(
+            cbox.bounding_box(),
+            [tile_rcbox](const RRectangle cbox)
+            { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
+            [tile_rcbox](const Circle cbox)
+            { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
+            [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
         {
             transform.pos.y += y_adjust;

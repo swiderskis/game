@@ -3,6 +3,8 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <variant> // IWYU pragma: keep
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define EXPORT extern "C" __declspec(dllexport)
 #else
@@ -15,6 +17,8 @@ struct overloaded : Ts... // NOLINT(readability-identifier-naming)
 {
     using Ts::operator()...;
 };
+
+#define MATCH(val, ...) std::visit(overloaded{ __VA_ARGS__ }, val);
 
 // exists to allow constexpr vec declarations
 struct SimpleVec2
