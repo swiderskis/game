@@ -20,29 +20,4 @@ struct overloaded : Ts... // NOLINT(readability-identifier-naming)
 
 #define MATCH(val, ...) std::visit(overloaded{ __VA_ARGS__ }, val);
 
-// exists to allow constexpr vec declarations
-struct SimpleVec2
-{
-    float x;
-    float y;
-
-    SimpleVec2() = delete;
-
-    constexpr SimpleVec2(float x, float y) : x(x), y(y)
-    {
-    }
-
-    operator RVector2() const // NOLINT(hicpp-explicit-conversions)
-    {
-        return { x, y };
-    }
-};
-
-// this should be made into a library / libraries if it grows enough
-namespace utils
-{
-float degrees_to_radians(float ang);
-float radians_to_degrees(float ang);
-} // namespace utils
-
 #endif

@@ -3,8 +3,8 @@
 
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "seb.hpp"
 #include "settings.hpp"
-#include "utils.hpp"
 
 #include <bitset>
 #include <cstdint>
@@ -69,8 +69,8 @@ enum class SpriteExtra : int8_t
 
 struct SpriteDetails
 {
-    SimpleVec2 pos;
-    SimpleVec2 size;
+    seb::SimpleVec2 pos;
+    seb::SimpleVec2 size;
     unsigned frames;
     float frame_duration;
     bool allow_movement_override;

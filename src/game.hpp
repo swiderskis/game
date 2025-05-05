@@ -4,7 +4,6 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "utils.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
 static constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
@@ -26,7 +25,7 @@ struct Inputs
 
 struct Coordinates
 {
-    SimpleVec2 pos;
+    seb::SimpleVec2 pos;
 
     Coordinates() = delete;
 

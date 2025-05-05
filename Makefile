@@ -17,7 +17,7 @@ BIN := $(RELEASE_DIR)/game$(BIN_SUFFIX)
 DEBUG_BIN := $(DEBUG_DIR)/game$(BIN_SUFFIX)
 SO := $(DEBUG_DIR)/game$(SO_SUFFIX)
 
-LIB :=
+LIB := seb
 LIB_DIRS := $(LIB:%=lib/%)
 LIB_FILES := $(join $(LIB_DIRS), $(addsuffix .a,$(addprefix /lib,$(LIB))))
 LIB_CPPFLAGS := $(LIB_DIRS:%=-iquote%/src)
@@ -59,7 +59,7 @@ else
 	export LD_LIBRARY_PATH=$(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH_OLD)
 endif
 
-.PHONY: all debug run release run_release so clean $(LIB_CLEANS) clean_raylib
+.PHONY: all debug run release run_release so clean $(LIB_CLEANS) clean_raylib $(LIB_FILES)
 
 all: debug
 
