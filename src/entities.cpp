@@ -1,12 +1,14 @@
 #include "entities.hpp"
 
-#include "seb.hpp"
+#include "seblib.hpp"
 #include "settings.hpp"
 
 #include <cassert>
 #include <ranges>
 #include <span>
 #include <utility>
+
+namespace sl = seblib;
 
 unsigned Entities::spawn(const Entity type)
 {
@@ -107,7 +109,7 @@ AttackDetails attack_details(const Attack attack)
     case Attack::Sector:
         return {
             .details = SectorDetails{ .radius = 50.0,
-                                      .ang = seb::math::degrees_to_radians(40.0),
+                                      .ang = sl::math::degrees_to_radians(40.0),
                                       .internal_offset = 20.0, 
                                       .external_offset = 15.0, },
             .lifespan = 0.3,

@@ -4,7 +4,7 @@
 #include "entities.hpp"
 #include "logging.hpp"
 #include "misc.hpp"
-#include "seb.hpp"
+#include "seblib.hpp"
 #include "settings.hpp"
 
 #include <cassert>
@@ -12,23 +12,31 @@
 #include <optional>
 #include <ranges>
 
+namespace sl = seblib;
+namespace sui = seblib::ui;
+
 inline constexpr unsigned TARGET_FPS = 60;
 
 inline constexpr float DAMAGE_LINES_INV_FREQ = 5.0;
 inline constexpr float PROJECTILE_SIZE = 4.0;
 
-inline constexpr auto PLAYER_CBOX_SIZE = seb::SimpleVec2(20.0, 29.0);
-inline constexpr auto ENEMY_CBOX_SIZE = seb::SimpleVec2(30.0, 24.0);
-inline constexpr auto PLAYER_HITBOX_SIZE = seb::SimpleVec2(12.0, 21.0);
-inline constexpr auto PLAYER_HITBOX_OFFSET = seb::SimpleVec2(0.0, 4.0);
-inline constexpr auto ENEMY_HITBOX_SIZE = seb::SimpleVec2(22.0, 16.0);
-inline constexpr auto ENEMY_HITBOX_OFFSET = seb::SimpleVec2(0.0, 4.0);
-inline constexpr auto TILE_CBOX_SIZE = seb::SimpleVec2(TILE_SIZE, TILE_SIZE);
-inline constexpr auto TILE_CBOX_OFFSET = seb::SimpleVec2(-8.0, 16.0);
-inline constexpr auto MELEE_OFFSET = seb::SimpleVec2(24.0, 9.0);
+inline constexpr auto PLAYER_CBOX_SIZE = sl::SimpleVec2(20.0, 29.0);
+inline constexpr auto ENEMY_CBOX_SIZE = sl::SimpleVec2(30.0, 24.0);
+inline constexpr auto PLAYER_HITBOX_SIZE = sl::SimpleVec2(12.0, 21.0);
+inline constexpr auto PLAYER_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
+inline constexpr auto ENEMY_HITBOX_SIZE = sl::SimpleVec2(22.0, 16.0);
+inline constexpr auto ENEMY_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
+inline constexpr auto TILE_CBOX_SIZE = sl::SimpleVec2(TILE_SIZE, TILE_SIZE);
+inline constexpr auto TILE_CBOX_OFFSET = sl::SimpleVec2(-8.0, 16.0);
+inline constexpr auto MELEE_OFFSET = sl::SimpleVec2(24.0, 9.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
+
+namespace
+{
+sui::Screen pause_screen(Game& game);
+} // namespace
 
 void Game::spawn_player(const RVector2 pos)
 {
@@ -151,7 +159,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
             = 1 + (unsigned)ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ);
         LOG_TRC("Spawning {} damage lines", damage_lines);
         const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
-        LOG_TRC("Angle between damage lines: {}", seb::math::radians_to_degrees(angle_diff));
+        LOG_TRC("Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
         const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
         m_components.get_by_id(sector_id).set_lifespan(details.lifespan).set_parent(parent_id);
@@ -199,26 +207,32 @@ Game::Game()
 
 void Game::run()
 {
-    m_window.BeginDrawing();
-    m_window.ClearBackground(SKYBLUE);
-
     poll_inputs();
-    set_player_vel();
-    player_attack();
-    move_entities();
-    sync_children();
-    update_lifespans();
-    update_invuln_times();
-    damage_entities();
-    destroy_entities();
+    check_pause_game();
+    if (!m_paused)
+    {
+        set_player_vel();
+        player_attack();
+        move_entities();
+        sync_children();
+        update_lifespans();
+        update_invuln_times();
+        damage_entities();
+        destroy_entities();
+    }
+
+    m_window.BeginDrawing();
+    m_window.ClearBackground(::SKYBLUE);
     render();
+    render_ui();
+    m_window.EndDrawing();
+
+    ui_click_action();
 
     if (m_inputs.spawn_enemy)
     {
         spawn_enemy(Enemy::Duck, Coordinates(2, 2));
     }
-
-    m_window.EndDrawing();
 }
 
 RWindow& Game::window()
@@ -234,6 +248,21 @@ Entities& Game::entities()
 Components& Game::components()
 {
     return m_components;
+}
+
+void Game::toggle_pause()
+{
+    m_paused = !m_paused;
+    if (m_paused)
+    {
+        m_screen = pause_screen(*this);
+        LOG_INF("Game paused");
+    }
+    else
+    {
+        m_screen = std::nullopt;
+        LOG_INF("Game unpaused");
+    }
 }
 
 #ifndef NDEBUG
@@ -256,3 +285,29 @@ EXPORT bool check_reload_lib()
     return RKeyboard::IsKeyPressed(KEY_R);
 }
 #endif
+
+namespace
+{
+
+sui::Screen pause_screen(Game& game)
+{
+    sui::Screen screen;
+    auto [_, resume_button] = screen.new_element<sui::Button>();
+    resume_button->set_pos(sui::PercentSize{ .width = 50, .height = 40 });  // NOLINT(*magic-numbers)
+    resume_button->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
+    resume_button->color = ::WHITE;
+    resume_button->text.text = "Resume";
+    resume_button->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    resume_button->on_click = [&game]() { game.toggle_pause(); };
+
+    auto [_, exit_button] = screen.new_element<sui::Button>();
+    exit_button->set_pos(sui::PercentSize{ .width = 50, .height = 60 });  // NOLINT(*magic-numbers)
+    exit_button->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
+    exit_button->color = ::WHITE;
+    exit_button->text.text = "Exit";
+    exit_button->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    exit_button->on_click = [&game]() { game.window().Close(); };
+
+    return screen;
+}
+} // namespace

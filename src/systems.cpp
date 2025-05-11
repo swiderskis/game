@@ -14,6 +14,8 @@
 #define SHOW_HITBOXES
 #undef SHOW_HITBOXES
 
+namespace sl = seblib;
+
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
 };
@@ -29,7 +31,7 @@ static constexpr auto ENTITY_RENDER_ORDER = {
     Entity::DamageLine, Entity::Tile, Entity::Enemy, Entity::Player, Entity::Projectile,
 };
 
-inline constexpr auto HEALTH_BAR_SIZE = seb::SimpleVec2(32.0, 4.0);
+inline constexpr auto HEALTH_BAR_SIZE = sl::SimpleVec2(32.0, 4.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
@@ -47,8 +49,9 @@ void Game::poll_inputs()
     m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
     m_inputs.up = RKeyboard::IsKeyDown(KEY_W);
     m_inputs.down = RKeyboard::IsKeyDown(KEY_S);
-    m_inputs.attack = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
+    m_inputs.click = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
     m_inputs.spawn_enemy = RKeyboard::IsKeyPressed(KEY_P);
+    m_inputs.pause = RKeyboard::IsKeyPressed(KEY_ESCAPE);
 }
 
 void Game::render()
@@ -56,7 +59,6 @@ void Game::render()
     const auto player_pos = m_components.transforms[PLAYER_ID].pos;
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
-
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
         for (const unsigned id : m_entities.entity_ids(entity))
@@ -64,7 +66,7 @@ void Game::render()
             if (entity == Entity::DamageLine)
             {
                 const auto line = std::get<Line>(m_components.hitboxes[id].bounding_box());
-                line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, LIGHTGRAY);
+                line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
                 continue;
             }
 
@@ -79,8 +81,8 @@ void Game::render()
             {
                 const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
                 const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
-                RRectangle(pos, HEALTH_BAR_SIZE).Draw(RED);
-                RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(GREEN);
+                RRectangle(pos, HEALTH_BAR_SIZE).Draw(::RED);
+                RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
             }
         }
     }
@@ -92,12 +94,13 @@ void Game::render()
         {
             MATCH(
                 m_components.collision_boxes[id].bounding_box(),
-                [](const RRectangle bbox) { bbox.DrawLines(RED); },
-                [](const Circle bbox) { bbox.draw_lines(RED); },
-                [](const Line bbox) { bbox.draw_line(RED); });
+                [](const RRectangle bbox) { bbox.DrawLines(::RED); },
+                [](const Circle bbox) { bbox.draw_lines(::RED); },
+                [](const Line bbox) { bbox.draw_line(::RED); });
         }
     }
 #endif
+
 #ifdef SHOW_HITBOXES
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
@@ -105,9 +108,9 @@ void Game::render()
         {
             MATCH(
                 m_components.hitboxes[id].bounding_box(),
-                [](const RRectangle bbox) { bbox.DrawLines(GREEN); },
-                [](const Circle bbox) { bbox.draw_lines(GREEN); },
-                [](const Line bbox) { bbox.draw_line(GREEN); });
+                [](const RRectangle bbox) { bbox.DrawLines(::GREEN); },
+                [](const Circle bbox) { bbox.draw_lines(::GREEN); },
+                [](const Line bbox) { bbox.draw_line(::GREEN); });
         }
     }
 #endif
@@ -169,7 +172,7 @@ void Game::player_attack()
         attack_cooldown -= dt();
     }
 
-    if (!m_inputs.attack || attack_cooldown > 0.0)
+    if (!m_inputs.click || attack_cooldown > 0.0)
     {
         return;
     }
@@ -265,6 +268,30 @@ void Game::update_invuln_times()
         {
             invuln_time -= dt();
         }
+    }
+}
+
+void Game::render_ui()
+{
+    if (m_screen != std::nullopt)
+    {
+        m_screen.value().render();
+    }
+}
+
+void Game::check_pause_game()
+{
+    if (m_inputs.pause)
+    {
+        toggle_pause();
+    }
+}
+
+void Game::ui_click_action()
+{
+    if (m_inputs.click && m_screen != std::nullopt)
+    {
+        m_screen->click_action(RMouse::GetPosition());
     }
 }
 

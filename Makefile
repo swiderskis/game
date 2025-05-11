@@ -17,7 +17,7 @@ BIN := $(RELEASE_DIR)/game$(BIN_SUFFIX)
 DEBUG_BIN := $(DEBUG_DIR)/game$(BIN_SUFFIX)
 SO := $(DEBUG_DIR)/game$(SO_SUFFIX)
 
-LIB := seb
+LIB := seblib
 LIB_DIRS := $(LIB:%=lib/%)
 LIB_FILES := $(join $(LIB_DIRS), $(addsuffix .a,$(addprefix /lib,$(LIB))))
 LIB_CPPFLAGS := $(LIB_DIRS:%=-iquote%/src)
@@ -37,7 +37,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 CPPFLAGS := -MMD -MP $(LIB_CPPFLAGS) -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
-CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
+CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++2c
 LDFLAGS := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS)
 LDLIBS := $(LIB_LDLIBS) -lraylib -lGL
 LDLIBS_SO := $(LIB_LDLIBS) -lraylib -lGL
@@ -59,31 +59,35 @@ else
 	export LD_LIBRARY_PATH=$(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH_OLD)
 endif
 
-.PHONY: all debug run release run_release so clean $(LIB_CLEANS) clean_raylib $(LIB_FILES)
+.PHONY: all debug run release run_release so $(LIB_DIRS) clean clean_libs $(LIB_CLEANS) clean_raylib
 
 all: debug
 
-debug: $(DEBUG_BIN)
+debug: $(LIB_DIRS) $(DEBUG_BIN)
 
-run: $(DEBUG_BIN)
+run: $(LIB_DIRS) $(DEBUG_BIN)
 	$(DEBUG_RUN_SO_CMD)
 	$(DEBUG_BIN)
 
-release: $(BIN)
+release: $(LIB_DIRS) $(BIN)
 
-run_release: $(BIN)
+run_release: $(LIB_DIRS) $(BIN)
 	$(BIN)
 
-so: $(SO)
+so: $(LIB_DIRS) $(SO)
 
-clean: $(LIB_CLEANS)
+$(LIB_DIRS):
+	$(MAKE) RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$@
+
+clean:
 	$(RM) -r $(BUILD_DIR)
 
+clean_libs: clean $(LIB_CLEANS)
+
 $(LIB_CLEANS):
-	@echo $(LIB_CLEANS)
 	$(MAKE) clean -C$(dir $@)
 
-clean_raylib: clean
+clean_raylib: clean clean_libs
 	$(MAKE) clean_shell_sh -C$(RAYLIB_DIR)/src
 	$(RM) $(RAYLIB_SO)
 	$(RM) $(RAYLIB_SO_STUB)
@@ -96,7 +100,7 @@ $(BIN): $(LIB_FILES) $(RAYLIB) $(OBJ) | $(BUILD_DIR)
 $(DEBUG_BIN): $(LIB_FILES) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR) $(SO)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
-$(SO): $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR)
+$(SO): $(LIB_FILES) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR)
 	$(CXX) -fPIC -shared $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
 
 $(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
@@ -104,9 +108,6 @@ $(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
 
 $(DEBUG_DIR)/%.o: src/%.cpp | $(DEBUG_DIR)
 	$(CXX) -fPIC $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(LIB_FILES):
-	$(MAKE) RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
 
 $(RAYLIB):
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C$(RAYLIB_DIR)/src

@@ -1,9 +1,9 @@
-BUILD_DIR := make-build
-LIB := libseb.a
+BUILD_DIR := build
+LIB := libseblib.a
 SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 
-CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
+CPPFLAGS := -fPIC -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 
 .PHONY: all clean
@@ -11,13 +11,13 @@ CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 all: $(LIB)
 
 clean:
-	$(RM) -r make-build
+	$(RM) -r $(BUILD_DIR)
 	$(RM) $(LIB)
 
-$(LIB): $(OBJ) | make-build
+$(LIB): $(OBJ) | $(BUILD_DIR)
 	ar rcs $(LIB) $(OBJ)
 
-$(BUILD_DIR)/%.o: src/%.cpp | make-build
+$(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
