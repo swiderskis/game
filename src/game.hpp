@@ -4,12 +4,10 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "seblib.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
 static constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
-
-inline constexpr unsigned WINDOW_WIDTH = 800;
-inline constexpr unsigned WINDOW_HEIGHT = 450;
 
 inline constexpr float CAMERA_ZOOM = 2.0;
 
@@ -19,13 +17,14 @@ struct Inputs
     bool right = false;
     bool up = false;
     bool down = false;
-    bool attack = false;
+    bool click = false;
     bool spawn_enemy = false;
+    bool pause = false;
 };
 
 struct Coordinates
 {
-    seb::SimpleVec2 pos;
+    seblib::SimpleVec2 pos;
 
     Coordinates() = delete;
 
@@ -47,6 +46,8 @@ class Game
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
     RCamera2D m_camera{ RVector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
+    std::optional<seblib::ui::Screen> m_screen;
+    bool m_paused = false;
 
     void spawn_player(RVector2 pos);
     void spawn_enemy(Enemy enemy, RVector2 pos);
@@ -67,6 +68,9 @@ class Game
     void damage_entities();
     void sync_children();
     void update_invuln_times();
+    void render_ui();
+    void check_pause_game();
+    void ui_click_action();
 
 public:
     Game();
@@ -75,6 +79,7 @@ public:
     RWindow& window();
     [[nodiscard]] Entities& entities();
     [[nodiscard]] Components& components();
+    void toggle_pause();
 #ifndef NDEBUG
     void reload_texture_sheet();
 #endif

@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP_
-#define UTILS_HPP_
+#ifndef MISC_HPP_
+#define MISC_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
