@@ -1,7 +1,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
-#include "misc.hpp"
+#include "seblib.hpp"
 #include "settings.hpp"
 
 #include <algorithm>
@@ -92,7 +92,7 @@ void Game::render()
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
-            MATCH(
+            sl::match(
                 m_components.collision_boxes[id].bounding_box(),
                 [](const RRectangle bbox) { bbox.DrawLines(::RED); },
                 [](const Circle bbox) { bbox.draw_lines(::RED); },
@@ -106,7 +106,7 @@ void Game::render()
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
-            MATCH(
+            sl::match(
                 m_components.hitboxes[id].bounding_box(),
                 [](const RRectangle bbox) { bbox.DrawLines(::GREEN); },
                 [](const Circle bbox) { bbox.draw_lines(::GREEN); },
@@ -318,7 +318,7 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
         }
 
         const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
-        const float x_adjust = MATCH(
+        const float x_adjust = sl::match(
             cbox.bounding_box(),
             [tile_rcbox](const RRectangle cbox)
             { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
@@ -331,7 +331,7 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
             cbox.sync(transform, flipped);
         }
 
-        const float y_adjust = MATCH(
+        const float y_adjust = sl::match(
             cbox.bounding_box(),
             [tile_rcbox](const RRectangle cbox)
             { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },

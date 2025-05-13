@@ -2,13 +2,15 @@
 
 #include "entities.hpp"
 #include "logging.hpp"
-#include "misc.hpp"
+#include "seblib.hpp"
 #include "settings.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <optional>
 #include <utility>
+
+namespace sl = seblib;
 
 namespace
 {
@@ -161,7 +163,7 @@ void Line::draw_line(::Color color) const
 
 void BBox::sync(const Tform transform, const bool flipped)
 {
-    MATCH(
+    sl::match(
         m_bounding_box,
         [transform, this, flipped](RRectangle& bbox)
         {
@@ -200,12 +202,12 @@ void BBox::sync(const Tform transform, const bool flipped)
 
 bool BBox::collides(const BBox other_bbox) const
 {
-    return MATCH(m_bounding_box,
-                 [other_bbox](const auto bbox)
-                 {
-                     return MATCH(other_bbox.m_bounding_box,
-                                  [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); });
-                 });
+    return sl::match(m_bounding_box,
+                     [other_bbox](const auto bbox)
+                     {
+                         return sl::match(other_bbox.m_bounding_box,
+                                          [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); });
+                     });
 }
 
 bool BBox::x_overlaps(const BBox other_bbox) const
@@ -215,7 +217,7 @@ bool BBox::x_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return MATCH(
+    return sl::match(
         other_bbox.m_bounding_box,
         [bbox](const RRectangle other_bbox)
         {
@@ -243,7 +245,7 @@ bool BBox::y_overlaps(const BBox other_bbox) const
 
     const auto bbox = std::get<RRectangle>(m_bounding_box);
 
-    return MATCH(
+    return sl::match(
         other_bbox.m_bounding_box,
         [bbox](const RRectangle other_bbox)
         {

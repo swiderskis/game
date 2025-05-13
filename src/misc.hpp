@@ -11,13 +11,4 @@
 #define EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
-// taken from https://en.cppreference.com/w/cpp/utility/variant/visit
-template <typename... Ts>
-struct overloaded : Ts... // NOLINT(readability-identifier-naming)
-{
-    using Ts::operator()...;
-};
-
-#define MATCH(val, ...) std::visit(overloaded{ __VA_ARGS__ }, val);
-
 #endif
