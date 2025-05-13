@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <utility>
 
 inline constexpr unsigned WINDOW_WIDTH = 800;
 inline constexpr unsigned WINDOW_HEIGHT = 450;
@@ -24,8 +25,20 @@ struct SimpleVec2
 
     constexpr SimpleVec2(float x, float y);
 
-    constexpr operator raylib::Vector2() const; // NOLINT(hicpp-explicit-conversions)
+    operator raylib::Vector2() const; // NOLINT(hicpp-explicit-conversions)
 };
+
+//
+// taken from https://en.cppreference.com/w/cpp/utility/variant/visit
+template <typename... Funcs>
+struct Overload : Funcs...
+{
+    using Funcs::operator()...;
+};
+
+// taken from https://www.reddit.com/r/cpp/comments/16lq63k/2_lines_of_code_and_3_c17_features_the_overload
+template <typename Var, typename... Funcs>
+auto match(Var&& variant, Funcs&&... funcs);
 
 namespace math
 {
@@ -112,9 +125,10 @@ constexpr SimpleVec2::SimpleVec2(float x, float y) : x(x), y(y)
 {
 }
 
-constexpr SimpleVec2::operator raylib::Vector2() const
+template <typename Var, typename... Funcs>
+auto match(Var&& variant, Funcs&&... funcs)
 {
-    return { x, y };
+    return std::visit(Overload{ std::forward<Funcs>(funcs)... }, std::forward<Var>(variant));
 }
 
 namespace math
