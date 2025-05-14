@@ -1,9 +1,8 @@
 #include "seblib.hpp"
 
-namespace seblib
-{
-SimpleVec2::operator raylib::Vector2() const
+namespace sl = seblib;
+
+sl::SimpleVec2::operator raylib::Vector2() const
 {
     return { x, y };
 }
-} // namespace seblib

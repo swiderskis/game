@@ -3,15 +3,19 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <format>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <optional>
+#include <source_location>
 #include <string>
 #include <tuple>
 #include <utility>
 
 inline constexpr unsigned WINDOW_WIDTH = 800;
 inline constexpr unsigned WINDOW_HEIGHT = 450;
+inline constexpr unsigned FILENAME_WIDTH = 8;
 
 namespace seblib
 {
@@ -117,11 +121,38 @@ public:
     void render();
 };
 } // namespace ui
+
+namespace log
+{
+enum Level : int8_t
+{
+    FTL = -1,
+    ERR = 0,
+    WRN = 1,
+    INF = 2,
+    TRC = 3,
+};
+
+// taken from https://stackoverflow.com/questions/14805192/c-variadic-template-function-parameter-with-default-value
+template <typename... Args>
+struct log // NOLINT(readability-identifier-naming)
+{
+    explicit log(Level lvl,
+                 std::format_string<Args...> fmt,
+                 Args&&... args,
+                 std::source_location loc = std::source_location::current());
+};
+
+template <typename... Args>
+log(Level level, std::format_string<Args...> fmt, Args&&... args) -> log<Args...>;
+int level();
+void set_level(int level);
+} // namespace log
 } // namespace seblib
 
 namespace seblib
 {
-constexpr SimpleVec2::SimpleVec2(float x, float y) : x(x), y(y)
+constexpr SimpleVec2::SimpleVec2(const float x, const float y) : x(x), y(y)
 {
 }
 
@@ -133,12 +164,12 @@ auto match(Var&& variant, Funcs&&... funcs)
 
 namespace math
 {
-constexpr float degrees_to_radians(float ang)
+constexpr float degrees_to_radians(const float ang)
 {
     return (float)(ang * M_PI / 180.0); // NOLINT(*magic-numbers)
 }
 
-constexpr float radians_to_degrees(float ang)
+constexpr float radians_to_degrees(const float ang)
 {
     return (float)(ang * 180.0 / M_PI); // NOLINT(*magic-numbers)
 }
@@ -155,6 +186,48 @@ std::tuple<unsigned, Elem*> Screen::new_element()
     return std::make_tuple(id, element);
 }
 } // namespace ui
+
+namespace log
+{
+template <typename... Args>
+log<Args...>::log(const Level lvl,
+                  const std::format_string<Args...> fmt,
+                  Args&&... args,
+                  const std::source_location loc)
+{
+    if (level() > lvl)
+    {
+        std::string level_text;
+        switch (lvl)
+        {
+        case FTL:
+            level_text = "FTL";
+            break;
+        case ERR:
+            level_text = "ERR";
+            break;
+        case WRN:
+            level_text = "WRN";
+            break;
+        case INF:
+            level_text = "INF";
+            break;
+        case TRC:
+            level_text = "TRC";
+            break;
+        }
+
+        const auto filename = std::string(loc.file_name());
+        std::clog << "[" << level_text << "] " << filename.substr(filename.size() - FILENAME_WIDTH)
+                  << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
+
+        if (lvl == FTL)
+        {
+            quick_exit(EXIT_FAILURE);
+        }
+    }
+}
+} // namespace log
 } // namespace seblib
 
 #endif

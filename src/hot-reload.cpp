@@ -4,7 +4,7 @@
 #include <string>
 
 #ifndef NDEBUG
-#include "logging.hpp"
+#include "seblib.hpp"
 
 #include <filesystem>
 #include <system_error>
@@ -29,6 +29,7 @@
 #define SO_TEMP_NAME SO_NAME ".tmp"
 
 namespace fs = std::filesystem;
+namespace slog = seblib::log;
 
 namespace
 {
@@ -52,7 +53,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     fs::remove(so_temp_name, ec);
     if (ec.value() != 0)
     {
-        LOG_ERR("Failed to delete shared library file");
+        slog::log(slog::ERR, "Failed to delete shared library file");
 
         return false;
     }
@@ -61,7 +62,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     fs::copy(SO_NAME, so_temp_name, ec);
     if (ec.value() != 0)
     {
-        LOG_ERR("Failed to copy shared library file");
+        slog::log(slog::ERR, "Failed to copy shared library file");
 
         return false;
     }
@@ -69,7 +70,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     lib = load_lib(so_temp_name.c_str());
     if (lib == nullptr)
     {
-        LOG_ERR("Failed to load library");
+        slog::log(slog::ERR, "Failed to load library");
 
         return false;
     }
@@ -81,7 +82,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     game_funcs.run = (RunFunc)get_func_address(lib, "run");
     if (game_funcs.run == nullptr)
     {
-        LOG_ERR("Failed to get run function address");
+        slog::log(slog::ERR, "Failed to get run function address");
 
         return false;
     }
@@ -89,7 +90,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
     game_funcs.check_reload_lib = (CheckReloadLibFunc)get_func_address(lib, "check_reload_lib");
     if (game_funcs.check_reload_lib == nullptr)
     {
-        LOG_ERR("Failed to get check_reload_lib function address");
+        slog::log(slog::ERR, "Failed to get check_reload_lib function address");
 
         return false;
     }
@@ -97,7 +98,7 @@ bool hot_reload::reload_lib(GameFuncs& game_funcs)
 #ifdef __GNUC__
 #pragma GCC diagnostic error "-Wcast-function-type"
 #endif
-    LOG_INF("Loaded library successfully");
+    slog::log(slog::INF, "Loaded library successfully");
 
     return true;
 }
