@@ -9,18 +9,18 @@ int Text::width() const
     return rl::MeasureText(text, m_size);
 }
 
-void Text::draw(rl::Vector2 pos) const
+void Text::draw(const rl::Vector2 pos) const
 {
     rl::DrawText(text, (int)pos.x, (int)pos.y, m_size, ::BLACK);
 }
 
-void Text::set_size(int size)
+void Text::set_size(const int size)
 {
     this->m_size = size;
     m_is_percent_size = false;
 }
 
-void Text::set_percent_size(unsigned size)
+void Text::set_percent_size(const unsigned size)
 {
     this->m_size = (int)(WINDOW_HEIGHT * (size / 100.0));
     m_is_percent_size = true;
@@ -31,13 +31,13 @@ int Text::size() const
     return m_size;
 }
 
-void Element::set_pos(PercentSize pos)
+void Element::set_pos(const PercentSize pos)
 {
     rect.x = (float)(pos.width / 100.0) * WINDOW_WIDTH - rect.width / 2;
     rect.y = (float)(pos.height / 100.0) * WINDOW_HEIGHT - rect.height / 2;
 }
 
-void Element::set_size(PercentSize size)
+void Element::set_size(const PercentSize size)
 {
     const auto old_width = rect.width;
     const auto old_height = rect.height;
@@ -47,7 +47,7 @@ void Element::set_size(PercentSize size)
     rect.y += (old_height - rect.height) / 2;
 }
 
-bool Element::mouse_overlaps(rl::Vector2 mouse_pos) const
+bool Element::mouse_overlaps(const rl::Vector2 mouse_pos) const
 {
     return rect.CheckCollision(mouse_pos);
 }
@@ -65,7 +65,7 @@ std::vector<std::unique_ptr<Element>>& Screen::elements()
     return m_elements;
 }
 
-void Screen::click_action(rl::Vector2 mouse_pos)
+void Screen::click_action(const rl::Vector2 mouse_pos)
 {
     Element* clicked_element = nullptr;
     for (auto& element : m_elements)
@@ -94,5 +94,4 @@ void Screen::render()
         element->render();
     }
 }
-
 } // namespace seblib::ui

@@ -2,7 +2,6 @@
 
 #include "components.hpp"
 #include "entities.hpp"
-#include "logging.hpp"
 #include "misc.hpp"
 #include "seblib.hpp"
 #include "settings.hpp"
@@ -14,6 +13,7 @@
 
 namespace sl = seblib;
 namespace sui = seblib::ui;
+namespace slog = seblib::log;
 
 inline constexpr unsigned TARGET_FPS = 60;
 
@@ -116,9 +116,9 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
     const auto details = entities::attack_details(attack);
     const auto source_pos = m_components.transforms[parent_id].pos;
-    LOG_TRC("Attack source pos ({}, {})", source_pos.x, source_pos.y);
+    slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
     const auto target_pos = (parent_id == PLAYER_ID ? get_mouse_pos() : m_components.transforms[PLAYER_ID].pos);
-    LOG_TRC("Attack target pos ({}, {})", target_pos.x, target_pos.y);
+    slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
     const auto diff = target_pos - source_pos;
     const float angle = atan2(diff.y, diff.x);
     switch (attack)
@@ -157,9 +157,9 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const float initial_angle = angle - (sector_details.ang / 2);
         const unsigned damage_lines
             = 1 + (unsigned)ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ);
-        LOG_TRC("Spawning {} damage lines", damage_lines);
+        slog::log(slog::TRC, "Spawning {} damage lines", damage_lines);
         const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
-        LOG_TRC("Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
+        slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
         const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
         m_components.get_by_id(sector_id).set_lifespan(details.lifespan).set_parent(parent_id);
@@ -168,7 +168,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
             const unsigned line_id = m_entities.spawn(Entity::DamageLine);
             const auto line_ang = initial_angle + (angle_diff * (float)i);
             const auto offset = ext_offset + RVector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
-            LOG_TRC("Offsetting damage line by ({}, {})", offset.x, offset.y);
+            slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
             m_components.get_by_id(line_id)
                 .set_pos(source_pos)
                 .set_hitbox_size(sector_details.radius, line_ang)
@@ -256,23 +256,21 @@ void Game::toggle_pause()
     if (m_paused)
     {
         m_screen = pause_screen(*this);
-        LOG_INF("Game paused");
+        slog::log(slog::INF, "Game paused");
     }
     else
     {
         m_screen = std::nullopt;
-        LOG_INF("Game unpaused");
+        slog::log(slog::INF, "Game unpaused");
     }
 }
 
 #ifndef NDEBUG
-#include "logging.hpp"
-
 void Game::reload_texture_sheet()
 {
     m_texture_sheet.Unload();
     m_texture_sheet.Load(TEXTURE_SHEET);
-    LOG_INF("Texture sheet reloaded");
+    slog::log(slog::INF, "Texture sheet reloaded");
 }
 
 EXPORT void run(Game& game)

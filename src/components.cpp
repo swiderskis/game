@@ -1,7 +1,6 @@
 #include "components.hpp"
 
 #include "entities.hpp"
-#include "logging.hpp"
 #include "seblib.hpp"
 #include "settings.hpp"
 
@@ -11,6 +10,7 @@
 #include <utility>
 
 namespace sl = seblib;
+namespace slog = seblib::log;
 
 namespace
 {
@@ -172,7 +172,7 @@ void BBox::sync(const Tform transform, const bool flipped)
             bbox.y += (SPRITE_SIZE - bbox.height);
             bbox.x += offset.x * (flipped ? -1.0F : 1.0F);
             bbox.y -= offset.y;
-            LOG_TRC("Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
+            slog::log(slog::TRC, "Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
         },
         [transform, this, flipped](Circle& bbox)
         {
@@ -181,7 +181,7 @@ void BBox::sync(const Tform transform, const bool flipped)
             bbox.pos.y += SPRITE_SIZE / 2;
             bbox.pos.x += offset.x * (flipped ? -1.0F : 1.0F);
             bbox.pos.y -= offset.y;
-            LOG_TRC("Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
+            slog::log(slog::TRC, "Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
         },
         [transform, this, flipped](Line& bbox)
         {
@@ -195,8 +195,8 @@ void BBox::sync(const Tform transform, const bool flipped)
             bbox.pos1.y += SPRITE_SIZE / 2;
             bbox.pos2.x += SPRITE_SIZE / 2;
             bbox.pos2.y += SPRITE_SIZE / 2;
-            LOG_TRC("Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
-            LOG_TRC("Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
+            slog::log(slog::TRC, "Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
+            slog::log(slog::TRC, "Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
         });
 }
 
@@ -312,7 +312,7 @@ Components::Components()
     hit_damage.resize(MAX_ENTITIES, 0);
     for (size_t i = 0; i < MAX_ENTITIES; i++)
     {
-        LOG_TRC("Invuln time [{}]: {}", i, invuln_times[i]);
+        slog::log(slog::TRC, "Invuln time [{}]: {}", i, invuln_times[i]);
     }
 }
 
