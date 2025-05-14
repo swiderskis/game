@@ -133,6 +133,7 @@ enum Level : int8_t
     TRC = 3,
 };
 
+// taken from https://stackoverflow.com/questions/14805192/c-variadic-template-function-parameter-with-default-value
 template <typename... Args>
 struct log // NOLINT(readability-identifier-naming)
 {
