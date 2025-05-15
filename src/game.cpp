@@ -2,9 +2,7 @@
 
 #include "components.hpp"
 #include "entities.hpp"
-#include "misc.hpp"
 #include "seblib.hpp"
-#include "settings.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -14,6 +12,7 @@
 namespace sl = seblib;
 namespace sui = seblib::ui;
 namespace slog = seblib::log;
+namespace se = seb_engine;
 
 inline constexpr unsigned TARGET_FPS = 60;
 
@@ -41,6 +40,7 @@ sui::Screen pause_screen(Game& game);
 void Game::spawn_player(const RVector2 pos)
 {
     const unsigned id = m_entities.spawn(Entity::Player);
+    m_player_id = id;
     m_components.get_by_id(id)
         .set_pos(pos)
         .set_cbox_size(PLAYER_CBOX_SIZE)
@@ -121,7 +121,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
     const auto details = entities::attack_details(attack);
     const auto source_pos = m_components.transforms[parent_id].pos;
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
-    const auto target_pos = (parent_id == PLAYER_ID ? get_mouse_pos() : m_components.transforms[PLAYER_ID].pos);
+    const auto target_pos = (parent_id == m_player_id ? get_mouse_pos() : m_components.transforms[m_player_id].pos);
     slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
     const auto diff = target_pos - source_pos;
     const float angle = atan2(diff.y, diff.x);
@@ -244,7 +244,7 @@ RWindow& Game::window()
     return m_window;
 }
 
-Entities& Game::entities()
+se::Entities<Entity>& Game::entities()
 {
     return m_entities;
 }
@@ -270,6 +270,8 @@ void Game::toggle_pause()
 }
 
 #ifndef NDEBUG
+#include "hot-reload.hpp"
+
 void Game::reload_texture_sheet()
 {
     m_texture_sheet.Unload();

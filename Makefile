@@ -17,12 +17,13 @@ BIN := $(RELEASE_DIR)/game$(BIN_SUFFIX)
 DEBUG_BIN := $(DEBUG_DIR)/game$(BIN_SUFFIX)
 SO := $(DEBUG_DIR)/game$(SO_SUFFIX)
 
-LIB := seblib
+LIB := seblib seb-engine
 LIB_DIRS := $(LIB:%=lib/%)
 LIB_FILES := $(join $(LIB_DIRS), $(addsuffix .a,$(addprefix /lib,$(LIB))))
 LIB_CPPFLAGS := $(LIB_DIRS:%=-iquote%/src)
 LIB_LDFLAGS := $(LIB_DIRS:%=-L%)
 LIB_LDLIBS := $(LIB:%=-l%)
+LIB_BUILDS := $(LIB_DIRS:%=%/build)
 LIB_CLEANS := $(LIB_DIRS:%=%/clean)
 
 # shared library stub only required for Windows debug build
@@ -59,25 +60,25 @@ else
 	export LD_LIBRARY_PATH=$(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH_OLD)
 endif
 
-.PHONY: all debug run release run_release so $(LIB_DIRS) clean clean_libs $(LIB_CLEANS) clean_raylib
+.PHONY: all debug run release run_release so $(LIB_BUILDS) clean clean_libs $(LIB_CLEANS) clean_raylib
 
 all: debug
 
-debug: $(LIB_DIRS) $(DEBUG_BIN)
+debug: $(LIB_BUILDS) $(DEBUG_BIN)
 
-run: $(LIB_DIRS) $(DEBUG_BIN)
+run: $(LIB_BUILDS) $(DEBUG_BIN)
 	$(DEBUG_RUN_SO_CMD)
 	$(DEBUG_BIN)
 
-release: $(LIB_DIRS) $(BIN)
+release: $(LIB_BUILDS) $(BIN)
 
-run_release: $(LIB_DIRS) $(BIN)
+run_release: $(LIB_BUILDS) $(BIN)
 	$(BIN)
 
-so: $(LIB_DIRS) $(SO)
+so: $(LIB_BUILDS) $(SO)
 
-$(LIB_DIRS):
-	$(MAKE) RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$@
+$(LIB_BUILDS):
+	$(MAKE) RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
 
 clean:
 	$(RM) -r $(BUILD_DIR)
