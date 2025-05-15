@@ -99,6 +99,13 @@ RVector2 Game::get_mouse_pos() const
 
 void Game::destroy_entity(const unsigned id)
 {
+    if (m_entities.entities()[id] == std::nullopt)
+    {
+        return;
+    }
+
+    m_entities.destroy_entity(id);
+    m_components.uninit_destroyed_entity(id);
     // destroy any child entities
     for (const auto [child_id, parent_id] : m_components.parents | std::views::enumerate | std::views::as_const)
     {
@@ -107,9 +114,6 @@ void Game::destroy_entity(const unsigned id)
             destroy_entity(child_id);
         }
     }
-
-    m_components.uninit_destroyed_entity(id);
-    m_entities.destroy_entity(id);
 }
 
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
