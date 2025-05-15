@@ -150,6 +150,12 @@ void set_level(int level);
 } // namespace log
 } // namespace seblib
 
+/****************************
+ *                          *
+ * TEMPLATE IMPLEMENTATIONS *
+ *                          *
+ ****************************/
+
 namespace seblib
 {
 constexpr SimpleVec2::SimpleVec2(const float x, const float y) : x(x), y(y)

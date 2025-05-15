@@ -2,7 +2,6 @@
 #include "entities.hpp"
 #include "game.hpp"
 #include "seblib.hpp"
-#include "settings.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -56,7 +55,7 @@ void Game::poll_inputs()
 
 void Game::render()
 {
-    const auto player_pos = m_components.transforms[PLAYER_ID].pos;
+    const auto player_pos = m_components.transforms[m_player_id].pos;
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
     for (const auto entity : ENTITY_RENDER_ORDER)
@@ -120,7 +119,7 @@ void Game::render()
 
 void Game::set_player_vel()
 {
-    auto& player_vel = m_components.transforms[PLAYER_ID].vel;
+    auto& player_vel = m_components.transforms[m_player_id].vel;
     player_vel.x = 0.0;
     player_vel.x += (m_inputs.right ? PLAYER_SPEED : 0.0F);
     player_vel.x -= (m_inputs.left ? PLAYER_SPEED : 0.0F);
@@ -166,7 +165,7 @@ void Game::destroy_entities()
 
 void Game::player_attack()
 {
-    auto& attack_cooldown = m_components.attack_cooldowns[PLAYER_ID];
+    auto& attack_cooldown = m_components.attack_cooldowns[m_player_id];
     if (attack_cooldown > 0.0)
     {
         attack_cooldown -= dt();
@@ -179,9 +178,9 @@ void Game::player_attack()
 
     const auto attack = Attack::Sector;
     const auto attack_details = entities::attack_details(attack);
-    m_components.sprites[PLAYER_ID].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
-    m_components.attack_cooldowns[PLAYER_ID] = attack_details.cooldown;
-    spawn_attack(attack, PLAYER_ID);
+    m_components.sprites[m_player_id].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
+    m_components.attack_cooldowns[m_player_id] = attack_details.cooldown;
+    spawn_attack(attack, m_player_id);
 }
 
 void Game::update_lifespans()
@@ -249,7 +248,7 @@ void Game::sync_children()
         const unsigned parent_id = m_components.parents[id].value();
         if (std::ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
         {
-            m_components.flags[id][flag::FLIPPED] = m_components.flags[PLAYER_ID][flag::FLIPPED];
+            m_components.flags[id][flag::FLIPPED] = m_components.flags[m_player_id][flag::FLIPPED];
         }
 
         const bool flipped = m_components.flags[id][flag::FLIPPED];

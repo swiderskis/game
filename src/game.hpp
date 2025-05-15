@@ -4,6 +4,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "seb-engine.hpp"
 #include "seblib.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
@@ -40,13 +41,14 @@ struct Coordinates
 
 class Game
 {
-    Entities m_entities;
+    seb_engine::Entities<Entity> m_entities;
     Components m_components;
     Inputs m_inputs;
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
     RCamera2D m_camera{ RVector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
     std::optional<seblib::ui::Screen> m_screen;
+    unsigned m_player_id = 0;
     bool m_paused = false;
 
     void spawn_player(RVector2 pos);
@@ -77,7 +79,7 @@ public:
 
     void run();
     RWindow& window();
-    [[nodiscard]] Entities& entities();
+    [[nodiscard]] seb_engine::Entities<Entity>& entities();
     [[nodiscard]] Components& components();
     void toggle_pause();
 #ifndef NDEBUG

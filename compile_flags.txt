@@ -1,4 +1,0 @@
--iquotelib/seblib/src
--isystemext-lib/raylib/src
--iquoteext-lib/raylib-cpp/include
--std=c++2c

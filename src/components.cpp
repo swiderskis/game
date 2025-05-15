@@ -2,7 +2,6 @@
 
 #include "entities.hpp"
 #include "seblib.hpp"
-#include "settings.hpp"
 
 #include <cassert>
 #include <cmath>

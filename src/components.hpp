@@ -3,7 +3,7 @@
 
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "settings.hpp"
+#include "seb-engine.hpp"
 
 #include <bitset>
 #include <cstdint>
@@ -248,6 +248,12 @@ public:
     EntityComponents& set_parent(unsigned parent);
     EntityComponents& set_hit_damage(unsigned damage);
 };
+
+/****************************
+ *                          *
+ * TEMPLATE IMPLEMENTATIONS *
+ *                          *
+ ****************************/
 
 template <typename Part>
 SpritePart<Part>::SpritePart(const Part part) : m_part(part)
