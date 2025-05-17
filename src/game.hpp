@@ -34,7 +34,7 @@ struct Coordinates
     {
     }
 
-    operator RVector2() const // NOLINT(hicpp-explicit-conversions)
+    operator raylib::Vector2() const // NOLINT(hicpp-explicit-conversions)
     {
         return pos;
     }
@@ -45,18 +45,20 @@ class Game
     seb_engine::Entities<Entity> m_entities;
     seb_engine::Components m_components;
     Inputs m_inputs;
-    RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
-    RTexture m_texture_sheet{ TEXTURE_SHEET };
-    RCamera2D m_camera{ RVector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
+    raylib::Window m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
+    raylib::Texture m_texture_sheet{ TEXTURE_SHEET };
+    raylib::Camera2D m_camera{
+        raylib::Vector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, raylib::Vector2(0.0, 0.0), 0.0, CAMERA_ZOOM
+    };
     std::optional<seb_engine::ui::Screen> m_screen;
     unsigned m_player_id = 0;
     bool m_paused = false;
 
-    void spawn_player(RVector2 pos);
-    void spawn_enemy(Enemy enemy, RVector2 pos);
-    void spawn_tile(Tile tile, RVector2 pos);
+    void spawn_player(raylib::Vector2 pos);
+    void spawn_enemy(Enemy enemy, raylib::Vector2 pos);
+    void spawn_tile(Tile tile, raylib::Vector2 pos);
     [[nodiscard]] float dt() const;
-    [[nodiscard]] RVector2 get_mouse_pos() const;
+    [[nodiscard]] raylib::Vector2 get_mouse_pos() const;
     void destroy_entity(unsigned id);
     void spawn_attack(Attack attack, unsigned parent_id);
 
@@ -79,7 +81,7 @@ public:
     Game();
 
     void run();
-    RWindow& window();
+    raylib::Window& window();
     [[nodiscard]] seb_engine::Entities<Entity>& entities();
     [[nodiscard]] seb_engine::Components& components();
     void toggle_pause();

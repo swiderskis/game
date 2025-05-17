@@ -4,7 +4,8 @@
 
 #include <utility>
 
-namespace sl = seblib;
+namespace rl = raylib;
+namespace smath = seblib::math;
 
 namespace entities
 {
@@ -14,7 +15,7 @@ AttackDetails attack_details(const Attack attack)
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
         return {
-            .details = MeleeDetails{ RVector2(18.0, 7.0) },
+            .details = MeleeDetails{ rl::Vector2(18.0, 7.0) },
             .lifespan = 0.3,
             .delay = 0.0,
             .cooldown = 0.5,
@@ -31,7 +32,7 @@ AttackDetails attack_details(const Attack attack)
     case Attack::Sector:
         return {
             .details = SectorDetails{ .radius = 50.0,
-                                      .ang = sl::math::degrees_to_radians(40.0),
+                                      .ang = smath::degrees_to_radians(40.0),
                                       .internal_offset = 20.0, 
                                       .external_offset = 15.0, },
             .lifespan = 0.3,

@@ -9,6 +9,7 @@
 #include <optional>
 #include <ranges>
 
+namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
 namespace se = seb_engine;
@@ -37,7 +38,7 @@ namespace
 sui::Screen pause_screen(Game& game);
 } // namespace
 
-void Game::spawn_player(const RVector2 pos)
+void Game::spawn_player(const rl::Vector2 pos)
 {
     const unsigned id = m_entities.spawn(Entity::Player);
     m_player_id = id;
@@ -51,7 +52,7 @@ void Game::spawn_player(const RVector2 pos)
     combat.hitbox.set_offset(pos, PLAYER_HITBOX_OFFSET);
 }
 
-void Game::spawn_enemy(const Enemy enemy, const RVector2 pos)
+void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
 {
     auto sprite_base = SpriteBase::None;
     switch (enemy)
@@ -74,7 +75,7 @@ void Game::spawn_enemy(const Enemy enemy, const RVector2 pos)
     sprite.base.set(sprite_base);
 }
 
-void Game::spawn_tile(const Tile tile, const RVector2 pos)
+void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
 {
     auto sprite_base = SpriteBase::None;
     switch (tile)
@@ -99,9 +100,9 @@ float Game::dt() const
     return m_window.GetFrameTime();
 }
 
-RVector2 Game::get_mouse_pos() const
+rl::Vector2 Game::get_mouse_pos() const
 {
-    return m_camera.GetScreenToWorld(RMouse::GetPosition()) - RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2;
+    return m_camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2(SPRITE_SIZE, SPRITE_SIZE) / 2;
 }
 
 void Game::destroy_entity(const unsigned id)
@@ -152,7 +153,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
     case Attack::Projectile:
     {
         const auto proj_details = std::get<ProjectileDetails>(details.details);
-        const auto vel = RVector2(cos(angle), sin(angle)) * proj_details.speed;
+        const auto vel = rl::Vector2(cos(angle), sin(angle)) * proj_details.speed;
         const unsigned id = m_entities.spawn(Entity::Projectile);
         auto components = m_components.by_id(id);
         auto& transform = components.get<Tform>();
@@ -176,7 +177,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         slog::log(slog::TRC, "Spawning {} damage lines", damage_lines);
         const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
         slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
-        const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
+        const auto ext_offset = rl::Vector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
         auto components = m_components.by_id(sector_id);
         components.get<Combat>().lifespan = details.lifespan;
@@ -185,7 +186,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         {
             const unsigned line_id = m_entities.spawn(Entity::DamageLine);
             const auto line_ang = initial_angle + (angle_diff * (float)i);
-            const auto offset = ext_offset + RVector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
+            const auto offset = ext_offset + rl::Vector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
             slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
             components = m_components.by_id(line_id);
             components.get<Tform>().pos = source_pos;
@@ -260,7 +261,7 @@ void Game::run()
     }
 }
 
-RWindow& Game::window()
+rl::Window& Game::window()
 {
     return m_window;
 }
@@ -307,7 +308,7 @@ EXPORT void run(Game& game)
 
 EXPORT bool check_reload_lib()
 {
-    return RKeyboard::IsKeyPressed(KEY_R);
+    return rl::Keyboard::IsKeyPressed(KEY_R);
 }
 #endif
 

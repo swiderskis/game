@@ -15,24 +15,24 @@ inline constexpr float SPRITE_SIZE = 32.0;
 
 inline constexpr unsigned FLAG_COUNT = 8;
 
-using BBoxVariant = std::variant<RRectangle, seblib::math::Circle, seblib::math::Line>;
+using BBoxVariant = std::variant<raylib::Rectangle, seblib::math::Circle, seblib::math::Line>;
 
 class BBox
 {
-    BBoxVariant m_bbox{ RRectangle() };
-    RVector2 m_offset{ 0.0, 0.0 };
+    BBoxVariant m_bbox{ raylib::Rectangle() };
+    raylib::Vector2 m_offset{ 0.0, 0.0 };
 
 public:
     BBox() = default;
 
-    void sync(RVector2 pos, bool flipped);
+    void sync(raylib::Vector2 pos, bool flipped);
     [[nodiscard]] bool collides(BBox other_bbox) const;
     [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
     [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
-    void set(RVector2 pos, RVector2 size);
-    void set(RVector2 pos, float radius);
-    void set(RVector2 pos, float len, float angle);
-    void set_offset(RVector2 pos, RVector2 offset);
+    void set(raylib::Vector2 pos, raylib::Vector2 size);
+    void set(raylib::Vector2 pos, float radius);
+    void set(raylib::Vector2 pos, float len, float angle);
+    void set_offset(raylib::Vector2 pos, raylib::Vector2 offset);
     [[nodiscard]] BBoxVariant bbox() const;
 
     enum Variant : uint8_t
@@ -45,8 +45,8 @@ public:
 
 struct Tform
 {
-    RVector2 pos;
-    RVector2 vel;
+    raylib::Vector2 pos;
+    raylib::Vector2 vel;
     BBox cbox;
 
     Tform() = default;
@@ -99,8 +99,8 @@ enum class SpriteExtra : int8_t
 
 struct SpriteDetails
 {
-    RVector2 pos;
-    RVector2 size;
+    raylib::Vector2 pos;
+    raylib::Vector2 size;
     unsigned frames = 0;
     float frame_duration = 0.0;
     bool allow_movement_override = false;
@@ -130,7 +130,7 @@ public:
     void set(Part part);
     void set(Part part, float frame_duration);
     void check_update_frame(float dt);
-    [[nodiscard]] RRectangle sprite(bool flipped) const;
+    [[nodiscard]] raylib::Rectangle sprite(bool flipped) const;
     [[nodiscard]] Part part() const;
     [[nodiscard]] unsigned current_frame() const;
     void movement_set(Part part);
@@ -145,8 +145,8 @@ struct Sprite
     SpritePart<SpriteExtra> extra{ SpriteExtra::None };
 
     void check_update_frames(float dt);
-    void draw(RTexture const& texture_sheet, Tform transform, bool flipped);
-    void lookup_set_movement_parts(Entity entity, RVector2 vel);
+    void draw(raylib::Texture const& texture_sheet, Tform transform, bool flipped);
+    void lookup_set_movement_parts(Entity entity, raylib::Vector2 vel);
 
 private:
     [[nodiscard]] float alternate_frame_y_offset() const;
@@ -155,7 +155,7 @@ private:
     void lookup_set_walk_parts(Entity entity);
     void lookup_set_idle_parts(Entity entity);
     template <typename Part>
-    [[nodiscard]] RVector2 render_pos(SpritePart<Part> part, RVector2 pos, bool flipped) const;
+    [[nodiscard]] raylib::Vector2 render_pos(SpritePart<Part> part, raylib::Vector2 pos, bool flipped) const;
 };
 
 struct Flags
@@ -204,7 +204,6 @@ struct Parent
 
 template <typename Part>
 SpritePart<Part>::SpritePart(const Part part) : m_part(part)
-
 {
 }
 
@@ -261,11 +260,11 @@ void SpritePart<Part>::check_update_frame(const float dt)
 }
 
 template <typename Part>
-RRectangle SpritePart<Part>::sprite(const bool flipped) const
+raylib::Rectangle SpritePart<Part>::sprite(const bool flipped) const
 {
     const auto details = components::sprite_details(m_part);
-    const auto pos = RVector2(details.size.x * m_current_frame, 0.0) + details.pos;
-    const auto size = RVector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
+    const auto pos = raylib::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
+    const auto size = raylib::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
 
     return { pos, size };
 }
@@ -292,12 +291,12 @@ void SpritePart<Part>::movement_set(const Part part)
 }
 
 template <typename Part>
-RVector2 Sprite::render_pos(const SpritePart<Part> part, const RVector2 pos, const bool flipped) const
+raylib::Vector2 Sprite::render_pos(const SpritePart<Part> part, const raylib::Vector2 pos, const bool flipped) const
 {
     // sprite part draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
     const float x_offset = (components::sprite_details(part.part()).size.x - SPRITE_SIZE) * flipped;
 
-    return pos - RVector2(x_offset, 0.0);
+    return pos - raylib::Vector2(x_offset, 0.0);
 }
 
 #endif

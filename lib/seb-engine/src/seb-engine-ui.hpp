@@ -11,10 +11,10 @@
 inline constexpr unsigned WINDOW_WIDTH = 800;
 inline constexpr unsigned WINDOW_HEIGHT = 450;
 
-namespace rl = raylib;
-
 namespace seb_engine::ui
 {
+namespace rl = raylib;
+
 struct PercentSize
 {
     unsigned width = 100;  // NOLINT(*magic-numbers)

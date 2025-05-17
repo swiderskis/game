@@ -8,28 +8,29 @@
 #include <optional>
 #include <utility>
 
+namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
 namespace sm = seblib::math;
 
 namespace
 {
-bool check_collision(RRectangle rectangle1, RRectangle rectangle2);
-bool check_collision(RRectangle rectangle, sm::Circle circle);
-bool check_collision(RRectangle rectangle, sm::Line line);
-bool check_collision(sm::Circle circle, RRectangle rectangle);
+bool check_collision(rl::Rectangle rectangle1, rl::Rectangle rectangle2);
+bool check_collision(rl::Rectangle rectangle, sm::Circle circle);
+bool check_collision(rl::Rectangle rectangle, sm::Line line);
+bool check_collision(sm::Circle circle, rl::Rectangle rectangle);
 bool check_collision(sm::Circle circle1, sm::Circle circle2);
 bool check_collision(sm::Circle circle, sm::Line line);
-bool check_collision(sm::Line line, RRectangle rectangle);
+bool check_collision(sm::Line line, rl::Rectangle rectangle);
 bool check_collision(sm::Line line, sm::Circle circle);
 bool check_collision(sm::Line line1, sm::Line line2);
 } // namespace
 
-void BBox::sync(const RVector2 pos, const bool flipped)
+void BBox::sync(const rl::Vector2 pos, const bool flipped)
 {
     sl::match(
         m_bbox,
-        [pos, this, flipped](RRectangle& bbox)
+        [pos, this, flipped](rl::Rectangle& bbox)
         {
             bbox.SetPosition(pos);
             bbox.x += (SPRITE_SIZE - bbox.width) / 2;
@@ -79,11 +80,11 @@ bool BBox::x_overlaps(const BBox other_bbox) const
     // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bbox.index() == RECTANGLE);
 
-    const auto bbox = std::get<RRectangle>(m_bbox);
+    const auto bbox = std::get<rl::Rectangle>(m_bbox);
 
     return sl::match(
         other_bbox.m_bbox,
-        [bbox](const RRectangle other_bbox)
+        [bbox](const rl::Rectangle other_bbox)
         {
             return (bbox.x >= other_bbox.x && bbox.x - other_bbox.x < other_bbox.width)
                    || (other_bbox.x >= bbox.x && other_bbox.x - bbox.x < bbox.width);
@@ -107,11 +108,11 @@ bool BBox::y_overlaps(const BBox other_bbox) const
     // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bbox.index() == RECTANGLE);
 
-    const auto bbox = std::get<RRectangle>(m_bbox);
+    const auto bbox = std::get<rl::Rectangle>(m_bbox);
 
     return sl::match(
         other_bbox.m_bbox,
-        [bbox](const RRectangle other_bbox)
+        [bbox](const rl::Rectangle other_bbox)
         {
             return (bbox.y >= other_bbox.y && bbox.y - other_bbox.y < other_bbox.height)
                    || (other_bbox.y >= bbox.y && other_bbox.y - bbox.y < bbox.height);
@@ -130,25 +131,25 @@ bool BBox::y_overlaps(const BBox other_bbox) const
         });
 }
 
-void BBox::set(const RVector2 pos, const RVector2 size)
+void BBox::set(const rl::Vector2 pos, const rl::Vector2 size)
 {
-    m_bbox = RRectangle(RVector2(0.0, 0.0), size);
+    m_bbox = rl::Rectangle(rl::Vector2(0.0, 0.0), size);
     sync(pos, false);
 }
 
-void BBox::set(const RVector2 pos, const float radius)
+void BBox::set(const rl::Vector2 pos, const float radius)
 {
-    m_bbox = sm::Circle(RVector2(0.0, 0.0), radius);
+    m_bbox = sm::Circle(rl::Vector2(0.0, 0.0), radius);
     sync(pos, false);
 }
 
-void BBox::set(const RVector2 pos, const float len, const float angle)
+void BBox::set(const rl::Vector2 pos, const float len, const float angle)
 {
-    m_bbox = sm::Line(RVector2(0.0, 0.0), len, angle);
+    m_bbox = sm::Line(rl::Vector2(0.0, 0.0), len, angle);
     sync(pos, false);
 }
 
-void BBox::set_offset(RVector2 pos, RVector2 offset)
+void BBox::set_offset(rl::Vector2 pos, rl::Vector2 offset)
 {
     m_offset = offset;
     sync(pos, false);
@@ -168,10 +169,10 @@ void Sprite::check_update_frames(const float dt)
     extra.check_update_frame(dt);
 }
 
-void Sprite::draw(RTexture const& texture_sheet, const Tform transform, const bool flipped)
+void Sprite::draw(rl::Texture const& texture_sheet, const Tform transform, const bool flipped)
 {
     const float y_offset = (legs.current_frame() % 2 != 0 ? alternate_frame_y_offset() : 0.0F);
-    const auto pos = transform.pos + RVector2(0.0, y_offset);
+    const auto pos = transform.pos + rl::Vector2(0.0, y_offset);
     const auto legs_pos = transform.pos;
     texture_sheet.Draw(base.sprite(flipped), render_pos(base, pos, flipped));
     texture_sheet.Draw(head.sprite(flipped), render_pos(head, pos, flipped));
@@ -180,9 +181,9 @@ void Sprite::draw(RTexture const& texture_sheet, const Tform transform, const bo
     texture_sheet.Draw(extra.sprite(flipped), render_pos(extra, pos, flipped));
 }
 
-void Sprite::lookup_set_movement_parts(const Entity entity, const RVector2 vel)
+void Sprite::lookup_set_movement_parts(const Entity entity, const rl::Vector2 vel)
 {
-    vel != RVector2(0.0, 0.0) ? lookup_set_walk_parts(entity) : lookup_set_idle_parts(entity);
+    vel != rl::Vector2(0.0, 0.0) ? lookup_set_walk_parts(entity) : lookup_set_idle_parts(entity);
 }
 
 float Sprite::alternate_frame_y_offset() const
@@ -483,31 +484,31 @@ SpriteDetails sprite_details(const SpriteExtra sprite)
 
 namespace
 {
-bool check_collision(const RRectangle rectangle1, const RRectangle rectangle2)
+bool check_collision(const rl::Rectangle rectangle1, const rl::Rectangle rectangle2)
 {
     return rectangle1.CheckCollision(rectangle2);
 }
 
-bool check_collision(const RRectangle rectangle, const sm::Circle circle)
+bool check_collision(const rl::Rectangle rectangle, const sm::Circle circle)
 {
     return rectangle.CheckCollision(circle.pos, circle.radius);
 }
 
-bool check_collision(const RRectangle rectangle, const sm::Line line)
+bool check_collision(const rl::Rectangle rectangle, const sm::Line line)
 {
     const auto rect_pos = rectangle.GetPosition();
     const auto rect_size = rectangle.GetSize();
-    const auto rect_line1 = sm::Line(rect_pos, rect_pos + RVector2(rectangle.width, 0.0));
-    const auto rect_line2 = sm::Line(rect_pos, rect_pos + RVector2(0.0, rectangle.height));
-    const auto rect_line3 = sm::Line(rect_pos + RVector2(rectangle.width, 0.0), rect_pos + rect_size);
-    const auto rect_line4 = sm::Line(rect_pos + RVector2(0.0, rectangle.height), rect_pos + rect_size);
+    const auto rect_line1 = sm::Line(rect_pos, rect_pos + rl::Vector2(rectangle.width, 0.0));
+    const auto rect_line2 = sm::Line(rect_pos, rect_pos + rl::Vector2(0.0, rectangle.height));
+    const auto rect_line3 = sm::Line(rect_pos + rl::Vector2(rectangle.width, 0.0), rect_pos + rect_size);
+    const auto rect_line4 = sm::Line(rect_pos + rl::Vector2(0.0, rectangle.height), rect_pos + rect_size);
 
     return rectangle.CheckCollision(line.pos1) || rectangle.CheckCollision(line.pos2)
            || check_collision(rect_line1, line) || check_collision(rect_line2, line)
            || check_collision(rect_line3, line) || check_collision(rect_line4, line);
 }
 
-bool check_collision(const sm::Circle circle, const RRectangle rectangle)
+bool check_collision(const sm::Circle circle, const rl::Rectangle rectangle)
 {
     return check_collision(rectangle, circle);
 }
@@ -522,7 +523,7 @@ bool check_collision(const sm::Circle circle, const sm::Line line)
     return CheckCollisionCircleLine(circle.pos, circle.radius, line.pos1, line.pos2);
 }
 
-bool check_collision(const sm::Line line, const RRectangle rectangle)
+bool check_collision(const sm::Line line, const rl::Rectangle rectangle)
 {
     return check_collision(rectangle, line);
 }
