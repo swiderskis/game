@@ -4,7 +4,8 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seb-engine.hpp"
+#include "seb-engine-ecs.hpp"
+#include "seb-engine-ui.hpp"
 #include "seblib.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
@@ -47,7 +48,7 @@ class Game
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
     RCamera2D m_camera{ RVector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, RVector2(0.0, 0.0), 0.0, CAMERA_ZOOM };
-    std::optional<seblib::ui::Screen> m_screen;
+    std::optional<seb_engine::ui::Screen> m_screen;
     unsigned m_player_id = 0;
     bool m_paused = false;
 

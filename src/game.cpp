@@ -10,9 +10,9 @@
 #include <ranges>
 
 namespace sl = seblib;
-namespace sui = seblib::ui;
 namespace slog = seblib::log;
 namespace se = seb_engine;
+namespace sui = seb_engine::ui;
 
 inline constexpr unsigned TARGET_FPS = 60;
 
