@@ -13,6 +13,7 @@
 #define SHOW_HITBOXES
 #undef SHOW_HITBOXES
 
+namespace rl = raylib;
 namespace sl = seblib;
 namespace smath = seblib::math;
 
@@ -45,19 +46,19 @@ void resolve_tile_collisions(Game& game, unsigned id, BBox prev_cbox);
 
 void Game::poll_inputs()
 {
-    m_inputs.left = RKeyboard::IsKeyDown(KEY_A);
-    m_inputs.right = RKeyboard::IsKeyDown(KEY_D);
-    m_inputs.up = RKeyboard::IsKeyDown(KEY_W);
-    m_inputs.down = RKeyboard::IsKeyDown(KEY_S);
-    m_inputs.click = RMouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
-    m_inputs.spawn_enemy = RKeyboard::IsKeyPressed(KEY_P);
-    m_inputs.pause = RKeyboard::IsKeyPressed(KEY_ESCAPE);
+    m_inputs.left = rl::Keyboard::IsKeyDown(KEY_A);
+    m_inputs.right = rl::Keyboard::IsKeyDown(KEY_D);
+    m_inputs.up = rl::Keyboard::IsKeyDown(KEY_W);
+    m_inputs.down = rl::Keyboard::IsKeyDown(KEY_S);
+    m_inputs.click = rl::Mouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
+    m_inputs.spawn_enemy = rl::Keyboard::IsKeyPressed(KEY_P);
+    m_inputs.pause = rl::Keyboard::IsKeyPressed(KEY_ESCAPE);
 }
 
 void Game::render()
 {
     const auto player_pos = m_components.get<Tform>(m_player_id).pos;
-    m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
+    m_camera.SetTarget(player_pos + rl::Vector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
@@ -80,10 +81,10 @@ void Game::render()
             const auto health = components.get<Combat>().health;
             if (health.max != std::nullopt && health.current != health.max)
             {
-                const auto pos = transform.pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
+                const auto pos = transform.pos - rl::Vector2(0.0, HEALTH_BAR_Y_OFFSET);
                 const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
-                RRectangle(pos, HEALTH_BAR_SIZE).Draw(::RED);
-                RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
+                rl::Rectangle(pos, HEALTH_BAR_SIZE).Draw(::RED);
+                rl::Rectangle(pos, rl::Vector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
             }
         }
     }
@@ -95,7 +96,7 @@ void Game::render()
         {
             sl::match(
                 m_components.get<Tform>(id).cbox.bbox(),
-                [](const RRectangle bbox) { bbox.DrawLines(::RED); },
+                [](const rl::Rectangle bbox) { bbox.DrawLines(::RED); },
                 [](const smath::Circle bbox) { bbox.draw_lines(::RED); },
                 [](const smath::Line bbox) { bbox.draw_line(::RED); });
         }
@@ -109,7 +110,7 @@ void Game::render()
         {
             sl::match(
                 m_components.get<Combat>(id).hitbox.bbox(),
-                [](const RRectangle bbox) { bbox.DrawLines(::GREEN); },
+                [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
                 [](const smath::Circle bbox) { bbox.draw_lines(::GREEN); },
                 [](const smath::Line bbox) { bbox.draw_line(::GREEN); });
         }
@@ -301,7 +302,7 @@ void Game::ui_click_action()
 {
     if (m_inputs.click && m_screen != std::nullopt)
     {
-        m_screen->click_action(RMouse::GetPosition());
+        m_screen->click_action(rl::Mouse::GetPosition());
     }
 }
 
@@ -328,10 +329,10 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
             continue;
         }
 
-        const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bbox());
+        const auto tile_rcbox = std::get<rl::Rectangle>(tile_cbox.bbox());
         const float x_adjust = sl::match(
             cbox.bbox(),
-            [tile_rcbox](const RRectangle cbox)
+            [tile_rcbox](const rl::Rectangle cbox)
             { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
             [tile_rcbox](const smath::Circle cbox)
             { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
@@ -344,7 +345,7 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
 
         const float y_adjust = sl::match(
             cbox.bbox(),
-            [tile_rcbox](const RRectangle cbox)
+            [tile_rcbox](const rl::Rectangle cbox)
             { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
             [tile_rcbox](const smath::Circle cbox)
             { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },

@@ -31,7 +31,7 @@ enum class Attack : uint8_t
 
 struct MeleeDetails
 {
-    RVector2 size;
+    raylib::Vector2 size;
 };
 
 struct ProjectileDetails
