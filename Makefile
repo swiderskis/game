@@ -38,7 +38,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 CPPFLAGS := -MMD -MP $(LIB_CPPFLAGS) -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
-CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++2c
+CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 LDFLAGS := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS)
 LDLIBS := $(LIB_LDLIBS) -lraylib -lGL
 LDLIBS_SO := $(LIB_LDLIBS) -lraylib -lGL

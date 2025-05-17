@@ -14,6 +14,7 @@
 #undef SHOW_HITBOXES
 
 namespace sl = seblib;
+namespace smath = seblib::math;
 
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
@@ -55,30 +56,31 @@ void Game::poll_inputs()
 
 void Game::render()
 {
-    const auto player_pos = m_components.transforms[m_player_id].pos;
+    const auto player_pos = m_components.get<Tform>(m_player_id).pos;
     m_camera.SetTarget(player_pos + RVector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
     m_camera.BeginMode();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
+            auto components = m_components.by_id(id);
             if (entity == Entity::DamageLine)
             {
-                const auto line = std::get<Line>(m_components.hitboxes[id].bounding_box());
+                const auto line = std::get<smath::Line>(components.get<Combat>().hitbox.bbox());
                 line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
                 continue;
             }
 
-            const auto transform = m_components.transforms[id];
-            auto& sprite = m_components.sprites[id];
+            const auto transform = components.get<Tform>();
+            auto& sprite = components.get<Sprite>();
             sprite.check_update_frames(dt());
             sprite.lookup_set_movement_parts(entity, transform.vel);
-            sprite.draw(m_texture_sheet, transform, m_components.flags[id][flag::FLIPPED]);
+            sprite.draw(m_texture_sheet, transform, components.get<Flags>().is_enabled(Flags::FLIPPED));
 
-            const auto health = m_components.healths[id];
+            const auto health = components.get<Combat>().health;
             if (health.max != std::nullopt && health.current != health.max)
             {
-                const auto pos = m_components.transforms[id].pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
+                const auto pos = transform.pos - RVector2(0.0, HEALTH_BAR_Y_OFFSET);
                 const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
                 RRectangle(pos, HEALTH_BAR_SIZE).Draw(::RED);
                 RRectangle(pos, RVector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
@@ -92,10 +94,10 @@ void Game::render()
         for (const unsigned id : m_entities.entity_ids(entity))
         {
             sl::match(
-                m_components.collision_boxes[id].bounding_box(),
+                m_components.get<Tform>(id).cbox.bbox(),
                 [](const RRectangle bbox) { bbox.DrawLines(::RED); },
-                [](const Circle bbox) { bbox.draw_lines(::RED); },
-                [](const Line bbox) { bbox.draw_line(::RED); });
+                [](const smath::Circle bbox) { bbox.draw_lines(::RED); },
+                [](const smath::Line bbox) { bbox.draw_line(::RED); });
         }
     }
 #endif
@@ -106,10 +108,10 @@ void Game::render()
         for (const unsigned id : m_entities.entity_ids(entity))
         {
             sl::match(
-                m_components.hitboxes[id].bounding_box(),
+                m_components.get<Combat>(id).hitbox.bbox(),
                 [](const RRectangle bbox) { bbox.DrawLines(::GREEN); },
-                [](const Circle bbox) { bbox.draw_lines(::GREEN); },
-                [](const Line bbox) { bbox.draw_line(::GREEN); });
+                [](const smath::Circle bbox) { bbox.draw_lines(::GREEN); },
+                [](const smath::Line bbox) { bbox.draw_line(::GREEN); });
         }
     }
 #endif
@@ -119,7 +121,7 @@ void Game::render()
 
 void Game::set_player_vel()
 {
-    auto& player_vel = m_components.transforms[m_player_id].vel;
+    auto& player_vel = m_components.get<Tform>(m_player_id).vel;
     player_vel.x = 0.0;
     player_vel.x += (m_inputs.right ? PLAYER_SPEED : 0.0F);
     player_vel.x -= (m_inputs.left ? PLAYER_SPEED : 0.0F);
@@ -137,19 +139,20 @@ void Game::move_entities()
             continue;
         }
 
-        auto& transform = m_components.transforms[id];
+        auto components = m_components.by_id(id);
+        auto& transform = components.get<Tform>();
         transform.pos += transform.vel * dt();
         if (transform.vel.x != 0.0)
         {
-            m_components.flags[id][flag::FLIPPED] = transform.vel.x < 0.0;
+            m_components.get<Flags>(id).set(Flags::FLIPPED, transform.vel.x < 0.0);
         }
 
-        auto& cbox = m_components.collision_boxes[id];
+        auto& cbox = components.get<Tform>().cbox;
         const auto prev_cbox = cbox;
-        const auto flipped = m_components.flags[id][flag::FLIPPED];
-        cbox.sync(transform, flipped);
+        const auto flipped = components.get<Flags>().is_enabled(Flags::FLIPPED);
+        cbox.sync(transform.pos, flipped);
         resolve_tile_collisions(*this, id, prev_cbox);
-        m_components.hitboxes[id].sync(transform, flipped);
+        components.get<Combat>().hitbox.sync(transform.pos, flipped);
     }
 }
 
@@ -165,7 +168,8 @@ void Game::destroy_entities()
 
 void Game::player_attack()
 {
-    auto& attack_cooldown = m_components.attack_cooldowns[m_player_id];
+    auto components = m_components.by_id(m_player_id);
+    auto& attack_cooldown = components.get<Combat>().attack_cooldown;
     if (attack_cooldown > 0.0)
     {
         attack_cooldown -= dt();
@@ -178,15 +182,16 @@ void Game::player_attack()
 
     const auto attack = Attack::Sector;
     const auto attack_details = entities::attack_details(attack);
-    m_components.sprites[m_player_id].arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
-    m_components.attack_cooldowns[m_player_id] = attack_details.cooldown;
+    components.get<Sprite>().arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
+    components.get<Combat>().attack_cooldown = attack_details.cooldown;
     spawn_attack(attack, m_player_id);
 }
 
 void Game::update_lifespans()
 {
-    for (const auto& [id, lifespan] : m_components.lifespans | std::views::enumerate)
+    for (const auto& [id, combat] : m_components.vec<Combat>() | std::views::enumerate)
     {
+        auto& lifespan = combat.lifespan;
         if (lifespan == std::nullopt)
         {
             continue;
@@ -206,18 +211,20 @@ void Game::damage_entities()
     {
         for (const unsigned id : m_entities.entity_ids(entity))
         {
-            const auto projectile_bbox = m_components.hitboxes[id];
+            auto components = m_components.by_id(id);
+            const auto projectile_bbox = components.get<Combat>().hitbox;
             for (const unsigned enemy_id : m_entities.entity_ids(Entity::Enemy))
             {
-                const auto enemy_bbox = m_components.hitboxes[enemy_id];
-                float& invuln_time = m_components.invuln_times[enemy_id];
+                auto& enemy_combat_comps = m_components.by_id(enemy_id).get<Combat>();
+                const auto enemy_bbox = enemy_combat_comps.hitbox;
+                float& invuln_time = enemy_combat_comps.invuln_time;
                 if (invuln_time > 0.0 || !enemy_bbox.collides(projectile_bbox))
                 {
                     continue;
                 }
 
-                int& enemy_current_health = m_components.healths[enemy_id].current;
-                enemy_current_health -= (int)m_components.hit_damage[id];
+                int& enemy_current_health = enemy_combat_comps.health.current;
+                enemy_current_health -= (int)components.get<Combat>().damage;
                 if (enemy_current_health <= 0)
                 {
                     m_entities.queue_destroy(enemy_id);
@@ -240,29 +247,33 @@ void Game::sync_children()
 {
     for (const auto [id, entity] : m_entities.entities() | std::views::enumerate)
     {
-        if (entity == std::nullopt || m_components.parents[id] == std::nullopt)
+        auto components = m_components.by_id(id);
+        if (entity == std::nullopt || components.get<Parent>().id == std::nullopt)
         {
             continue;
         }
 
-        const unsigned parent_id = m_components.parents[id].value();
+        const unsigned parent_id = components.get<Parent>().id.value();
+        auto parent_components = m_components.by_id(parent_id);
         if (std::ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
         {
-            m_components.flags[id][flag::FLIPPED] = m_components.flags[m_player_id][flag::FLIPPED];
+            const bool is_parent_flipped = parent_components.get<Flags>().is_enabled(Flags::FLIPPED);
+            components.get<Flags>().set(Flags::FLIPPED, is_parent_flipped);
         }
 
-        const bool flipped = m_components.flags[id][flag::FLIPPED];
-        auto& transform = m_components.transforms[id];
-        transform.pos = m_components.transforms[parent_id].pos;
-        m_components.collision_boxes[id].sync(transform, flipped);
-        m_components.hitboxes[id].sync(transform, flipped);
+        const bool flipped = components.get<Flags>().is_enabled(Flags::FLIPPED);
+        auto& transform = components.get<Tform>();
+        transform.pos = parent_components.get<Tform>().pos;
+        components.get<Tform>().cbox.sync(transform.pos, flipped);
+        components.get<Combat>().hitbox.sync(transform.pos, flipped);
     }
 }
 
 void Game::update_invuln_times()
 {
-    for (const auto& [id, invuln_time] : m_components.invuln_times | std::views::enumerate)
+    for (const auto& [id, combat] : m_components.vec<Combat>() | std::views::enumerate)
     {
+        auto& invuln_time = combat.invuln_time;
         if (invuln_time > 0.0)
         {
             invuln_time -= dt();
@@ -298,13 +309,14 @@ namespace
 {
 void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox)
 {
+    auto components = game.components().by_id(id);
     const auto entity = game.entities().entities()[id];
-    auto& transform = game.components().transforms[id];
-    auto& cbox = game.components().collision_boxes[id];
-    const auto flipped = game.components().flags[id][flag::FLIPPED];
+    auto& transform = components.get<Tform>();
+    auto& cbox = transform.cbox;
+    const auto flipped = components.get<Flags>().is_enabled(Flags::FLIPPED);
     for (const unsigned tile_id : game.entities().entity_ids(Entity::Tile))
     {
-        const auto tile_cbox = game.components().collision_boxes[tile_id];
+        const auto tile_cbox = game.components().get<Tform>(tile_id).cbox;
         if (!cbox.collides(tile_cbox))
         {
             continue;
@@ -316,31 +328,31 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
             continue;
         }
 
-        const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bounding_box());
+        const auto tile_rcbox = std::get<RRectangle>(tile_cbox.bbox());
         const float x_adjust = sl::match(
-            cbox.bounding_box(),
+            cbox.bbox(),
             [tile_rcbox](const RRectangle cbox)
             { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
-            [tile_rcbox](const Circle cbox)
+            [tile_rcbox](const smath::Circle cbox)
             { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
         {
             transform.pos.x += x_adjust;
-            cbox.sync(transform, flipped);
+            cbox.sync(transform.pos, flipped);
         }
 
         const float y_adjust = sl::match(
-            cbox.bounding_box(),
+            cbox.bbox(),
             [tile_rcbox](const RRectangle cbox)
             { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
-            [tile_rcbox](const Circle cbox)
+            [tile_rcbox](const smath::Circle cbox)
             { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
         {
             transform.pos.y += y_adjust;
-            cbox.sync(transform, flipped);
+            cbox.sync(transform.pos, flipped);
         }
     }
 }

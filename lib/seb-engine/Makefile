@@ -1,9 +1,12 @@
 BUILD_DIR := build
+RAYLIB_DIR := ../../ext-lib/raylib
+RAYLIB_CPP_DIR := ../../ext-lib/raylib-cpp
+SEBLIB_DIR := ../seblib
 LIB := libseb-engine.a
 SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 
-CPPFLAGS := -fPIC -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
+CPPFLAGS := -fPIC -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include -iquote$(SEBLIB_DIR)/src
 CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 
 .PHONY: all clean
