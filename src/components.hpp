@@ -3,7 +3,7 @@
 
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seb-engine.hpp"
+#include "seblib.hpp"
 
 #include <bitset>
 #include <cstdint>
@@ -15,10 +15,41 @@ inline constexpr float SPRITE_SIZE = 32.0;
 
 inline constexpr unsigned FLAG_COUNT = 8;
 
+using BBoxVariant = std::variant<RRectangle, seblib::math::Circle, seblib::math::Line>;
+
+class BBox
+{
+    BBoxVariant m_bbox{ RRectangle() };
+    RVector2 m_offset{ 0.0, 0.0 };
+
+public:
+    BBox() = default;
+
+    void sync(RVector2 pos, bool flipped);
+    [[nodiscard]] bool collides(BBox other_bbox) const;
+    [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
+    [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
+    void set(RVector2 pos, RVector2 size);
+    void set(RVector2 pos, float radius);
+    void set(RVector2 pos, float len, float angle);
+    void set_offset(RVector2 pos, RVector2 offset);
+    [[nodiscard]] BBoxVariant bbox() const;
+
+    enum Variant : uint8_t
+    {
+        RECTANGLE = 0,
+        CIRCLE = 1,
+        LINE = 2,
+    };
+};
+
 struct Tform
 {
     RVector2 pos;
     RVector2 vel;
+    BBox cbox;
+
+    Tform() = default;
 };
 
 enum class SpriteBase : int8_t
@@ -127,126 +158,42 @@ private:
     [[nodiscard]] RVector2 render_pos(SpritePart<Part> part, RVector2 pos, bool flipped) const;
 };
 
-struct Circle
+struct Flags
 {
-    RVector2 pos;
-    float radius = 0.0;
+    std::bitset<FLAG_COUNT> flag;
 
-    Circle(RVector2 pos, float radius);
-
-    void draw_lines(::Color color) const;
-};
-
-struct Line
-{
-    RVector2 pos1;
-    RVector2 pos2;
-
-    Line() = delete;
-    Line(RVector2 pos1, RVector2 pos2);
-    Line(RVector2 pos, float len, float angle);
-
-    [[nodiscard]] float len() const;
-    void draw_line(::Color color) const;
-};
-
-using BBoxVariant = std::variant<RRectangle, Circle, Line>;
-
-class BBox
-{
-    BBoxVariant m_bounding_box{ RRectangle() };
-
-public:
-    RVector2 offset{ 0.0, 0.0 };
-
-    BBox() = default;
-
-    void sync(Tform transform, bool flipped);
-    [[nodiscard]] bool collides(BBox other_bbox) const;
-    [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
-    [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
-    void set(Tform transform, RVector2 size);
-    void set(Tform transform, float radius);
-    void set(Tform transform, float len, float angle);
-    [[nodiscard]] BBoxVariant bounding_box() const;
-
-    enum Variant : uint8_t
+    enum Flag : uint8_t
     {
-        RECTANGLE = 0,
-        CIRCLE = 1,
-        LINE = 2,
+        FLIPPED,
     };
-};
 
-namespace flag
-{
-enum Flag : uint8_t
-{
-    FLIPPED,
+    [[nodiscard]] bool is_enabled(Flag flag) const;
+    void set(Flag flag, bool val);
 };
-} // namespace flag
 
 struct Health
-{
-    int current = 0;
-    std::optional<int> max = std::nullopt;
 
-    void set_health(int health);
+{
+    std::optional<int> max = std::nullopt;
+    int current = 0;
+
+    void set(int health);
     [[nodiscard]] float percentage() const;
 };
 
-class EntityComponents;
-
-struct Components
+struct Combat
 {
-    std::vector<Tform> transforms{ MAX_ENTITIES, Tform() };
-    std::vector<Sprite> sprites{ MAX_ENTITIES, Sprite() };
-    std::vector<BBox> collision_boxes{ MAX_ENTITIES, BBox() };
-    std::vector<std::bitset<FLAG_COUNT>> flags;
-    std::vector<std::optional<float>> lifespans;
-    std::vector<Health> healths{ MAX_ENTITIES, Health() };
-    std::vector<BBox> hitboxes{ MAX_ENTITIES, BBox() };
-    std::vector<std::optional<unsigned>> parents;
-    std::vector<float> attack_cooldowns;
-    std::vector<float> invuln_times;
-    std::vector<unsigned> hit_damage;
-
-    Components();
-
-    void uninit_destroyed_entity(unsigned id);
-    [[nodiscard]] EntityComponents get_by_id(unsigned id);
+    BBox hitbox;
+    Health health;
+    std::optional<float> lifespan = std::nullopt;
+    float attack_cooldown = 0.0;
+    float invuln_time = 0.0;
+    unsigned damage = 0;
 };
 
-class EntityComponents
+struct Parent
 {
-    Components* m_components;
-    unsigned m_id;
-
-    EntityComponents(Components& components, unsigned id);
-    friend struct Components;
-
-public:
-    EntityComponents() = delete;
-
-    EntityComponents& set_pos(RVector2 pos);
-    EntityComponents& set_vel(RVector2 vel);
-    EntityComponents& set_cbox_size(RVector2 cbox_size);
-    EntityComponents& set_cbox_size(float radius);
-    EntityComponents& set_cbox_size(float len, float angle);
-    EntityComponents& set_cbox_offset(RVector2 offset);
-    EntityComponents& set_health(int health);
-    EntityComponents& set_hitbox_size(RVector2 hbox_size);
-    EntityComponents& set_hitbox_size(float radius);
-    EntityComponents& set_hitbox_size(float len, float angle);
-    EntityComponents& set_hitbox_offset(RVector2 offset);
-    EntityComponents& set_sprite_base(SpriteBase sprite);
-    EntityComponents& set_sprite_head(SpriteHead sprite);
-    EntityComponents& set_sprite_arms(SpriteArms sprite);
-    EntityComponents& set_sprite_legs(SpriteLegs sprite);
-    EntityComponents& set_sprite_extra(SpriteExtra sprite);
-    EntityComponents& set_lifespan(float lifespan);
-    EntityComponents& set_parent(unsigned parent);
-    EntityComponents& set_hit_damage(unsigned damage);
+    std::optional<unsigned> id;
 };
 
 /****************************
@@ -257,6 +204,7 @@ public:
 
 template <typename Part>
 SpritePart<Part>::SpritePart(const Part part) : m_part(part)
+
 {
 }
 

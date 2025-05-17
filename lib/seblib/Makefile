@@ -1,4 +1,6 @@
 BUILD_DIR := build
+RAYLIB_DIR := ../../ext-lib/raylib
+RAYLIB_CPP_DIR := ../../ext-lib/raylib-cpp
 LIB := libseblib.a
 SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)

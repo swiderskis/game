@@ -3,6 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <cstddef>
 #include <format>
 #include <functional>
 #include <iostream>
@@ -10,7 +11,6 @@
 #include <optional>
 #include <source_location>
 #include <string>
-#include <tuple>
 #include <utility>
 
 inline constexpr unsigned WINDOW_WIDTH = 800;
@@ -19,6 +19,8 @@ inline constexpr unsigned FILENAME_WIDTH = 8;
 
 namespace seblib
 {
+namespace rl = raylib;
+
 // exists to allow constexpr vec declarations
 struct SimpleVec2
 {
@@ -29,7 +31,7 @@ struct SimpleVec2
 
     constexpr SimpleVec2(float x, float y);
 
-    operator raylib::Vector2() const; // NOLINT(hicpp-explicit-conversions)
+    operator rl::Vector2() const; // NOLINT(hicpp-explicit-conversions)
 };
 
 //
@@ -48,6 +50,29 @@ namespace math
 {
 constexpr float degrees_to_radians(float ang);
 constexpr float radians_to_degrees(float ang);
+
+struct Circle
+{
+    RVector2 pos;
+    float radius = 0.0;
+
+    Circle(RVector2 pos, float radius);
+
+    void draw_lines(rl::Color color) const;
+};
+
+struct Line
+{
+    RVector2 pos1;
+    RVector2 pos2;
+
+    Line() = delete;
+    Line(RVector2 pos1, RVector2 pos2);
+    Line(RVector2 pos, float len, float angle);
+
+    [[nodiscard]] float len() const;
+    void draw_line(rl::Color color) const;
+};
 } // namespace math
 
 namespace ui
@@ -61,7 +86,7 @@ struct PercentSize
 struct Text
 {
     std::string text;
-    raylib::Color color;
+    rl::Color color;
 
 private:
     int m_size = 0;
@@ -70,7 +95,7 @@ private:
 
 public:
     [[nodiscard]] int width() const;
-    void draw(raylib::Vector2 pos) const;
+    void draw(rl::Vector2 pos) const;
     void set_size(int size);
     void set_percent_size(unsigned size);
     [[nodiscard]] int size() const;
@@ -79,7 +104,7 @@ public:
 struct Element
 {
     std::function<void()> on_click = []() {};
-    raylib::Rectangle rect;
+    rl::Rectangle rect;
     std::optional<unsigned> parent = std::nullopt;
     unsigned layer = 0;
 
@@ -93,20 +118,27 @@ struct Element
 
     void set_pos(PercentSize pos);
     void set_size(PercentSize size);
-    [[nodiscard]] bool mouse_overlaps(raylib::Vector2 mouse_pos) const;
+    [[nodiscard]] bool mouse_overlaps(rl::Vector2 mouse_pos) const;
 
 protected:
     Element() = default;
 };
 
-struct Button : public Element
+struct Button : Element
 {
     Text text;
-    raylib::Color color;
+    rl::Color color;
 
     Button() = default;
 
     void render() override;
+};
+
+template <typename Elem>
+struct ElementWithId
+{
+    size_t id = 0;
+    Elem* element = nullptr;
 };
 
 class Screen
@@ -115,9 +147,9 @@ class Screen
 
 public:
     template <typename Elem>
-    [[maybe_unused]] std::tuple<unsigned, Elem*> new_element();
+    [[maybe_unused]] ElementWithId<Elem> new_element();
     [[nodiscard]] std::vector<std::unique_ptr<Element>>& elements();
-    void click_action(raylib::Vector2 mouse_pos);
+    void click_action(rl::Vector2 mouse_pos);
     void render();
 };
 } // namespace ui
@@ -184,12 +216,12 @@ constexpr float radians_to_degrees(const float ang)
 namespace ui
 {
 template <typename Elem>
-std::tuple<unsigned, Elem*> Screen::new_element()
+ElementWithId<Elem> Screen::new_element()
 {
-    const unsigned id = m_elements.size();
-    auto* element = dynamic_cast<Elem*>(m_elements.emplace_back(std::make_unique<Elem>()).get());
-
-    return std::make_tuple(id, element);
+    return ElementWithId<Elem>{
+        .id = m_elements.size(),
+        .element = dynamic_cast<Elem*>(m_elements.emplace_back(std::make_unique<Elem>()).get()),
+    };
 }
 } // namespace ui
 

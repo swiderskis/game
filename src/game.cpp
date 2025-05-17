@@ -41,50 +41,57 @@ void Game::spawn_player(const RVector2 pos)
 {
     const unsigned id = m_entities.spawn(Entity::Player);
     m_player_id = id;
-    m_components.get_by_id(id)
-        .set_pos(pos)
-        .set_cbox_size(PLAYER_CBOX_SIZE)
-        .set_health(PLAYER_HEALTH)
-        .set_hitbox_size(PLAYER_HITBOX_SIZE)
-        .set_hitbox_offset(PLAYER_HITBOX_OFFSET);
+    auto components = m_components.by_id(id);
+    auto& transform = components.get<Tform>();
+    transform.pos = pos;
+    transform.cbox.set(pos, PLAYER_CBOX_SIZE);
+    auto& combat = components.get<Combat>();
+    combat.health.set(PLAYER_HEALTH);
+    combat.hitbox.set(pos, PLAYER_HITBOX_SIZE);
+    combat.hitbox.set_offset(pos, PLAYER_HITBOX_OFFSET);
 }
 
 void Game::spawn_enemy(const Enemy enemy, const RVector2 pos)
 {
-    auto sprite = SpriteBase::None;
+    auto sprite_base = SpriteBase::None;
     switch (enemy)
     {
     case Enemy::Duck:
-        sprite = SpriteBase::EnemyDuck;
+        sprite_base = SpriteBase::EnemyDuck;
         break;
     }
 
     const unsigned id = m_entities.spawn(Entity::Enemy);
-    m_components.get_by_id(id)
-        .set_pos(pos)
-        .set_cbox_size(ENEMY_CBOX_SIZE)
-        .set_health(ENEMY_HEALTH)
-        .set_hitbox_size(ENEMY_HITBOX_SIZE)
-        .set_hitbox_offset(ENEMY_HITBOX_OFFSET)
-        .set_sprite_base(sprite);
+    auto components = m_components.by_id(id);
+    auto& transform = components.get<Tform>();
+    transform.pos = pos;
+    transform.cbox.set(pos, ENEMY_CBOX_SIZE);
+    auto& combat = components.get<Combat>();
+    combat.health.set(ENEMY_HEALTH);
+    combat.hitbox.set(pos, ENEMY_HITBOX_SIZE);
+    combat.hitbox.set_offset(pos, ENEMY_HITBOX_OFFSET);
+    auto& sprite = components.get<Sprite>();
+    sprite.base.set(sprite_base);
 }
 
 void Game::spawn_tile(const Tile tile, const RVector2 pos)
 {
-    auto sprite = SpriteBase::None;
+    auto sprite_base = SpriteBase::None;
     switch (tile)
     {
     case Tile::Brick:
-        sprite = SpriteBase::TileBrick;
+        sprite_base = SpriteBase::TileBrick;
         break;
     }
 
     const auto id = m_entities.spawn(Entity::Tile);
-    m_components.get_by_id(id)
-        .set_pos(pos)
-        .set_cbox_offset(TILE_CBOX_OFFSET)
-        .set_cbox_size(TILE_CBOX_SIZE)
-        .set_sprite_base(sprite);
+    auto components = m_components.by_id(id);
+    auto& transform = components.get<Tform>();
+    transform.pos = pos;
+    transform.cbox.set(pos, TILE_CBOX_SIZE);
+    transform.cbox.set_offset(pos, TILE_CBOX_OFFSET);
+    auto& sprite = components.get<Sprite>();
+    sprite.base.set(sprite_base);
 }
 
 float Game::dt() const
@@ -107,9 +114,9 @@ void Game::destroy_entity(const unsigned id)
     m_entities.destroy_entity(id);
     m_components.uninit_destroyed_entity(id);
     // destroy any child entities
-    for (const auto [child_id, parent_id] : m_components.parents | std::views::enumerate | std::views::as_const)
+    for (const auto [child_id, parent] : m_components.vec<Parent>() | std::views::enumerate | std::views::as_const)
     {
-        if (parent_id != std::nullopt && parent_id.value() == id)
+        if (parent.id != std::nullopt && parent.id.value() == id)
         {
             destroy_entity(child_id);
         }
@@ -119,9 +126,9 @@ void Game::destroy_entity(const unsigned id)
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
     const auto details = entities::attack_details(attack);
-    const auto source_pos = m_components.transforms[parent_id].pos;
+    const auto source_pos = m_components.get<Tform>(parent_id).pos;
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
-    const auto target_pos = (parent_id == m_player_id ? get_mouse_pos() : m_components.transforms[m_player_id].pos);
+    const auto target_pos = (parent_id == m_player_id ? get_mouse_pos() : m_components.get<Tform>(m_player_id).pos);
     slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
     const auto diff = target_pos - source_pos;
     const float angle = atan2(diff.y, diff.x);
@@ -131,13 +138,15 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
     {
         const auto melee_details = std::get<MeleeDetails>(details.details);
         const unsigned id = m_entities.spawn(Entity::Melee);
-        m_components.get_by_id(id)
-            .set_pos(source_pos)
-            .set_lifespan(details.lifespan)
-            .set_hitbox_size(melee_details.size)
-            .set_hitbox_offset(MELEE_OFFSET)
-            .set_parent(parent_id)
-            .set_hit_damage(details.damage);
+        auto components = m_components.by_id(id);
+        auto& transform = components.get<Tform>();
+        transform.pos = source_pos;
+        auto combat = components.get<Combat>();
+        combat.lifespan = details.lifespan;
+        combat.hitbox.set(source_pos, melee_details.size);
+        combat.hitbox.set_offset(source_pos, MELEE_OFFSET);
+        combat.damage = details.damage;
+        components.get<Parent>().id = parent_id;
         break;
     }
     case Attack::Projectile:
@@ -145,14 +154,17 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const auto proj_details = std::get<ProjectileDetails>(details.details);
         const auto vel = RVector2(cos(angle), sin(angle)) * proj_details.speed;
         const unsigned id = m_entities.spawn(Entity::Projectile);
-        m_components.get_by_id(id)
-            .set_pos(source_pos)
-            .set_vel(vel)
-            .set_sprite_base(SpriteBase::Projectile)
-            .set_cbox_size(PROJECTILE_SIZE)
-            .set_lifespan(details.lifespan)
-            .set_hitbox_size(PROJECTILE_SIZE)
-            .set_hit_damage(details.damage);
+        auto components = m_components.by_id(id);
+        auto& transform = components.get<Tform>();
+        transform.pos = source_pos;
+        transform.vel = vel;
+        transform.cbox.set(source_pos, PROJECTILE_SIZE);
+        auto& sprite = components.get<Sprite>();
+        sprite.base.set(SpriteBase::Projectile);
+        auto& combat = components.get<Combat>();
+        combat.lifespan = details.lifespan;
+        combat.hitbox.set(source_pos, PROJECTILE_SIZE);
+        combat.damage = details.damage;
         break;
     }
     case Attack::Sector:
@@ -166,19 +178,22 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
         const auto ext_offset = RVector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
-        m_components.get_by_id(sector_id).set_lifespan(details.lifespan).set_parent(parent_id);
+        auto components = m_components.by_id(sector_id);
+        components.get<Combat>().lifespan = details.lifespan;
+        components.get<Parent>().id = parent_id;
         for (unsigned i = 0; i < damage_lines; i++)
         {
             const unsigned line_id = m_entities.spawn(Entity::DamageLine);
             const auto line_ang = initial_angle + (angle_diff * (float)i);
             const auto offset = ext_offset + RVector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
             slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
-            m_components.get_by_id(line_id)
-                .set_pos(source_pos)
-                .set_hitbox_size(sector_details.radius, line_ang)
-                .set_hitbox_offset(offset)
-                .set_parent(sector_id)
-                .set_hit_damage(details.damage);
+            components = m_components.by_id(line_id);
+            components.get<Tform>().pos = source_pos;
+            auto& combat = components.get<Combat>();
+            combat.hitbox.set(source_pos, sector_details.radius, line_ang);
+            combat.hitbox.set_offset(source_pos, offset);
+            combat.damage = details.damage;
+            components.get<Parent>().id = sector_id;
         }
 
         break;
@@ -190,6 +205,12 @@ Game::Game()
 {
     m_window.SetTargetFPS(TARGET_FPS);
     m_window.SetExitKey(KEY_NULL);
+
+    m_components.reg<Tform>();
+    m_components.reg<Sprite>();
+    m_components.reg<Flags>();
+    m_components.reg<Combat>();
+    m_components.reg<Parent>();
 
     for (int i = 0; i < 10; i++) // NOLINT
     {
@@ -249,7 +270,7 @@ se::Entities<Entity>& Game::entities()
     return m_entities;
 }
 
-Components& Game::components()
+se::Components& Game::components()
 {
     return m_components;
 }
@@ -296,21 +317,21 @@ namespace
 sui::Screen pause_screen(Game& game)
 {
     sui::Screen screen;
-    auto [_, resume_button] = screen.new_element<sui::Button>();
-    resume_button->set_pos(sui::PercentSize{ .width = 50, .height = 40 });  // NOLINT(*magic-numbers)
-    resume_button->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
-    resume_button->color = ::WHITE;
-    resume_button->text.text = "Resume";
-    resume_button->text.set_percent_size(6); // NOLINT(*magic-numbers)
-    resume_button->on_click = [&game]() { game.toggle_pause(); };
+    auto resume = screen.new_element<sui::Button>();
+    resume.element->set_pos(sui::PercentSize{ .width = 50, .height = 40 });  // NOLINT(*magic-numbers)
+    resume.element->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
+    resume.element->color = ::WHITE;
+    resume.element->text.text = "Resume";
+    resume.element->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    resume.element->on_click = [&game]() { game.toggle_pause(); };
 
-    auto [_, exit_button] = screen.new_element<sui::Button>();
-    exit_button->set_pos(sui::PercentSize{ .width = 50, .height = 60 });  // NOLINT(*magic-numbers)
-    exit_button->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
-    exit_button->color = ::WHITE;
-    exit_button->text.text = "Exit";
-    exit_button->text.set_percent_size(6); // NOLINT(*magic-numbers)
-    exit_button->on_click = [&game]() { game.window().Close(); };
+    auto exit = screen.new_element<sui::Button>();
+    exit.element->set_pos(sui::PercentSize{ .width = 50, .height = 60 });  // NOLINT(*magic-numbers)
+    exit.element->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
+    exit.element->color = ::WHITE;
+    exit.element->text.text = "Exit";
+    exit.element->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    exit.element->on_click = [&game]() { game.window().Close(); };
 
     return screen;
 }

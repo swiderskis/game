@@ -2,4 +2,4 @@
 -iquote../lib/seblib/src
 -isystem../ext-lib/raylib/src
 -iquote../ext-lib/raylib-cpp/include
--std=c++2c
+-std=c++23

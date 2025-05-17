@@ -1,7 +1,5 @@
 #include "seblib.hpp"
 
-namespace rl = raylib;
-
 namespace seblib::ui
 {
 int Text::width() const

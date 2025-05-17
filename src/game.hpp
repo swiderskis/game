@@ -42,7 +42,7 @@ struct Coordinates
 class Game
 {
     seb_engine::Entities<Entity> m_entities;
-    Components m_components;
+    seb_engine::Components m_components;
     Inputs m_inputs;
     RWindow m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
     RTexture m_texture_sheet{ TEXTURE_SHEET };
@@ -80,7 +80,7 @@ public:
     void run();
     RWindow& window();
     [[nodiscard]] seb_engine::Entities<Entity>& entities();
-    [[nodiscard]] Components& components();
+    [[nodiscard]] seb_engine::Components& components();
     void toggle_pause();
 #ifndef NDEBUG
     void reload_texture_sheet();
