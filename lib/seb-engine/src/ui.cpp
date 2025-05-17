@@ -1,6 +1,6 @@
-#include "seblib.hpp"
+#include "seb-engine-ui.hpp"
 
-namespace seblib::ui
+namespace seb_engine::ui
 {
 int Text::width() const
 {
@@ -92,4 +92,4 @@ void Screen::render()
         element->render();
     }
 }
-} // namespace seblib::ui
+} // namespace seb_engine::ui

@@ -1,5 +1,5 @@
-#ifndef SEB_ENGINE_HPP_
-#define SEB_ENGINE_HPP_
+#ifndef SEB_ENGINE_ECS_HPP_
+#define SEB_ENGINE_ECS_HPP_
 
 #include "seblib.hpp"
 
