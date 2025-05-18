@@ -2,6 +2,7 @@
 #include "entities.hpp"
 #include "game.hpp"
 #include "seblib.hpp"
+#include "sprite.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -73,9 +74,9 @@ void Game::render()
             }
 
             const auto transform = components.get<Tform>();
-            auto& sprite = components.get<Sprite>();
+            auto& sprite = components.get<Sprites>();
             sprite.check_update_frames(dt());
-            sprite.lookup_set_movement_parts(entity, transform.vel);
+            sprite.lookup_set_movement_sprites(entity, transform.vel);
             sprite.draw(m_texture_sheet, transform, components.get<Flags>().is_enabled(Flags::FLIPPED));
 
             const auto health = components.get<Combat>().health;
@@ -183,7 +184,7 @@ void Game::player_attack()
 
     const auto attack = Attack::Sector;
     const auto attack_details = entities::attack_details(attack);
-    components.get<Sprite>().arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
+    components.get<Sprites>().arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
     components.get<Combat>().attack_cooldown = attack_details.cooldown;
     spawn_attack(attack, m_player_id);
 }
