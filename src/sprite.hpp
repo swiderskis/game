@@ -54,25 +54,20 @@ enum class SpriteExtra : int8_t
 
 namespace sprites
 {
-seb_engine::SpriteDetails sprite_details(SpriteBase sprite);
-seb_engine::SpriteDetails sprite_details(SpriteHead sprite);
-seb_engine::SpriteDetails sprite_details(SpriteArms sprite);
-seb_engine::SpriteDetails sprite_details(SpriteLegs sprite);
-seb_engine::SpriteDetails sprite_details(SpriteExtra sprite);
+seb_engine::SpriteDetails details(SpriteBase sprite);
+seb_engine::SpriteDetails details(SpriteHead sprite);
+seb_engine::SpriteDetails details(SpriteArms sprite);
+seb_engine::SpriteDetails details(SpriteLegs sprite);
+seb_engine::SpriteDetails details(SpriteExtra sprite);
 } // namespace sprites
 
 struct Sprites
 {
-    seb_engine::Sprite<SpriteBase> base{ SpriteBase::None,
-                                         [](SpriteBase sprite) { return sprites::sprite_details(sprite); } };
-    seb_engine::Sprite<SpriteHead> head{ SpriteHead::None,
-                                         [](SpriteHead sprite) { return sprites::sprite_details(sprite); } };
-    seb_engine::Sprite<SpriteArms> arms{ SpriteArms::None,
-                                         [](SpriteArms sprite) { return sprites::sprite_details(sprite); } };
-    seb_engine::Sprite<SpriteLegs> legs{ SpriteLegs::None,
-                                         [](SpriteLegs sprite) { return sprites::sprite_details(sprite); } };
-    seb_engine::Sprite<SpriteExtra> extra{ SpriteExtra::None,
-                                           [](SpriteExtra sprite) { return sprites::sprite_details(sprite); } };
+    seb_engine::Sprite<SpriteBase> base{ SpriteBase::None };
+    seb_engine::Sprite<SpriteHead> head{ SpriteHead::None };
+    seb_engine::Sprite<SpriteArms> arms{ SpriteArms::None };
+    seb_engine::Sprite<SpriteLegs> legs{ SpriteLegs::None };
+    seb_engine::Sprite<SpriteExtra> extra{ SpriteExtra::None };
 
     void check_update_frames(float dt);
     void draw(raylib::Texture const& texture_sheet, Tform transform, bool flipped);
@@ -102,7 +97,7 @@ raylib::Vector2 Sprites::render_pos(const seb_engine::Sprite<SpriteEnum> sprite,
                                     const bool flipped) const
 {
     // sprite draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
-    const float x_offset = (sprites::sprite_details(sprite.sprite()).size.x - SPRITE_SIZE) * flipped;
+    const float x_offset = (sprites::details(sprite.sprite()).size.x - SPRITE_SIZE) * flipped;
 
     return pos - raylib::Vector2(x_offset, 0.0);
 }

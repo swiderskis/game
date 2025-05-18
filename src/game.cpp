@@ -73,7 +73,7 @@ void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
     combat.hitbox.set(pos, ENEMY_HITBOX_SIZE);
     combat.hitbox.set_offset(pos, ENEMY_HITBOX_OFFSET);
     auto& sprite = components.get<Sprites>();
-    sprite.base.set(sprite_base);
+    sprite.base.set(sprite_base, sprites::details(sprite_base));
 }
 
 void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
@@ -93,7 +93,7 @@ void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
     transform.cbox.set(pos, TILE_CBOX_SIZE);
     transform.cbox.set_offset(pos, TILE_CBOX_OFFSET);
     auto& sprite = components.get<Sprites>();
-    sprite.base.set(sprite_base);
+    sprite.base.set(sprite_base, sprites::details(sprite_base));
 }
 
 float Game::dt() const
@@ -162,7 +162,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         transform.vel = vel;
         transform.cbox.set(source_pos, PROJECTILE_SIZE);
         auto& sprite = components.get<Sprites>();
-        sprite.base.set(SpriteBase::Projectile);
+        sprite.base.set(SpriteBase::Projectile, sprites::details(SpriteBase::Projectile));
         auto& combat = components.get<Combat>();
         combat.lifespan = details.lifespan;
         combat.hitbox.set(source_pos, PROJECTILE_SIZE);
