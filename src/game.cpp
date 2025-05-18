@@ -3,6 +3,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "seblib.hpp"
+#include "sprite.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -71,7 +72,7 @@ void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
     combat.health.set(ENEMY_HEALTH);
     combat.hitbox.set(pos, ENEMY_HITBOX_SIZE);
     combat.hitbox.set_offset(pos, ENEMY_HITBOX_OFFSET);
-    auto& sprite = components.get<Sprite>();
+    auto& sprite = components.get<Sprites>();
     sprite.base.set(sprite_base);
 }
 
@@ -91,7 +92,7 @@ void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
     transform.pos = pos;
     transform.cbox.set(pos, TILE_CBOX_SIZE);
     transform.cbox.set_offset(pos, TILE_CBOX_OFFSET);
-    auto& sprite = components.get<Sprite>();
+    auto& sprite = components.get<Sprites>();
     sprite.base.set(sprite_base);
 }
 
@@ -160,7 +161,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         transform.pos = source_pos;
         transform.vel = vel;
         transform.cbox.set(source_pos, PROJECTILE_SIZE);
-        auto& sprite = components.get<Sprite>();
+        auto& sprite = components.get<Sprites>();
         sprite.base.set(SpriteBase::Projectile);
         auto& combat = components.get<Combat>();
         combat.lifespan = details.lifespan;
@@ -208,7 +209,7 @@ Game::Game()
     m_window.SetExitKey(KEY_NULL);
 
     m_components.reg<Tform>();
-    m_components.reg<Sprite>();
+    m_components.reg<Sprites>();
     m_components.reg<Flags>();
     m_components.reg<Combat>();
     m_components.reg<Parent>();
