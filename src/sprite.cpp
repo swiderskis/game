@@ -4,12 +4,14 @@
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+using namespace sprites;
+
 namespace rl = raylib;
 namespace se = seb_engine;
 
 namespace sprites
 {
-se::SpriteDetails sprite_details(const SpriteBase sprite)
+se::SpriteDetails details(const SpriteBase sprite)
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -60,7 +62,7 @@ se::SpriteDetails sprite_details(const SpriteBase sprite)
     std::unreachable();
 };
 
-se::SpriteDetails sprite_details(const SpriteHead sprite)
+se::SpriteDetails details(const SpriteHead sprite)
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -85,7 +87,7 @@ se::SpriteDetails sprite_details(const SpriteHead sprite)
     std::unreachable();
 }
 
-se::SpriteDetails sprite_details(const SpriteArms sprite)
+se::SpriteDetails details(const SpriteArms sprite)
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -126,7 +128,7 @@ se::SpriteDetails sprite_details(const SpriteArms sprite)
     std::unreachable();
 }
 
-se::SpriteDetails sprite_details(const SpriteLegs sprite)
+se::SpriteDetails details(const SpriteLegs sprite)
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -167,7 +169,7 @@ se::SpriteDetails sprite_details(const SpriteLegs sprite)
     std::unreachable();
 }
 
-se::SpriteDetails sprite_details(const SpriteExtra sprite)
+se::SpriteDetails details(const SpriteExtra sprite)
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -203,11 +205,11 @@ se::SpriteDetails sprite_details(const SpriteExtra sprite)
 
 void Sprites::check_update_frames(const float dt)
 {
-    base.check_update_frame(dt);
-    head.check_update_frame(dt);
-    arms.check_update_frame(dt);
-    legs.check_update_frame(dt);
-    extra.check_update_frame(dt);
+    base.check_update_frame(dt, details(base.sprite()));
+    head.check_update_frame(dt, details(head.sprite()));
+    arms.check_update_frame(dt, details(arms.sprite()));
+    legs.check_update_frame(dt, details(legs.sprite()));
+    extra.check_update_frame(dt, details(extra.sprite()));
 }
 
 void Sprites::draw(rl::Texture const& texture_sheet, const Tform transform, const bool flipped)
@@ -215,11 +217,11 @@ void Sprites::draw(rl::Texture const& texture_sheet, const Tform transform, cons
     const float y_offset = (legs.current_frame() % 2 != 0 ? alternate_frame_y_offset() : 0.0F);
     const auto pos = transform.pos + rl::Vector2(0.0, y_offset);
     const auto legs_pos = transform.pos;
-    texture_sheet.Draw(base.sprite(flipped), render_pos(base, pos, flipped));
-    texture_sheet.Draw(head.sprite(flipped), render_pos(head, pos, flipped));
-    texture_sheet.Draw(arms.sprite(flipped), render_pos(arms, pos, flipped));
-    texture_sheet.Draw(legs.sprite(flipped), render_pos(legs, legs_pos, flipped));
-    texture_sheet.Draw(extra.sprite(flipped), render_pos(extra, pos, flipped));
+    texture_sheet.Draw(base.sprite(flipped, details(base.sprite())), render_pos(base, pos, flipped));
+    texture_sheet.Draw(head.sprite(flipped, details(head.sprite())), render_pos(head, pos, flipped));
+    texture_sheet.Draw(arms.sprite(flipped, details(arms.sprite())), render_pos(arms, pos, flipped));
+    texture_sheet.Draw(legs.sprite(flipped, details(legs.sprite())), render_pos(legs, legs_pos, flipped));
+    texture_sheet.Draw(extra.sprite(flipped, details(extra.sprite())), render_pos(extra, pos, flipped));
 }
 
 void Sprites::lookup_set_movement_sprites(const Entity entity, const rl::Vector2 vel)
@@ -247,11 +249,11 @@ void Sprites::lookup_set_fall_sprites(const Entity entity)
     switch (entity)
     {
     case Entity::Player:
-        base.movement_set(SpriteBase::PlayerIdle);
-        head.movement_set(SpriteHead::PlayerIdle);
-        arms.movement_set(SpriteArms::PlayerJump);
-        legs.movement_set(SpriteLegs::PlayerJump);
-        extra.movement_set(SpriteExtra::PlayerScarfFall);
+        base.movement_set(SpriteBase::PlayerIdle, details(SpriteBase::PlayerIdle));
+        head.movement_set(SpriteHead::PlayerIdle, details(SpriteHead::PlayerIdle));
+        arms.movement_set(SpriteArms::PlayerJump, details(SpriteArms::PlayerJump));
+        legs.movement_set(SpriteLegs::PlayerJump, details(SpriteLegs::PlayerJump));
+        extra.movement_set(SpriteExtra::PlayerScarfFall, details(SpriteExtra::PlayerScarfFall));
         break;
     default:
         break;
@@ -263,11 +265,11 @@ void Sprites::lookup_set_jump_sprites(const Entity entity)
     switch (entity)
     {
     case Entity::Player:
-        base.movement_set(SpriteBase::PlayerIdle);
-        head.movement_set(SpriteHead::PlayerIdle);
-        arms.movement_set(SpriteArms::PlayerJump);
-        legs.movement_set(SpriteLegs::PlayerJump);
-        extra.movement_set(SpriteExtra::None);
+        base.movement_set(SpriteBase::PlayerIdle, details(SpriteBase::PlayerIdle));
+        head.movement_set(SpriteHead::PlayerIdle, details(SpriteHead::PlayerIdle));
+        arms.movement_set(SpriteArms::PlayerJump, details(SpriteArms::PlayerJump));
+        legs.movement_set(SpriteLegs::PlayerJump, details(SpriteLegs::PlayerJump));
+        extra.movement_set(SpriteExtra::None, details(SpriteExtra::None));
         break;
     default:
         break;
@@ -279,11 +281,11 @@ void Sprites::lookup_set_walk_sprites(const Entity entity)
     switch (entity)
     {
     case Entity::Player:
-        base.movement_set(SpriteBase::PlayerIdle);
-        head.movement_set(SpriteHead::PlayerIdle);
-        arms.movement_set(SpriteArms::PlayerIdle);
-        legs.movement_set(SpriteLegs::PlayerWalk);
-        extra.movement_set(SpriteExtra::PlayerScarfWalk);
+        base.movement_set(SpriteBase::PlayerIdle, details(SpriteBase::PlayerIdle));
+        head.movement_set(SpriteHead::PlayerIdle, details(SpriteHead::PlayerIdle));
+        arms.movement_set(SpriteArms::PlayerIdle, details(SpriteArms::PlayerIdle));
+        legs.movement_set(SpriteLegs::PlayerWalk, details(SpriteLegs::PlayerWalk));
+        extra.movement_set(SpriteExtra::PlayerScarfWalk, details(SpriteExtra::PlayerScarfWalk));
         break;
     default:
         break;
@@ -295,11 +297,11 @@ void Sprites::lookup_set_idle_sprites(const Entity entity)
     switch (entity)
     {
     case Entity::Player:
-        base.movement_set(SpriteBase::PlayerIdle);
-        head.movement_set(SpriteHead::PlayerIdle);
-        arms.movement_set(SpriteArms::PlayerIdle);
-        legs.movement_set(SpriteLegs::PlayerIdle);
-        extra.movement_set(SpriteExtra::None);
+        base.movement_set(SpriteBase::PlayerIdle, details(SpriteBase::PlayerIdle));
+        head.movement_set(SpriteHead::PlayerIdle, details(SpriteHead::PlayerIdle));
+        arms.movement_set(SpriteArms::PlayerIdle, details(SpriteArms::PlayerIdle));
+        legs.movement_set(SpriteLegs::PlayerIdle, details(SpriteLegs::PlayerIdle));
+        extra.movement_set(SpriteExtra::None, details(SpriteExtra::None));
         break;
     default:
         break;

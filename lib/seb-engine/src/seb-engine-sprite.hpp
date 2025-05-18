@@ -2,14 +2,9 @@
 #define SEB_ENGINE_SPRITE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seblib.hpp"
-
-#include <functional>
 
 namespace seb_engine
 {
-namespace slog = seblib::log;
-
 struct SpriteDetails
 {
     raylib::Vector2 pos;
@@ -23,23 +18,22 @@ template <typename SpriteEnum>
 class Sprite
 {
     SpriteEnum m_sprite = (SpriteEnum)-1;
-    std::function<SpriteDetails(SpriteEnum)> m_details = [](SpriteEnum)
-    { slog::log(slog::FTL, "No details lookup function assigned for {}", typeid(Sprite<SpriteEnum>).name()); };
     float m_frame_update_dt = 0.0;
     unsigned m_current_frame = 0;
     float m_frame_duration = 0.0;
 
 public:
     Sprite() = delete;
-    Sprite(SpriteEnum sprite, std::function<SpriteDetails(SpriteEnum)> details);
+    explicit Sprite(SpriteEnum sprite);
 
-    void set(SpriteEnum sprite);
+    void set(SpriteEnum sprite, SpriteDetails details);
     void set(SpriteEnum sprite, float frame_duration);
-    void check_update_frame(float dt);
-    [[nodiscard]] raylib::Rectangle sprite(bool flipped) const;
+    void check_update_frame(float dt, SpriteDetails details);
+    [[nodiscard]] raylib::Rectangle sprite(bool flipped, SpriteDetails details) const;
     [[nodiscard]] SpriteEnum sprite() const;
     [[nodiscard]] unsigned current_frame() const;
-    void movement_set(SpriteEnum sprite);
+    void movement_set(SpriteEnum sprite, SpriteDetails details);
+    void unset();
 };
 } // namespace seb_engine
 
@@ -52,13 +46,12 @@ public:
 namespace seb_engine
 {
 template <typename SpriteEnum>
-Sprite<SpriteEnum>::Sprite(const SpriteEnum sprite, std::function<SpriteDetails(SpriteEnum)> details) :
-    m_sprite(sprite), m_details(details)
+Sprite<SpriteEnum>::Sprite(const SpriteEnum sprite) : m_sprite(sprite)
 {
 }
 
 template <typename SpriteEnum>
-void Sprite<SpriteEnum>::set(const SpriteEnum sprite)
+void Sprite<SpriteEnum>::set(const SpriteEnum sprite, const SpriteDetails details)
 {
     if (m_sprite == sprite)
     {
@@ -67,8 +60,8 @@ void Sprite<SpriteEnum>::set(const SpriteEnum sprite)
 
     m_sprite = sprite;
     m_current_frame = 0;
-    m_frame_update_dt = m_details(m_sprite).frame_duration;
-    m_frame_duration = m_details(m_sprite).frame_duration;
+    m_frame_update_dt = details.frame_duration;
+    m_frame_duration = details.frame_duration;
 }
 
 template <typename SpriteEnum>
@@ -86,9 +79,9 @@ void Sprite<SpriteEnum>::set(const SpriteEnum sprite, const float frame_duration
 }
 
 template <typename SpriteEnum>
-void Sprite<SpriteEnum>::check_update_frame(const float dt)
+void Sprite<SpriteEnum>::check_update_frame(const float dt, const SpriteDetails details)
 {
-    if (m_details(m_sprite).frame_duration == 0.0)
+    if (details.frame_duration == 0.0)
     {
         return;
     }
@@ -101,17 +94,17 @@ void Sprite<SpriteEnum>::check_update_frame(const float dt)
 
     m_frame_update_dt = m_frame_duration;
     m_current_frame += 1;
-    if (m_current_frame == m_details(m_sprite).frames)
+    if (m_current_frame == details.frames)
     {
-        set((SpriteEnum)-1);
+        unset();
     }
 }
 
 template <typename SpriteEnum>
-raylib::Rectangle Sprite<SpriteEnum>::sprite(const bool flipped) const
+raylib::Rectangle Sprite<SpriteEnum>::sprite(const bool flipped, const SpriteDetails details) const
 {
-    const auto pos = raylib::Vector2(m_details(m_sprite).size.x * m_current_frame, 0.0) + m_details(m_sprite).pos;
-    const auto size = raylib::Vector2((flipped ? -1.0F : 1.0F), 1.0) * m_details(m_sprite).size;
+    const auto pos = raylib::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
+    const auto size = raylib::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
 
     return { pos, size };
 }
@@ -129,12 +122,18 @@ unsigned Sprite<SpriteEnum>::current_frame() const
 }
 
 template <typename SpriteEnum>
-void Sprite<SpriteEnum>::movement_set(const SpriteEnum sprite)
+void Sprite<SpriteEnum>::movement_set(const SpriteEnum sprite, const SpriteDetails details)
 {
-    if (m_details(m_sprite).allow_movement_override)
+    if (details.allow_movement_override)
     {
-        set(sprite);
+        set(sprite, details);
     }
+}
+
+template <typename SpriteEnum>
+void Sprite<SpriteEnum>::unset()
+{
+    m_sprite = (SpriteEnum)-1;
 }
 } // namespace seb_engine
 
