@@ -8,11 +8,11 @@
 #include <optional>
 #include <string>
 
+namespace seb_engine::ui
+{
 inline constexpr unsigned WINDOW_WIDTH = 800;
 inline constexpr unsigned WINDOW_HEIGHT = 450;
 
-namespace seb_engine::ui
-{
 namespace rl = raylib;
 
 struct PercentSize

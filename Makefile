@@ -1,7 +1,7 @@
 # Makefile adapted from 
 # https://stackoverflow.com/questions/30573481/how-to-write-a-makefile-with-separate-source-and-header-directories
 
-BUILD_DIR := make-build
+BUILD_DIR := build
 RELEASE_DIR := $(BUILD_DIR)/release
 DEBUG_DIR := $(BUILD_DIR)/debug
 SRC := $(wildcard src/*.cpp)
@@ -19,11 +19,16 @@ SO := $(DEBUG_DIR)/game$(SO_SUFFIX)
 
 LIB := seblib seb-engine
 LIB_DIRS := $(LIB:%=lib/%)
-LIB_FILES := $(join $(LIB_DIRS), $(addsuffix .a,$(addprefix /lib,$(LIB))))
+LIB_DIRS_RELEASE := $(LIB_DIRS:%=%/$(RELEASE_DIR))
+LIB_DIRS_DEBUG := $(LIB_DIRS:%=%/$(DEBUG_DIR))
+LIB_FILES := $(join $(LIB_DIRS_RELEASE), $(addsuffix .a, $(addprefix /lib, $(LIB))))
+LIB_FILES_DEBUG := $(join $(LIB_DIRS_DEBUG), $(addsuffix .a, $(addprefix /lib, $(LIB))))
 LIB_CPPFLAGS := $(LIB_DIRS:%=-iquote%/src)
-LIB_LDFLAGS := $(LIB_DIRS:%=-L%)
+LIB_LDFLAGS := $(LIB_DIRS_RELEASE:%=-L%)
+LIB_LDFLAGS_DEBUG := $(LIB_DIRS_DEBUG:%=-L%)
 LIB_LDLIBS := $(LIB:%=-l%)
-LIB_BUILDS := $(LIB_DIRS:%=%/build)
+LIB_BUILDS := $(LIB_DIRS:%=%/release)
+LIB_BUILDS_DEBUG := $(LIB_DIRS:%=%/debug)
 LIB_CLEANS := $(LIB_DIRS:%=%/clean)
 
 # shared library stub only required for Windows debug build
@@ -40,15 +45,16 @@ endif
 CPPFLAGS := -MMD -MP $(LIB_CPPFLAGS) -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 LDFLAGS := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS)
+LDFLAGS_DEBUG := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS_DEBUG)
 LDLIBS := $(LIB_LDLIBS) -lraylib -lGL
-LDLIBS_SO := $(LIB_LDLIBS) -lraylib -lGL
+LDLIBS_DEBUG := $(LIB_LDLIBS) -lraylib -lGL
 ifeq ($(OS), Windows_NT)
 	LDLIBS = $(LIB_LDLIBS) -lraylib -lopengl32 -lgdi32 -lwinmm
-	LDLIBS_SO = $(LIB_LDLIBS) -lraylibdll -lopengl32 -lgdi32 -lwinmm
+	LDLIBS_DEBUG = $(LIB_LDLIBS) -lraylibdll -lopengl32 -lgdi32 -lwinmm
 endif
 
-NDEBUG := -DNDEBUG
-DEBUG := -DSO_NAME=\"$(SO)\"
+NDEBUG := -DNDEBUG -DLOGLVL=2
+DEBUG := -fPIC -DSO_NAME=\"$(SO)\"
 
 # Windows binary searches the directory it sits in for shared libraries
 # Linux binary doesn't, searches paths in LD_LIBRARY_PATH environment variable
@@ -60,13 +66,13 @@ else
 	export LD_LIBRARY_PATH=$(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH_OLD)
 endif
 
-.PHONY: all debug run release run_release so $(LIB_BUILDS) clean clean_libs $(LIB_CLEANS) clean_raylib
+.PHONY: all debug run release run_release so $(LIB_BUILDS_DEBUG) $(LIB_BUILDS) clean clean_libs $(LIB_CLEANS) clean_raylib
 
 all: debug
 
-debug: $(LIB_BUILDS) $(DEBUG_BIN)
+debug: $(LIB_BUILDS_DEBUG) $(DEBUG_BIN)
 
-run: $(LIB_BUILDS) $(DEBUG_BIN)
+run: $(LIB_BUILDS_DEBUG) $(DEBUG_BIN)
 	$(DEBUG_RUN_SO_CMD)
 	$(DEBUG_BIN)
 
@@ -75,10 +81,13 @@ release: $(LIB_BUILDS) $(BIN)
 run_release: $(LIB_BUILDS) $(BIN)
 	$(BIN)
 
-so: $(LIB_BUILDS) $(SO)
+so: $(LIB_BUILDS_DEBUG) $(SO)
+
+$(LIB_BUILDS_DEBUG):
+	$(MAKE) debug RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
 
 $(LIB_BUILDS):
-	$(MAKE) RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
+	$(MAKE) release RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
 
 clean:
 	$(RM) -r $(BUILD_DIR)
@@ -98,17 +107,17 @@ $(BIN): $(LIB_FILES) $(RAYLIB) $(OBJ) | $(BUILD_DIR)
 	$(RM) $(RAYLIB_DIR)/src/libraylib$(SO_SUFFIX)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(DEBUG_BIN): $(LIB_FILES) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR) $(SO)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
+$(DEBUG_BIN): $(LIB_FILES_DEBUG) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR) $(SO)
+	$(CXX) $(LDFLAGS_DEBUG) $^ $(LDLIBS_DEBUG) -o $@
 
-$(SO): $(LIB_FILES) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR)
-	$(CXX) -fPIC -shared $(LDFLAGS) $^ $(LDLIBS_SO) -o $@
+$(SO): $(LIB_FILES_DEBUG) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR)
+	$(CXX) -fPIC -shared $(LDFLAGS_DEBUG) $^ $(LDLIBS_DEBUG) -o $@
 
 $(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
 	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(DEBUG_DIR)/%.o: src/%.cpp | $(DEBUG_DIR)
-	$(CXX) -fPIC $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
 
 $(RAYLIB):
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C$(RAYLIB_DIR)/src

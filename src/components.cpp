@@ -1,5 +1,6 @@
 #include "components.hpp"
 
+#include "seb-engine-sprite.hpp"
 #include "seblib.hpp"
 
 #include <cassert>
@@ -10,6 +11,7 @@ namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
 namespace sm = seblib::math;
+namespace se = seb_engine;
 
 namespace
 {
@@ -31,8 +33,8 @@ void BBox::sync(const rl::Vector2 pos, const bool flipped)
         [pos, this, flipped](rl::Rectangle& bbox)
         {
             bbox.SetPosition(pos);
-            bbox.x += (SPRITE_SIZE - bbox.width) / 2;
-            bbox.y += (SPRITE_SIZE - bbox.height);
+            bbox.x += (se::SPRITE_SIZE - bbox.width) / 2;
+            bbox.y += (se::SPRITE_SIZE - bbox.height);
             bbox.x += m_offset.x * (flipped ? -1.0F : 1.0F);
             bbox.y -= m_offset.y;
             slog::log(slog::TRC, "Rectangle bbox pos: ({}, {})", bbox.x, bbox.y);
@@ -40,8 +42,8 @@ void BBox::sync(const rl::Vector2 pos, const bool flipped)
         [pos, this, flipped](sm::Circle& bbox)
         {
             bbox.pos = pos;
-            bbox.pos.x += SPRITE_SIZE / 2;
-            bbox.pos.y += SPRITE_SIZE / 2;
+            bbox.pos.x += se::SPRITE_SIZE / 2;
+            bbox.pos.y += se::SPRITE_SIZE / 2;
             bbox.pos.x += m_offset.x * (flipped ? -1.0F : 1.0F);
             bbox.pos.y -= m_offset.y;
             slog::log(slog::TRC, "Circle bbox pos: ({}, {})", bbox.pos.x, bbox.pos.y);
@@ -54,10 +56,10 @@ void BBox::sync(const rl::Vector2 pos, const bool flipped)
             bbox.pos1.y += m_offset.y * (flipped ? -1.0F : 1.0F);
             bbox.pos2.x += m_offset.x * (flipped ? -1.0F : 1.0F);
             bbox.pos2.y += m_offset.y * (flipped ? -1.0F : 1.0F);
-            bbox.pos1.x += SPRITE_SIZE / 2;
-            bbox.pos1.y += SPRITE_SIZE / 2;
-            bbox.pos2.x += SPRITE_SIZE / 2;
-            bbox.pos2.y += SPRITE_SIZE / 2;
+            bbox.pos1.x += se::SPRITE_SIZE / 2;
+            bbox.pos1.y += se::SPRITE_SIZE / 2;
+            bbox.pos2.x += se::SPRITE_SIZE / 2;
+            bbox.pos2.y += se::SPRITE_SIZE / 2;
             slog::log(slog::TRC, "Line bbox pos 1: ({}, {})", bbox.pos1.x, bbox.pos1.y);
             slog::log(slog::TRC, "Line bbox pos 2: ({}, {})", bbox.pos2.x, bbox.pos2.y);
         });
