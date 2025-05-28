@@ -2,7 +2,7 @@
 #include "entities.hpp"
 #include "game.hpp"
 #include "seblib.hpp"
-#include "sprite.hpp"
+#include "sprites.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -17,6 +17,7 @@
 namespace rl = raylib;
 namespace sl = seblib;
 namespace smath = seblib::math;
+namespace se = seb_engine;
 
 static constexpr auto DESTROY_ON_COLLISION = {
     Entity::Projectile,
@@ -43,6 +44,7 @@ inline constexpr float DAMAGE_LINE_THICKNESS = 1.33;
 namespace
 {
 void resolve_tile_collisions(Game& game, unsigned id, BBox prev_cbox);
+void draw_sprite(Game& game, unsigned id);
 } // namespace
 
 void Game::poll_inputs()
@@ -59,7 +61,7 @@ void Game::poll_inputs()
 void Game::render()
 {
     const auto player_pos = m_components.get<Tform>(m_player_id).pos;
-    m_camera.SetTarget(player_pos + rl::Vector2(SPRITE_SIZE, SPRITE_SIZE) / 2);
+    m_camera.SetTarget(player_pos + rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2);
     m_camera.BeginMode();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
@@ -74,10 +76,9 @@ void Game::render()
             }
 
             const auto transform = components.get<Tform>();
-            auto& sprite = components.get<Sprites>();
-            sprite.check_update_frames(dt());
-            sprite.lookup_set_movement_sprites(entity, transform.vel);
-            sprite.draw(m_texture_sheet, transform, components.get<Flags>().is_enabled(Flags::FLIPPED));
+            m_sprites.check_update_frames(id, dt());
+            sprites::lookup_set_movement_sprites(m_sprites, id, entity, transform.vel);
+            draw_sprite(*this, id);
 
             const auto health = components.get<Combat>().health;
             if (health.max != std::nullopt && health.current != health.max)
@@ -184,7 +185,7 @@ void Game::player_attack()
 
     const auto attack = Attack::Sector;
     const auto attack_details = entities::attack_details(attack);
-    components.get<Sprites>().arms.set(SpriteArms::PlayerAttack, attack_details.lifespan);
+    m_sprites.set(m_player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
     components.get<Combat>().attack_cooldown = attack_details.cooldown;
     spawn_attack(attack, m_player_id);
 }
@@ -357,5 +358,21 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
             cbox.sync(transform.pos, flipped);
         }
     }
+}
+
+void draw_sprite(Game& game, const unsigned id)
+{
+    const auto transform = game.components().get<Tform>(id);
+    const auto flags = game.components().get<Flags>(id);
+    auto& sprites = game.sprites();
+    const auto legs = sprites.sprite<SpriteLegs>(id);
+    const auto legs_frame = sprites.current_frame<SpriteLegs>(id);
+    const auto y_offset = (legs_frame % 2 == 0 ? 0.0 : sprites::alternate_frame_y_offset(legs));
+    const auto offset = rl::Vector2(0.0, static_cast<float>(y_offset));
+    sprites.draw_part<SpriteBase>(transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
+    sprites.draw_part<SpriteHead>(transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
+    sprites.draw_part<SpriteArms>(transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
+    sprites.draw_part<SpriteLegs>(transform.pos, id, flags.is_enabled(Flags::FLIPPED));
+    sprites.draw_part<SpriteExtra>(transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
 }
 } // namespace

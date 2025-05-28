@@ -2,10 +2,10 @@
 Language: Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: false
+AlignConsecutiveMacros: None
 AlignConsecutiveAssignments: None
-AlignConsecutiveBitFields: false
-AlignConsecutiveDeclarations: false
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Right
 AlignOperands: Align
 AlignTrailingComments: true
@@ -114,7 +114,7 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
-SpacesInAngles: false
+SpacesInAngles: Never
 SpacesInConditionalStatement: false
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
@@ -133,4 +133,3 @@ WhitespaceSensitiveMacros:
   - PP_STRINGIZE
   - BOOST_PP_STRINGIZE
 ---
-

@@ -1,28 +1,52 @@
 BUILD_DIR := build
+DEBUG_DIR := $(BUILD_DIR)/debug
+RELEASE_DIR := $(BUILD_DIR)/release
 RAYLIB_DIR := ../../ext-lib/raylib
 RAYLIB_CPP_DIR := ../../ext-lib/raylib-cpp
 LIB := libseblib.a
+DEBUG_LIB := $(DEBUG_DIR)/$(LIB)
+RELEASE_LIB := $(RELEASE_DIR)/$(LIB)
 SRC := $(wildcard src/*.cpp)
-OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
+DEBUG_OBJ := $(SRC:src/%.cpp=$(DEBUG_DIR)/%.o)
+OBJ := $(SRC:src/%.cpp=$(RELEASE_DIR)/%.o)
 
-CPPFLAGS := -fPIC -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
+CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
 
-.PHONY: all clean
+NDEBUG := -DNDEBUG -DLOGLVL=2
+DEBUG := -fPIC
 
-all: $(LIB)
+.PHONY: all debug release clean
+
+all: debug
+
+debug: $(DEBUG_LIB)
+
+release: $(RELEASE_LIB)
 
 clean:
 	$(RM) -r $(BUILD_DIR)
-	$(RM) $(LIB)
 
-$(LIB): $(OBJ) | $(BUILD_DIR)
-	ar rcs $(LIB) $(OBJ)
+$(DEBUG_LIB): $(DEBUG_OBJ) | $(DEBUG_DIR)
+	ar rcs $@ $^
 
-$(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+$(RELEASE_LIB): $(OBJ) | $(RELEASE_DIR)
+	ar rcs $@ $^
+
+$(DEBUG_DIR)/%.o: src/%.cpp | $(DEBUG_DIR)
+	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
+
+$(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
+	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
+
+$(DEBUG_DIR): | $(BUILD_DIR)
+	mkdir $@
+
+$(RELEASE_DIR): | $(BUILD_DIR)
+	mkdir $@
 
 $(BUILD_DIR):
 	mkdir $@
 
+-include $(DEBUG_OBJ:.o=.d)
 -include $(OBJ:.o=.d)

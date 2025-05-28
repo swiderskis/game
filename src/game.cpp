@@ -3,7 +3,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "seblib.hpp"
-#include "sprite.hpp"
+#include "sprites.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -72,8 +72,7 @@ void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
     combat.health.set(ENEMY_HEALTH);
     combat.hitbox.set(pos, ENEMY_HITBOX_SIZE);
     combat.hitbox.set_offset(pos, ENEMY_HITBOX_OFFSET);
-    auto& sprite = components.get<Sprites>();
-    sprite.base.set(sprite_base, sprites::details(sprite_base));
+    m_sprites.set(id, sprite_base);
 }
 
 void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
@@ -92,8 +91,7 @@ void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
     transform.pos = pos;
     transform.cbox.set(pos, TILE_CBOX_SIZE);
     transform.cbox.set_offset(pos, TILE_CBOX_OFFSET);
-    auto& sprite = components.get<Sprites>();
-    sprite.base.set(sprite_base, sprites::details(sprite_base));
+    m_sprites.set(id, sprite_base);
 }
 
 float Game::dt() const
@@ -103,7 +101,7 @@ float Game::dt() const
 
 rl::Vector2 Game::get_mouse_pos() const
 {
-    return m_camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2(SPRITE_SIZE, SPRITE_SIZE) / 2;
+    return m_camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2;
 }
 
 void Game::destroy_entity(const unsigned id)
@@ -161,8 +159,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         transform.pos = source_pos;
         transform.vel = vel;
         transform.cbox.set(source_pos, PROJECTILE_SIZE);
-        auto& sprite = components.get<Sprites>();
-        sprite.base.set(SpriteBase::Projectile, sprites::details(SpriteBase::Projectile));
+        m_sprites.set(id, SpriteBase::Projectile);
         auto& combat = components.get<Combat>();
         combat.lifespan = details.lifespan;
         combat.hitbox.set(source_pos, PROJECTILE_SIZE);
@@ -209,7 +206,6 @@ Game::Game()
     m_window.SetExitKey(KEY_NULL);
 
     m_components.reg<Tform>();
-    m_components.reg<Sprites>();
     m_components.reg<Flags>();
     m_components.reg<Combat>();
     m_components.reg<Parent>();
@@ -292,13 +288,18 @@ void Game::toggle_pause()
     }
 }
 
+Sprites& Game::sprites()
+{
+    return m_sprites;
+}
+
 #ifndef NDEBUG
 #include "hot-reload.hpp"
 
 void Game::reload_texture_sheet()
 {
-    m_texture_sheet.Unload();
-    m_texture_sheet.Load(TEXTURE_SHEET);
+    m_sprites.texture_sheet().Unload();
+    m_sprites.texture_sheet().Load(TEXTURE_SHEET);
     slog::log(slog::INF, "Texture sheet reloaded");
 }
 

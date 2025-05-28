@@ -10,10 +10,10 @@
 #include <unordered_map>
 #include <vector>
 
-inline constexpr unsigned MAX_ENTITIES = 1024;
-
 namespace seb_engine
 {
+inline constexpr unsigned MAX_ENTITIES = 1024;
+
 template <typename Entity>
 class Entities
 {

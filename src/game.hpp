@@ -7,6 +7,7 @@
 #include "seb-engine-ecs.hpp"
 #include "seb-engine-ui.hpp"
 #include "seblib.hpp"
+#include "sprites.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
 static constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
@@ -42,14 +43,15 @@ struct Coordinates
 
 class Game
 {
+    raylib::Window m_window{ seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT, WINDOW_TITLE };
+    raylib::Camera2D m_camera{ raylib::Vector2(seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT) / 2,
+                               raylib::Vector2(0.0, 0.0),
+                               0.0,
+                               CAMERA_ZOOM };
     seb_engine::Entities<Entity> m_entities;
     seb_engine::Components m_components;
+    Sprites m_sprites{ TEXTURE_SHEET };
     Inputs m_inputs;
-    raylib::Window m_window{ WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE };
-    raylib::Texture m_texture_sheet{ TEXTURE_SHEET };
-    raylib::Camera2D m_camera{
-        raylib::Vector2(WINDOW_WIDTH, WINDOW_HEIGHT) / 2, raylib::Vector2(0.0, 0.0), 0.0, CAMERA_ZOOM
-    };
     std::optional<seb_engine::ui::Screen> m_screen;
     unsigned m_player_id = 0;
     bool m_paused = false;
@@ -85,6 +87,7 @@ public:
     [[nodiscard]] seb_engine::Entities<Entity>& entities();
     [[nodiscard]] seb_engine::Components& components();
     void toggle_pause();
+    [[nodiscard]] Sprites& sprites();
 #ifndef NDEBUG
     void reload_texture_sheet();
 #endif
