@@ -10,7 +10,8 @@
 #include <system_error>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <windows.h>
+#include <libloaderapi.h>
+#include <minwindef.h>
 
 #define MODULE HMODULE
 #define PROC FARPROC
@@ -24,7 +25,7 @@
 #endif
 
 #ifndef SO_NAME
-#define SO_NAME "make-build/debug/game" SO_SUFFIX
+#define SO_NAME "build/debug/game" SO_SUFFIX
 #endif
 #define SO_TEMP_NAME SO_NAME ".tmp"
 

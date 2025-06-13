@@ -1,7 +1,7 @@
 export LIBS := seb-engine seblib
-export SEBLIB_DIR := $(PWD)/lib/seblib
-export RAYLIB_DIR := $(PWD)/ext-lib/raylib
-export RAYLIB_CPP_DIR := $(PWD)/ext-lib/raylib-cpp
+export SEBLIB_DIR := lib/seblib
+export RAYLIB_DIR := ext-lib/raylib
+export RAYLIB_CPP_DIR := ext-lib/raylib-cpp
 export BIN_EXT :=
 export SO_EXT := .so
 ifeq ($(OS), Windows_NT)
@@ -13,7 +13,7 @@ export BIN := game$(BIN_EXT)
 ifeq ($(OS), Windows_NT)
 	CP_RAYLIB_SO := cp $(RAYLIB_DIR)/src/raylib$(SO_EXT) build/debug
 else
-	export LD_LIBRARY_PATH := $(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH)
+	export LD_LIBRARY_PATH := $(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH)
 endif
 
 .PHONY: all run debug release clean clean_libs clean_raylib
