@@ -1,52 +1,33 @@
-BUILD_DIR := build
-DEBUG_DIR := $(BUILD_DIR)/debug
-RELEASE_DIR := $(BUILD_DIR)/release
-RAYLIB_DIR := ../../ext-lib/raylib
-RAYLIB_CPP_DIR := ../../ext-lib/raylib-cpp
-LIB := libseblib.a
-DEBUG_LIB := $(DEBUG_DIR)/$(LIB)
-RELEASE_LIB := $(RELEASE_DIR)/$(LIB)
+LIB := seblib
+LIB := $(addsuffix .a, $(addprefix $(BUILD_DIR)/lib, $(LIB)))
 SRC := $(wildcard src/*.cpp)
-DEBUG_OBJ := $(SRC:src/%.cpp=$(DEBUG_DIR)/%.o)
-OBJ := $(SRC:src/%.cpp=$(RELEASE_DIR)/%.o)
+OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 
-CPPFLAGS := -MMD -MP -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
-CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
+CPPFLAGS := -MMD -MP
+CPPFLAGS += -isystem../../$(RAYLIB_DIR)/src
+CPPFLAGS += -iquote../../$(RAYLIB_CPP_DIR)/include
+CXXFLAGS := -std=c++23
+ifeq ($(BUILD_TYPE), RELEASE)
+	CPPFLAGS += -DNDEBUG -DLOGLVL=2
+	CXXFLAGS += -O3
+else
+	CPPFLAGS += -fPIC
+	CXXFLAGS += -O2 -Wall -Wextra -Wpedantic -Werror
+endif
 
-NDEBUG := -DNDEBUG -DLOGLVL=2
-DEBUG := -fPIC
+.PHONY: all clean
 
-.PHONY: all debug release clean
-
-all: debug
-
-debug: $(DEBUG_LIB)
-
-release: $(RELEASE_LIB)
+all: $(OBJ)
+	ar rcs $(LIB) $^
 
 clean:
 	$(RM) -r $(BUILD_DIR)
 
-$(DEBUG_LIB): $(DEBUG_OBJ) | $(DEBUG_DIR)
-	ar rcs $@ $^
-
-$(RELEASE_LIB): $(OBJ) | $(RELEASE_DIR)
-	ar rcs $@ $^
-
-$(DEBUG_DIR)/%.o: src/%.cpp | $(DEBUG_DIR)
-	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
-	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(DEBUG_DIR): | $(BUILD_DIR)
-	mkdir $@
-
-$(RELEASE_DIR): | $(BUILD_DIR)
-	mkdir $@
+$(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
-	mkdir $@
+	mkdir -p $(dir $@)
+	mkdir -p $@
 
--include $(DEBUG_OBJ:.o=.d)
 -include $(OBJ:.o=.d)

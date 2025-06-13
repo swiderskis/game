@@ -1,138 +1,44 @@
-# Makefile adapted from 
-# https://stackoverflow.com/questions/30573481/how-to-write-a-makefile-with-separate-source-and-header-directories
-
-BUILD_DIR := build
-RELEASE_DIR := $(BUILD_DIR)/release
-DEBUG_DIR := $(BUILD_DIR)/debug
-SRC := $(wildcard src/*.cpp)
-OBJ := $(SRC:src/%.cpp=$(RELEASE_DIR)/%.o)
-DEBUG_OBJ := $(SRC:src/%.cpp=$(DEBUG_DIR)/%.o)
-BIN_SUFFIX :=
-SO_SUFFIX := .so
+export LIBS := seb-engine seblib
+export SEBLIB_DIR := lib/seblib
+export RAYLIB_DIR := ext-lib/raylib
+export RAYLIB_CPP_DIR := ext-lib/raylib-cpp
+export BIN_EXT :=
+export SO_EXT := .so
 ifeq ($(OS), Windows_NT)
-	BIN_SUFFIX = .exe
-	SO_SUFFIX = .dll
+	BIN_EXT := .exe
+	SO_EXT := .dll
 endif
-BIN := $(RELEASE_DIR)/game$(BIN_SUFFIX)
-DEBUG_BIN := $(DEBUG_DIR)/game$(BIN_SUFFIX)
-SO := $(DEBUG_DIR)/game$(SO_SUFFIX)
+export BIN := game$(BIN_EXT)
 
-LIB := seblib seb-engine
-LIB_DIRS := $(LIB:%=lib/%)
-LIB_DIRS_RELEASE := $(LIB_DIRS:%=%/$(RELEASE_DIR))
-LIB_DIRS_DEBUG := $(LIB_DIRS:%=%/$(DEBUG_DIR))
-LIB_FILES := $(join $(LIB_DIRS_RELEASE), $(addsuffix .a, $(addprefix /lib, $(LIB))))
-LIB_FILES_DEBUG := $(join $(LIB_DIRS_DEBUG), $(addsuffix .a, $(addprefix /lib, $(LIB))))
-LIB_CPPFLAGS := $(LIB_DIRS:%=-iquote%/src)
-LIB_LDFLAGS := $(LIB_DIRS_RELEASE:%=-L%)
-LIB_LDFLAGS_DEBUG := $(LIB_DIRS_DEBUG:%=-L%)
-LIB_LDLIBS := $(LIB:%=-l%)
-LIB_BUILDS := $(LIB_DIRS:%=%/release)
-LIB_BUILDS_DEBUG := $(LIB_DIRS:%=%/debug)
-LIB_CLEANS := $(LIB_DIRS:%=%/clean)
-
-# shared library stub only required for Windows debug build
-RAYLIB_DIR := ext-lib/raylib
-RAYLIB_CPP_DIR := ext-lib/raylib-cpp
-RAYLIB := $(RAYLIB_DIR)/src/libraylib.a
-RAYLIB_SO := $(RAYLIB_DIR)/src/libraylib$(SO_SUFFIX)
-RAYLIB_SO_STUB :=
 ifeq ($(OS), Windows_NT)
-	RAYLIB_SO = $(RAYLIB_DIR)/src/raylib$(SO_SUFFIX)
-	RAYLIB_SO_STUB = $(RAYLIB_DIR)/src/libraylibdll.a
-endif
-
-CPPFLAGS := -MMD -MP $(LIB_CPPFLAGS) -isystem$(RAYLIB_DIR)/src -iquote$(RAYLIB_CPP_DIR)/include
-CXXFLAGS := -O3 -Wall -Wextra -Wpedantic -Werror -std=c++23
-LDFLAGS := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS)
-LDFLAGS_DEBUG := -L$(RAYLIB_DIR)/src $(LIB_LDFLAGS_DEBUG)
-LDLIBS := $(LIB_LDLIBS) -lraylib -lGL
-LDLIBS_DEBUG := $(LIB_LDLIBS) -lraylib -lGL
-ifeq ($(OS), Windows_NT)
-	LDLIBS = $(LIB_LDLIBS) -lraylib -lopengl32 -lgdi32 -lwinmm
-	LDLIBS_DEBUG = $(LIB_LDLIBS) -lraylibdll -lopengl32 -lgdi32 -lwinmm
-endif
-
-NDEBUG := -DNDEBUG -DLOGLVL=2
-DEBUG := -fPIC -DSO_NAME=\"$(SO)\"
-
-# Windows binary searches the directory it sits in for shared libraries
-# Linux binary doesn't, searches paths in LD_LIBRARY_PATH environment variable
-DEBUG_RUN_SO_CMD :=
-ifeq ($(OS), Windows_NT)
-	DEBUG_RUN_SO_CMD = cp $(RAYLIB_SO) $(DEBUG_DIR)
+	CP_RAYLIB_SO := cp $(RAYLIB_DIR)/src/raylib$(SO_EXT) build/debug
 else
-	LD_LIBRARY_PATH_OLD := $(LD_LIBRARY_PATH)
-	export LD_LIBRARY_PATH=$(PWD)/$(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH_OLD)
+	export LD_LIBRARY_PATH := $(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH)
 endif
 
-.PHONY: all debug run release run_release so $(LIB_BUILDS_DEBUG) $(LIB_BUILDS) clean clean_libs $(LIB_CLEANS) clean_raylib
+.PHONY: all run debug release clean clean_libs clean_raylib
 
 all: debug
 
-debug: $(LIB_BUILDS_DEBUG) $(DEBUG_BIN)
+run: debug
+	$(CP_RAYLIB_SO)
+	./build/debug/$(BIN)
 
-run: $(LIB_BUILDS_DEBUG) $(DEBUG_BIN)
-	$(DEBUG_RUN_SO_CMD)
-	$(DEBUG_BIN)
+debug:
+	$(MAKE) PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED -C$(RAYLIB_DIR)/src
+	$(MAKE) BUILD_TYPE=DEBUG BUILD_DIR=build/debug -Clib
+	$(MAKE) BUILD_TYPE=DEBUG BUILD_DIR=build/debug -fMakemain.mk
 
-release: $(LIB_BUILDS) $(BIN)
-
-run_release: $(LIB_BUILDS) $(BIN)
-	$(BIN)
-
-so: $(LIB_BUILDS_DEBUG) $(SO)
-
-$(LIB_BUILDS_DEBUG):
-	$(MAKE) debug RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
-
-$(LIB_BUILDS):
-	$(MAKE) release RAYLIB_DIR=../../$(RAYLIB_DIR) RAYLIB_CPP_DIR=../../$(RAYLIB_CPP_DIR) -C$(dir $@)
+release:
+	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C$(RAYLIB_DIR)/src
+	$(MAKE) BUILD_TYPE=RELEASE BUILD_DIR=build/release -Clib
+	$(MAKE) BUILD_TYPE=RELEASE BUILD_DIR=build/release -fMakemain.mk
 
 clean:
-	$(RM) -r $(BUILD_DIR)
+	$(MAKE) clean BUILD_DIR=build -fMakemain.mk
 
-clean_libs: clean $(LIB_CLEANS)
+clean_libs: clean
+	$(MAKE) clean BUILD_DIR=build -Clib
 
-$(LIB_CLEANS):
-	$(MAKE) clean -C$(dir $@)
-
-clean_raylib: clean clean_libs
-	$(MAKE) clean_shell_sh -C$(RAYLIB_DIR)/src
-	$(RM) $(RAYLIB_SO)
-	$(RM) $(RAYLIB_SO_STUB)
-	
-# rm required on Linux build to prevent binary from linking to shared library
-$(BIN): $(LIB_FILES) $(RAYLIB) $(OBJ) | $(BUILD_DIR)
-	$(RM) $(RAYLIB_DIR)/src/libraylib$(SO_SUFFIX)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
-
-$(DEBUG_BIN): $(LIB_FILES_DEBUG) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR) $(SO)
-	$(CXX) $(LDFLAGS_DEBUG) $^ $(LDLIBS_DEBUG) -o $@
-
-$(SO): $(LIB_FILES_DEBUG) $(RAYLIB_SO) $(DEBUG_OBJ) | $(BUILD_DIR)
-	$(CXX) -fPIC -shared $(LDFLAGS_DEBUG) $^ $(LDLIBS_DEBUG) -o $@
-
-$(RELEASE_DIR)/%.o: src/%.cpp | $(RELEASE_DIR)
-	$(CXX) $(CPPFLAGS) $(NDEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(DEBUG_DIR)/%.o: src/%.cpp | $(DEBUG_DIR)
-	$(CXX) $(CPPFLAGS) $(DEBUG) $(CXXFLAGS) -c $< -o $@
-
-$(RAYLIB):
-	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C$(RAYLIB_DIR)/src
-
-$(RAYLIB_SO):
-	$(MAKE) PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED -C$(RAYLIB_DIR)/src
-
-$(RELEASE_DIR): | $(BUILD_DIR)
-	mkdir $@
-
-$(DEBUG_DIR): | $(BUILD_DIR)
-	mkdir $@
-
-$(BUILD_DIR):
-	mkdir $@
-
--include $(OBJ:.o=.d)
--include $(DEBUG_OBJ:.o=.d)
+clean_raylib: clean_libs
+	$(MAKE) clean -C$(RAYLIB_DIR)/src

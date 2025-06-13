@@ -3,8 +3,11 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
+#include <cstdlib>
 #include <iostream>
+#include <numbers>
 #include <source_location>
+#include <variant>
 
 inline constexpr unsigned FILENAME_WIDTH = 8;
 
@@ -116,12 +119,12 @@ namespace math
 {
 constexpr float degrees_to_radians(const float ang)
 {
-    return (float)(ang * M_PI / 180.0); // NOLINT(*magic-numbers)
+    return (float)(ang * std::numbers::pi / 180.0); // NOLINT(*magic-numbers)
 }
 
 constexpr float radians_to_degrees(const float ang)
 {
-    return (float)(ang * 180.0 / M_PI); // NOLINT(*magic-numbers)
+    return (float)(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
 }
 } // namespace math
 
@@ -161,7 +164,7 @@ log<Args...>::log(const Level lvl,
 
         if (lvl == FTL)
         {
-            quick_exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE); // NOLINT(concurrency-mt-unsafe)
         }
     }
 }
