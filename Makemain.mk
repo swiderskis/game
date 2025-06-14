@@ -41,6 +41,8 @@ ifeq ($(BUILD_TYPE), RELEASE)
 	else
 		RM_RAYLIB_SO := $(RM) $(RAYLIB_DIR)/src/libraylib$(SO_EXT)
 	endif
+else
+	BUILD_SO := $(CXX) -fPIC -shared $(LDFLAGS) $(OBJ) $(LDLIBS) -o $(SO)
 endif
 
 .PHONY: all clean
@@ -48,7 +50,7 @@ endif
 all: $(OBJ)
 	$(RM_RAYLIB_SO)
 	$(RM_RAYLIB_SO_STUB)
-	$(CXX) -fPIC -shared $(LDFLAGS) $^ $(LDLIBS) -o $(SO)
+	$(BUILD_SO)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $(BIN)
 
 clean:
