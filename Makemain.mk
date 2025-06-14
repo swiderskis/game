@@ -25,6 +25,9 @@ LDLIBS := $(LIBS:%=-l%)
 ifeq ($(BUILD_TYPE), RELEASE)
 	RAYLIB := $(RAYLIB_DIR)/src/libraylib.a
 	LDLIBS += -lraylib
+	ifeq ($(OS), Windows_NT)
+		LDLIBS += -lgdi32 -lwinmm
+	endif
 else ifeq ($(OS), Windows_NT)
 	RAYLIB := $(RAYLIB_DIR)/src/raylib$(SO_EXT)
 	LDLIBS += -lraylibdll
