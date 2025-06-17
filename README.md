@@ -17,7 +17,6 @@ cmake --build cmake-build
 ```
 to build and run the project.
 Note that it isn't my primary build tool and so will throw some warnings during the build.
-It also doesn't support hot reloading _yet_ - I plan to address this at some point (likely when I add cross-platform support).
 
 ## Credits
 
