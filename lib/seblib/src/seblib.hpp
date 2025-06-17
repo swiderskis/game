@@ -42,9 +42,6 @@ auto match(Var&& variant, Funcs&&... funcs);
 
 namespace math
 {
-constexpr float degrees_to_radians(float ang);
-constexpr float radians_to_degrees(float ang);
-
 struct Circle
 {
     RVector2 pos;
@@ -67,6 +64,18 @@ struct Line
     [[nodiscard]] float len() const;
     void draw_line(rl::Color color) const;
 };
+
+constexpr float degrees_to_radians(float ang);
+constexpr float radians_to_degrees(float ang);
+bool check_collision(rl::Rectangle rectangle1, rl::Rectangle rectangle2);
+bool check_collision(rl::Rectangle rectangle, Circle circle);
+bool check_collision(rl::Rectangle rectangle, Line line);
+bool check_collision(Circle circle, rl::Rectangle rectangle);
+bool check_collision(Circle circle1, Circle circle2);
+bool check_collision(Circle circle, Line line);
+bool check_collision(Line line, rl::Rectangle rectangle);
+bool check_collision(Line line, Circle circle);
+bool check_collision(Line line1, Line line2);
 } // namespace math
 
 namespace log

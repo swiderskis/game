@@ -13,19 +13,6 @@ namespace slog = seblib::log;
 namespace sm = seblib::math;
 namespace se = seb_engine;
 
-namespace
-{
-bool check_collision(rl::Rectangle rectangle1, rl::Rectangle rectangle2);
-bool check_collision(rl::Rectangle rectangle, sm::Circle circle);
-bool check_collision(rl::Rectangle rectangle, sm::Line line);
-bool check_collision(sm::Circle circle, rl::Rectangle rectangle);
-bool check_collision(sm::Circle circle1, sm::Circle circle2);
-bool check_collision(sm::Circle circle, sm::Line line);
-bool check_collision(sm::Line line, rl::Rectangle rectangle);
-bool check_collision(sm::Line line, sm::Circle circle);
-bool check_collision(sm::Line line1, sm::Line line2);
-} // namespace
-
 void BBox::sync(const rl::Vector2 pos, const bool flipped)
 {
     sl::match(
@@ -71,7 +58,8 @@ bool BBox::collides(const BBox other_bbox) const
                      [other_bbox](const auto bbox)
                      {
                          return sl::match(other_bbox.m_bbox,
-                                          [bbox](const auto other_bbox) { return check_collision(bbox, other_bbox); });
+                                          [bbox](const auto other_bbox)
+                                          { return sm::check_collision(bbox, other_bbox); });
                      });
 }
 
@@ -182,60 +170,3 @@ float Health::percentage() const
 
     return (float)current / (float)max.value();
 }
-
-namespace
-{
-bool check_collision(const rl::Rectangle rectangle1, const rl::Rectangle rectangle2)
-{
-    return rectangle1.CheckCollision(rectangle2);
-}
-
-bool check_collision(const rl::Rectangle rectangle, const sm::Circle circle)
-{
-    return rectangle.CheckCollision(circle.pos, circle.radius);
-}
-
-bool check_collision(const rl::Rectangle rectangle, const sm::Line line)
-{
-    const auto rect_pos = rectangle.GetPosition();
-    const auto rect_size = rectangle.GetSize();
-    const auto rect_line1 = sm::Line(rect_pos, rect_pos + rl::Vector2(rectangle.width, 0.0));
-    const auto rect_line2 = sm::Line(rect_pos, rect_pos + rl::Vector2(0.0, rectangle.height));
-    const auto rect_line3 = sm::Line(rect_pos + rl::Vector2(rectangle.width, 0.0), rect_pos + rect_size);
-    const auto rect_line4 = sm::Line(rect_pos + rl::Vector2(0.0, rectangle.height), rect_pos + rect_size);
-
-    return rectangle.CheckCollision(line.pos1) || rectangle.CheckCollision(line.pos2)
-           || check_collision(rect_line1, line) || check_collision(rect_line2, line)
-           || check_collision(rect_line3, line) || check_collision(rect_line4, line);
-}
-
-bool check_collision(const sm::Circle circle, const rl::Rectangle rectangle)
-{
-    return check_collision(rectangle, circle);
-}
-
-bool check_collision(const sm::Circle circle1, const sm::Circle circle2)
-{
-    return circle1.radius + circle2.radius > circle1.pos.Distance(circle2.pos);
-}
-
-bool check_collision(const sm::Circle circle, const sm::Line line)
-{
-    return CheckCollisionCircleLine(circle.pos, circle.radius, line.pos1, line.pos2);
-}
-
-bool check_collision(const sm::Line line, const rl::Rectangle rectangle)
-{
-    return check_collision(rectangle, line);
-}
-
-bool check_collision(const sm::Line line, const sm::Circle circle)
-{
-    return check_collision(circle, line);
-}
-
-bool check_collision(const sm::Line line1, const sm::Line line2)
-{
-    return line1.pos1.CheckCollisionLines(line1.pos2, line2.pos1, line2.pos2, nullptr);
-}
-} // namespace
