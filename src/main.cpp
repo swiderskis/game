@@ -14,7 +14,7 @@ int main()
         return -1;
     }
 
-    while (!game.window().ShouldClose())
+    while (!game.close)
     {
         if (game_funcs.check_reload_lib())
         {
@@ -29,7 +29,7 @@ int main()
         game_funcs.run(&game);
     }
 #else
-    while (!game.window().ShouldClose())
+    while (!game.close)
     {
         game.run();
     }

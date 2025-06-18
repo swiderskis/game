@@ -56,6 +56,10 @@ class Game
     unsigned m_player_id = 0;
     bool m_paused = false;
 
+public:
+    bool close = false;
+
+private:
     void spawn_player(raylib::Vector2 pos);
     void spawn_enemy(Enemy enemy, raylib::Vector2 pos);
     void spawn_tile(Tile tile, raylib::Vector2 pos);
