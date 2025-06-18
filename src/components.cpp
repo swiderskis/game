@@ -168,5 +168,5 @@ float Health::percentage() const
 {
     assert(max != std::nullopt);
 
-    return (float)current / (float)max.value();
+    return static_cast<float>(current) / static_cast<float>(max.value());
 }

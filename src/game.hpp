@@ -31,7 +31,7 @@ struct Coordinates
 
     Coordinates() = delete;
 
-    constexpr Coordinates(int x, int y) : pos((float)x * TILE_SIZE, (float)-y * TILE_SIZE)
+    constexpr Coordinates(int x, int y) : pos(static_cast<float>(x) * TILE_SIZE, static_cast<float>(-y) * TILE_SIZE)
     {
     }
 

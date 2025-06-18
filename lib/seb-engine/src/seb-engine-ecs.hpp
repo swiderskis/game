@@ -121,7 +121,7 @@ unsigned Entities<Entity>::spawn(const Entity type)
         break;
     }
 
-    slog::log(slog::TRC, "Spawning entity type {} with id {}", (int)type, entity_id);
+    slog::log(slog::TRC, "Spawning entity type {} with id {}", static_cast<int>(type), entity_id);
 
     return entity_id;
 }

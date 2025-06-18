@@ -8,7 +8,7 @@ Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius
 
 void Circle::draw_lines(const rl::Color color) const
 {
-    DrawCircleLines((int)pos.x, (int)pos.y, radius, color);
+    DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
 }
 
 Line::Line(const RVector2 pos1, const RVector2 pos2) : pos1(pos1), pos2(pos2)
@@ -30,7 +30,8 @@ float Line::len() const
 
 void Line::draw_line(const rl::Color color) const
 {
-    DrawLine((int)pos1.x, (int)pos1.y, (int)pos2.x, (int)pos2.y, color);
+    DrawLine(
+        static_cast<int>(pos1.x), static_cast<int>(pos1.y), static_cast<int>(pos2.x), static_cast<int>(pos2.y), color);
 }
 
 bool check_collision(const rl::Rectangle rectangle1, const rl::Rectangle rectangle2)

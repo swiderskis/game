@@ -9,7 +9,7 @@ int Text::width() const
 
 void Text::draw(const rl::Vector2 pos) const
 {
-    rl::DrawText(text, (int)pos.x, (int)pos.y, m_size, ::BLACK);
+    rl::DrawText(text, static_cast<int>(pos.x), static_cast<int>(pos.y), m_size, ::BLACK);
 }
 
 void Text::set_size(const int size)
@@ -20,7 +20,7 @@ void Text::set_size(const int size)
 
 void Text::set_percent_size(const unsigned size)
 {
-    this->m_size = (int)(WINDOW_HEIGHT * (size / 100.0));
+    this->m_size = static_cast<int>(WINDOW_HEIGHT * (size / 100.0));
     m_is_percent_size = true;
 }
 
@@ -31,16 +31,16 @@ int Text::size() const
 
 void Element::set_pos(const PercentSize pos)
 {
-    rect.x = (float)(pos.width / 100.0) * WINDOW_WIDTH - rect.width / 2;
-    rect.y = (float)(pos.height / 100.0) * WINDOW_HEIGHT - rect.height / 2;
+    rect.x = static_cast<float>(pos.width * WINDOW_WIDTH / 100.0) - rect.width / 2;
+    rect.y = static_cast<float>(pos.height * WINDOW_HEIGHT / 100.0) - rect.height / 2;
 }
 
 void Element::set_size(const PercentSize size)
 {
     const auto old_width = rect.width;
     const auto old_height = rect.height;
-    rect.width = (float)(size.width / 100.0) * WINDOW_WIDTH;
-    rect.height = (float)(size.height / 100.0) * WINDOW_HEIGHT;
+    rect.width = static_cast<float>(size.width * WINDOW_WIDTH / 100.0);
+    rect.height = static_cast<float>(size.height * WINDOW_HEIGHT / 100.0);
     rect.x += (old_width - rect.width) / 2;
     rect.y += (old_height - rect.height) / 2;
 }
@@ -53,8 +53,8 @@ bool Element::mouse_overlaps(const rl::Vector2 mouse_pos) const
 void Button::render()
 {
     rect.Draw(color);
-    const float x = rect.x + ((rect.width - (float)text.width()) / 2);
-    const float y = rect.y + ((rect.height - (float)text.size()) / 2);
+    const float x = rect.x + ((rect.width - static_cast<float>(text.width())) / 2);
+    const float y = rect.y + ((rect.height - static_cast<float>(text.size())) / 2);
     text.draw(rl::Vector2(x, y));
 }
 
