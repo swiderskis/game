@@ -230,27 +230,31 @@ Game::Game()
 
 void Game::run()
 {
+    // input
     poll_inputs();
     check_pause_game();
+    ui_click_action();
     if (!m_paused)
     {
+        // movement
         set_player_vel();
-        player_attack();
         move_entities();
         sync_children();
-        update_lifespans();
+
+        // combat
+        player_attack();
         update_invuln_times();
         damage_entities();
+        update_lifespans();
         destroy_entities();
     }
 
+    // render
     m_window.BeginDrawing();
     m_window.ClearBackground(::SKYBLUE);
     render();
     render_ui();
     m_window.EndDrawing();
-
-    ui_click_action();
 
     if (m_inputs.spawn_enemy)
     {
@@ -334,7 +338,7 @@ sui::Screen pause_screen(Game& game)
     exit.element->color = ::WHITE;
     exit.element->text.text = "Exit";
     exit.element->text.set_percent_size(6); // NOLINT(*magic-numbers)
-    exit.element->on_click = [&game]() { game.window().Close(); };
+    exit.element->on_click = [&game]() { game.close = true; };
 
     return screen;
 }
