@@ -171,9 +171,9 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const auto sector_details = std::get<SectorDetails>(details.details);
         const float initial_angle = angle - (sector_details.ang / 2);
         const unsigned damage_lines
-            = 1 + (unsigned)ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ);
+            = 1 + static_cast<unsigned>(ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ));
         slog::log(slog::TRC, "Spawning {} damage lines", damage_lines);
-        const float angle_diff = sector_details.ang / (float)(damage_lines - 1.0);
+        const float angle_diff = sector_details.ang / static_cast<float>(damage_lines - 1.0);
         slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
         const auto ext_offset = rl::Vector2(cos(angle), sin(angle)) * sector_details.external_offset;
         const unsigned sector_id = m_entities.spawn(Entity::Sector);
@@ -183,7 +183,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         for (unsigned i = 0; i < damage_lines; i++)
         {
             const unsigned line_id = m_entities.spawn(Entity::DamageLine);
-            const auto line_ang = initial_angle + (angle_diff * (float)i);
+            const auto line_ang = initial_angle + (angle_diff * static_cast<float>(i));
             const auto offset = ext_offset + rl::Vector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
             slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
             components = m_components.by_id(line_id);

@@ -227,7 +227,7 @@ void Game::damage_entities()
                 }
 
                 int& enemy_current_health = enemy_combat_comps.health.current;
-                enemy_current_health -= (int)components.get<Combat>().damage;
+                enemy_current_health -= static_cast<int>(components.get<Combat>().damage);
                 if (enemy_current_health <= 0)
                 {
                     m_entities.queue_destroy(enemy_id);

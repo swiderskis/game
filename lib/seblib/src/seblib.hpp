@@ -128,12 +128,12 @@ namespace math
 {
 constexpr float degrees_to_radians(const float ang)
 {
-    return (float)(ang * std::numbers::pi / 180.0); // NOLINT(*magic-numbers)
+    return static_cast<float>(ang * std::numbers::pi / 180.0); // NOLINT(*magic-numbers)
 }
 
 constexpr float radians_to_degrees(const float ang)
 {
-    return (float)(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
+    return static_cast<float>(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
 }
 } // namespace math
 
