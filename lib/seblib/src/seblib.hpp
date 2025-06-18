@@ -4,16 +4,18 @@
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <numbers>
 #include <source_location>
 #include <variant>
 
-inline constexpr unsigned FILENAME_WIDTH = 8;
+inline constexpr unsigned FILENAME_WIDTH = 16;
 
 namespace seblib
 {
 namespace rl = raylib;
+namespace fs = std::filesystem;
 
 // exists to allow constexpr vec declarations
 struct SimpleVec2
@@ -167,8 +169,8 @@ log<Args...>::log(const Level lvl,
             break;
         }
 
-        const auto filename = std::string(loc.file_name());
-        std::clog << "[" << level_text << "] " << filename.substr(filename.size() - FILENAME_WIDTH)
+        const auto filename = fs::path(loc.file_name()).filename().string();
+        std::clog << "[" << level_text << "] " << std::format("{:>{}}", filename, FILENAME_WIDTH)
                   << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
 
         if (lvl == FTL)
