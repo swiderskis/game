@@ -76,7 +76,6 @@ void Game::render()
             }
 
             const auto transform = comps.get<Tform>();
-            sprites.check_update_frames(id, dt());
             sprites::lookup_set_movement_sprites(sprites, id, entity, transform.vel);
             draw_sprite(*this, id);
 
@@ -369,10 +368,11 @@ void draw_sprite(Game& game, const unsigned id)
     const auto legs_frame = sprites.current_frame<SpriteLegs>(id);
     const auto y_offset = (legs_frame % 2 == 0 ? 0.0 : sprites::alternate_frame_y_offset(legs));
     const auto offset = rl::Vector2(0.0, static_cast<float>(y_offset));
-    sprites.draw_part<SpriteBase>(game.texture_sheet, transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
-    sprites.draw_part<SpriteHead>(game.texture_sheet, transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
-    sprites.draw_part<SpriteArms>(game.texture_sheet, transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
-    sprites.draw_part<SpriteLegs>(game.texture_sheet, transform.pos, id, flags.is_enabled(Flags::FLIPPED));
-    sprites.draw_part<SpriteExtra>(game.texture_sheet, transform.pos + offset, id, flags.is_enabled(Flags::FLIPPED));
+    const auto flipped = flags.is_enabled(Flags::FLIPPED);
+    sprites.draw_part<SpriteBase>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteHead>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteArms>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteLegs>(game.texture_sheet, transform.pos, id, game.dt(), flipped);
+    sprites.draw_part<SpriteExtra>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
 }
 } // namespace

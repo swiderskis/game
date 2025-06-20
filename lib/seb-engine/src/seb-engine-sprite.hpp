@@ -6,7 +6,6 @@
 
 #include <ranges>
 #include <tuple>
-#include <utility>
 
 namespace seb_engine
 {
@@ -39,20 +38,23 @@ class SpritePart
     unsigned m_current_frame = 0;
     float m_frame_duration = 0.0;
 
-public:
     static SpriteDetailsLookup<SpriteEnum> s_details_lookup;
 
+    [[nodiscard]] rl::Rectangle rect(bool flipped) const;
+
+public:
     SpritePart() = default;
     explicit SpritePart(SpriteEnum sprite);
 
     void set(SpriteEnum sprite);
     void set(SpriteEnum sprite, float frame_duration);
     void check_update_frame(float dt);
-    [[nodiscard]] rl::Rectangle rect(bool flipped) const;
     [[nodiscard]] SpriteEnum sprite() const;
     [[nodiscard]] unsigned current_frame() const;
     void movement_set(SpriteEnum sprite);
     void unset();
+    void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
+    [[nodiscard]] rl::Vector2 render_pos(rl::Vector2 pos, bool flipped) const;
 };
 
 template <typename... SpriteEnums>
@@ -69,17 +71,12 @@ class Sprites
     [[nodiscard]] SpritePart<SpriteEnum>& part_mut(unsigned id);
     template <typename SpriteEnum>
     [[nodiscard]] SpritePart<SpriteEnum> const& part(unsigned id) const;
-    template <size_t... Indices>
-    void check_update_frame(unsigned id, float dt, std::index_sequence<Indices...> /*_*/);
 
 public:
-    void check_update_all_frames(float dt);
-    template <size_t TupleSize = std::tuple_size_v<std::tuple<SpritePart<SpriteEnums>...>>>
-    void check_update_frames(unsigned id, float dt);
-    void draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, bool flipped);
-    void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, bool flipped);
+    void draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
+    void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped);
     template <typename SpriteEnum>
-    void draw_part(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, bool flipped);
+    void draw_part(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped);
     template <typename SpriteEnum>
     void set(unsigned id, SpriteEnum sprite);
     template <typename SpriteEnum>
@@ -121,6 +118,16 @@ public:
 
 namespace seb_engine
 {
+template <typename SpriteEnum>
+rl::Rectangle SpritePart<SpriteEnum>::rect(const bool flipped) const
+{
+    const auto details = s_details_lookup.get(m_sprite);
+    const auto pos = rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
+    const auto size = rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
+
+    return { pos, size };
+}
+
 template <typename SpriteEnum>
 SpritePart<SpriteEnum>::SpritePart(const SpriteEnum sprite) : m_sprite(sprite)
 {
@@ -179,16 +186,6 @@ void SpritePart<SpriteEnum>::check_update_frame(const float dt)
 }
 
 template <typename SpriteEnum>
-rl::Rectangle SpritePart<SpriteEnum>::rect(const bool flipped) const
-{
-    const auto details = s_details_lookup.get(m_sprite);
-    const auto pos = rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
-    const auto size = rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
-
-    return { pos, size };
-}
-
-template <typename SpriteEnum>
 SpriteEnum SpritePart<SpriteEnum>::sprite() const
 {
     return m_sprite;
@@ -215,12 +212,20 @@ void SpritePart<SpriteEnum>::unset()
     set((SpriteEnum)-1);
 }
 
-template <typename... SpriteEnums>
 template <typename SpriteEnum>
-rl::Vector2 Sprites<SpriteEnums...>::render_pos(const rl::Vector2 pos, const unsigned id, const bool flipped) const
+void SpritePart<SpriteEnum>::draw(rl::Texture const& texture_sheet,
+                                  const rl::Vector2 pos,
+                                  const float dt,
+                                  const bool flipped)
 {
-    const auto sprite = part<SpriteEnum>(id);
-    const auto details = sprite.s_details_lookup.get(sprite.sprite());
+    texture_sheet.Draw(rect(flipped), render_pos(pos, flipped));
+    check_update_frame(dt);
+}
+
+template <typename SpriteEnum>
+rl::Vector2 SpritePart<SpriteEnum>::render_pos(const rl::Vector2 pos, const bool flipped) const
+{
+    const auto details = s_details_lookup.get(m_sprite);
     // sprite draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
     const float x_offset = (details.size.x - SPRITE_SIZE) * flipped;
 
@@ -242,60 +247,30 @@ SpritePart<SpriteEnum> const& Sprites<SpriteEnums...>::part(const unsigned id) c
 }
 
 template <typename... SpriteEnums>
-template <size_t... Indices>
-void Sprites<SpriteEnums...>::check_update_frame(const unsigned id,
-                                                 const float dt,
-                                                 const std::index_sequence<Indices...> /*_*/)
-{
-    auto& sprite = m_sprites[id];
-    (std::get<Indices>(sprite).check_update_frame(dt), ...);
-}
-
-template <typename... SpriteEnums>
-void Sprites<SpriteEnums...>::check_update_all_frames(const float dt)
+void Sprites<SpriteEnums...>::draw_all(rl::Texture const& texture_sheet,
+                                       const rl::Vector2 pos,
+                                       const float dt,
+                                       const bool flipped)
 {
     for (const auto [id, sprite] : m_sprites | std::views::enumerate)
     {
-        check_update_frames(id, dt);
+        draw(texture_sheet, pos, id, dt, flipped);
     }
 }
 
 template <typename... SpriteEnums>
-template <size_t TupleSize>
-void Sprites<SpriteEnums...>::check_update_frames(const unsigned id, const float dt)
+void Sprites<SpriteEnums...>::draw(
+    rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped)
 {
-    check_update_frame(id, dt, std::make_index_sequence<TupleSize>{});
-}
-
-template <typename... SpriteEnums>
-void Sprites<SpriteEnums...>::draw_all(rl::Texture const& texture_sheet, const rl::Vector2 pos, const bool flipped)
-{
-    for (const auto [id, sprite] : m_sprites | std::views::enumerate)
-    {
-        draw(texture_sheet, pos, id, flipped);
-    }
-}
-
-template <typename... SpriteEnums>
-void Sprites<SpriteEnums...>::draw(rl::Texture const& texture_sheet,
-                                   const rl::Vector2 pos,
-                                   const unsigned id,
-                                   const bool flipped)
-{
-    (draw_part<SpriteEnums>(texture_sheet, pos, id, flipped), ...);
+    (draw_part<SpriteEnums>(texture_sheet, pos, id, dt, flipped), ...);
 }
 
 template <typename... SpriteEnums>
 template <typename SpriteEnum>
-void Sprites<SpriteEnums...>::draw_part(rl::Texture const& texture_sheet,
-                                        const rl::Vector2 pos,
-                                        const unsigned id,
-                                        const bool flipped)
+void Sprites<SpriteEnums...>::draw_part(
+    rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped)
 {
-    const auto sprite = part_mut<SpriteEnum>(id);
-    const auto rect = sprite.rect(flipped);
-    const auto sprite_render_pos = render_pos<SpriteEnum>(pos, id, flipped);
-    texture_sheet.Draw(rect, sprite_render_pos);
+    part_mut<SpriteEnum>(id).draw(texture_sheet, pos, dt, flipped);
 }
 
 template <typename... SpriteEnums>
