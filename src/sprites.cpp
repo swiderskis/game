@@ -40,13 +40,6 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteBase>::get(SpriteBase sprite)
             .pos = { 128.0, 256.0 },
             .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
         };
-
-    // tiles
-    case SpriteBase::TileBrick:
-        return {
-            .pos = { 0.0, 0.0 },
-            .size = { TILE_SIZE, TILE_SIZE },
-        };
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
@@ -161,6 +154,26 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite)
             .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
             .frames = 4,
             .frame_duration = 0.1,
+        };
+    } // NOLINTEND(*magic-numbers)
+
+    std::unreachable();
+}
+
+template <>
+se::SpriteDetails se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite)
+{
+    switch (sprite)
+    { // NOLINTBEGIN(*magic-numbers)
+    case SpriteTile::None:
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { 0.0, 0.0 },
+        };
+    case SpriteTile::TileBrick:
+        return {
+            .pos = { 0.0, 0.0 },
+            .size = { TILE_SIZE, TILE_SIZE },
         };
     } // NOLINTEND(*magic-numbers)
 

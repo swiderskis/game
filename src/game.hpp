@@ -52,6 +52,7 @@ struct Game
     seb_engine::Entities<Entity> entities;
     seb_engine::Components components;
     Sprites sprites;
+    seb_engine::Tiles<Tile, SpriteTile> tiles;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
     unsigned player_id = 0;

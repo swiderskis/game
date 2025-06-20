@@ -1,6 +1,8 @@
 #ifndef SEB_ENGINE_ECS_HPP_
 #define SEB_ENGINE_ECS_HPP_
 
+#include "seb-engine-sprite.hpp"
+#include "seb-engine.hpp"
 #include "seblib.hpp"
 
 #include <cstddef>
@@ -12,7 +14,7 @@
 
 namespace seb_engine
 {
-inline constexpr unsigned MAX_ENTITIES = 1024;
+namespace rl = raylib;
 
 template <typename Entity>
 class Entities
@@ -92,6 +94,29 @@ public:
     template <typename Comp>
     [[nodiscard]] Comp& get();
 };
+
+// assumes TileEnum has a "no tile" value of -1
+// assumes SpriteEnum has a "no sprite" value of -1
+template <typename TileEnum, typename SpriteEnum>
+struct Tile
+{
+    SpritePart<SpriteEnum> sprite = SpritePart<SpriteEnum>((SpriteEnum)-1);
+    raylib::Vector2 pos;
+    TileEnum type = (TileEnum)-1;
+};
+
+// assumes TileEnum has a "no tile" value of -1
+// assumes SpriteEnum has a "no sprite" value of -1
+template <typename TileEnum, typename SpriteEnum>
+class Tiles
+{
+    std::vector<Tile<TileEnum, SpriteEnum>> m_tiles{ MAX_TILES, Tile<TileEnum, SpriteEnum>() };
+
+public:
+    [[maybe_unused]] unsigned spawn(TileEnum type, SpriteEnum sprite, raylib::Vector2 pos);
+    std::vector<Tile<TileEnum, SpriteEnum>> const& tiles();
+    void draw(rl::Texture const& texture_sheet, float dt, bool flipped);
+};
 } // namespace seb_engine
 
 /****************************
@@ -122,6 +147,10 @@ unsigned Entities<Entity>::spawn(const Entity type)
     }
 
     slog::log(slog::TRC, "Spawning entity type {} with id {}", static_cast<int>(type), entity_id);
+    if (entity_id == MAX_ENTITIES)
+    {
+        slog::log(slog::WRN, "Maximum entities reached");
+    }
 
     return entity_id;
 }
@@ -221,6 +250,49 @@ template <typename Comp>
 Comp& EntityComponents::get()
 {
     return m_components->component<Comp>()->vec()[m_id];
+}
+
+template <typename TileEnum, typename SpriteEnum>
+unsigned Tiles<TileEnum, SpriteEnum>::spawn(const TileEnum type, const SpriteEnum sprite, const raylib::Vector2 pos)
+{
+    unsigned tile_id = 0;
+    for (const auto [id, tile] : m_tiles | std::views::enumerate)
+    {
+        if (tile.type != (TileEnum)-1)
+        {
+            continue;
+        }
+
+        tile.type = type;
+        tile.sprite = SpritePart(sprite);
+        tile.pos = pos;
+        tile_id = id;
+        break;
+    }
+
+    slog::log(slog::TRC, "Spawning tile type {} with id {}", static_cast<int>(type), tile_id);
+    if (tile_id == MAX_TILES)
+    {
+        slog::log(slog::WRN, "Maximum tiles reached");
+    }
+
+    return tile_id;
+}
+
+template <typename TileEnum, typename SpriteEnum>
+std::vector<Tile<TileEnum, SpriteEnum>> const& Tiles<TileEnum, SpriteEnum>::tiles()
+{
+    return m_tiles;
+}
+
+template <typename TileEnum, typename SpriteEnum>
+void Tiles<TileEnum, SpriteEnum>::draw(rl::Texture const& texture_sheet, const float dt, const bool flipped)
+{
+    for (const auto [id, tile] : m_tiles | std::views::enumerate)
+    {
+        const auto pos = tile.pos;
+        tile.sprite.draw(texture_sheet, pos, dt, flipped);
+    }
 }
 } // namespace seb_engine
 

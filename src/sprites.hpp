@@ -13,9 +13,6 @@ enum class SpriteBase : int8_t
     PlayerIdle,
     Projectile,
     EnemyDuck,
-
-    // tiles
-    TileBrick,
 };
 
 enum class SpriteHead : int8_t
@@ -49,6 +46,13 @@ enum class SpriteExtra : int8_t
 
     PlayerScarfWalk,
     PlayerScarfFall,
+};
+
+enum class SpriteTile : int8_t
+{
+    None = -1,
+
+    TileBrick,
 };
 
 using Sprites = seb_engine::Sprites<SpriteBase, SpriteHead, SpriteArms, SpriteLegs, SpriteExtra>;
