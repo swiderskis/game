@@ -9,7 +9,7 @@ CPPFLAGS += -isystem../../$(RAYLIB_DIR)/src
 CPPFLAGS += -iquote../../$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -std=c++23
 ifeq ($(BUILD_TYPE), RELEASE)
-	CPPFLAGS += -DNDEBUG -DLOGLVL=2
+	CPPFLAGS += -DNDEBUG -DLOGLVL=1
 	CXXFLAGS += -O3
 else
 	CPPFLAGS += -fPIC
