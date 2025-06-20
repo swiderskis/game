@@ -41,25 +41,25 @@ struct Coordinates
     }
 };
 
-struct Game
+class Game
 {
-    raylib::Window window{ seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT, WINDOW_TITLE };
-    raylib::Camera2D camera{ raylib::Vector2(seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT) / 2,
-                             raylib::Vector2(0.0, 0.0),
-                             0.0,
-                             CAMERA_ZOOM };
-    seb_engine::Entities<Entity> entities;
-    seb_engine::Components components;
-    Sprites sprites{ TEXTURE_SHEET };
-    Inputs inputs;
-    std::optional<seb_engine::ui::Screen> screen;
-    unsigned player_id = 0;
-    bool paused = false;
+    raylib::Window m_window{ seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT, WINDOW_TITLE };
+    raylib::Camera2D m_camera{ raylib::Vector2(seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT) / 2,
+                               raylib::Vector2(0.0, 0.0),
+                               0.0,
+                               CAMERA_ZOOM };
+    seb_engine::Entities<Entity> m_entities;
+    seb_engine::Components m_components;
+    Sprites m_sprites{ TEXTURE_SHEET };
+    Inputs m_inputs;
+    std::optional<seb_engine::ui::Screen> m_screen;
+    unsigned m_player_id = 0;
+    bool m_paused = false;
+
+public:
     bool close = false;
 
-    Game();
-
-    void run();
+private:
     void spawn_player(raylib::Vector2 pos);
     void spawn_enemy(Enemy enemy, raylib::Vector2 pos);
     void spawn_tile(Tile tile, raylib::Vector2 pos);
@@ -67,10 +67,6 @@ struct Game
     [[nodiscard]] raylib::Vector2 get_mouse_pos() const;
     void destroy_entity(unsigned id);
     void spawn_attack(Attack attack, unsigned parent_id);
-    void toggle_pause();
-#ifndef NDEBUG
-    void reload_texture_sheet();
-#endif
 
     // systems
     void poll_inputs();
