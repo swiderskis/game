@@ -48,9 +48,10 @@ struct Game
                              raylib::Vector2(0.0, 0.0),
                              0.0,
                              CAMERA_ZOOM };
+    raylib::Texture texture_sheet{ TEXTURE_SHEET };
     seb_engine::Entities<Entity> entities;
     seb_engine::Components components;
-    Sprites sprites{ TEXTURE_SHEET };
+    Sprites sprites;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
     unsigned player_id = 0;
