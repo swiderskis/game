@@ -104,7 +104,7 @@ struct log // NOLINT(readability-identifier-naming)
 template <typename... Args>
 log(Level level, std::format_string<Args...> fmt, Args&&... args) -> log<Args...>;
 int level();
-void set_level(int level);
+void set_level(Level level);
 } // namespace log
 } // namespace seblib
 
@@ -147,36 +147,38 @@ log<Args...>::log(const Level lvl,
                   Args&&... args,
                   const std::source_location loc)
 {
-    if (level() > lvl)
+    if (level() < lvl)
     {
-        std::string level_text;
-        switch (lvl)
-        {
-        case FTL:
-            level_text = "FTL";
-            break;
-        case ERR:
-            level_text = "ERR";
-            break;
-        case WRN:
-            level_text = "WRN";
-            break;
-        case INF:
-            level_text = "INF";
-            break;
-        case TRC:
-            level_text = "TRC";
-            break;
-        }
+        return;
+    }
 
-        const auto filename = fs::path(loc.file_name()).filename().string();
-        std::clog << "[" << level_text << "] " << std::format("{:>{}}", filename, FILENAME_WIDTH)
-                  << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
+    std::string level_text;
+    switch (lvl)
+    {
+    case FTL:
+        level_text = "FTL";
+        break;
+    case ERR:
+        level_text = "ERR";
+        break;
+    case WRN:
+        level_text = "WRN";
+        break;
+    case INF:
+        level_text = "INF";
+        break;
+    case TRC:
+        level_text = "TRC";
+        break;
+    }
 
-        if (lvl == FTL)
-        {
-            exit(EXIT_FAILURE); // NOLINT(concurrency-mt-unsafe)
-        }
+    const auto filename = fs::path(loc.file_name()).filename().string();
+    std::clog << "[" << level_text << "] " << std::format("{:>{}}", filename, FILENAME_WIDTH)
+              << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
+
+    if (lvl == FTL)
+    {
+        exit(EXIT_FAILURE); // NOLINT(concurrency-mt-unsafe)
     }
 }
 } // namespace log
