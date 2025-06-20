@@ -31,10 +31,15 @@ static constexpr auto FLIP_ON_SYNC_WITH_PARENT = {
     Entity::Melee,
 };
 static constexpr auto ENTITY_RENDER_ORDER = {
-    Entity::DamageLine, Entity::Tile, Entity::Enemy, Entity::Player, Entity::Projectile,
+    Entity::DamageLine,
+    Entity::Enemy,
+    Entity::Player,
+    Entity::Projectile,
 };
 
 inline constexpr auto HEALTH_BAR_SIZE = sl::SimpleVec2(32.0, 4.0);
+inline constexpr auto TILE_CBOX_SIZE = sl::SimpleVec2(TILE_SIZE, TILE_SIZE);
+inline constexpr auto TILE_CBOX_OFFSET = sl::SimpleVec2(-8.0, 16.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
 inline constexpr float HEALTH_BAR_Y_OFFSET = 8.0;
@@ -45,6 +50,7 @@ namespace
 {
 void resolve_tile_collisions(Game& game, unsigned id, BBox prev_cbox);
 void draw_sprite(Game& game, unsigned id);
+[[nodiscard]] BBox calculate_tile_cbox(rl::Vector2 pos);
 } // namespace
 
 void Game::poll_inputs()
@@ -63,6 +69,7 @@ void Game::render()
     const auto player_pos = components.get<Tform>(player_id).pos;
     camera.SetTarget(player_pos + rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2);
     camera.BeginMode();
+    tiles.draw(texture_sheet, dt(), false);
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
         for (const unsigned id : entities.entity_ids(entity))
@@ -91,6 +98,12 @@ void Game::render()
     }
 
 #ifdef SHOW_CBOXES
+    for (const auto tile : tiles.tiles())
+    {
+        const auto cbox = std::get<rl::Rectangle>(calculate_tile_cbox(tile.pos).bbox());
+        cbox.DrawLines(::RED);
+    }
+
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
         for (const unsigned id : entities.entity_ids(entity))
@@ -136,7 +149,7 @@ void Game::move_entities()
 {
     for (const auto [id, entity] : entities.entities() | std::views::enumerate)
     {
-        if (entity == std::nullopt || entity == Entity::Tile)
+        if (entity == std::nullopt)
         {
             continue;
         }
@@ -316,9 +329,9 @@ void resolve_tile_collisions(Game& game, const unsigned id, const BBox prev_cbox
     auto& transform = comps.get<Tform>();
     auto& cbox = transform.cbox;
     const auto flipped = comps.get<Flags>().is_enabled(Flags::FLIPPED);
-    for (const unsigned tile_id : game.entities.entity_ids(Entity::Tile))
+    for (const auto tile : game.tiles.tiles())
     {
-        const auto tile_cbox = game.components.get<Tform>(tile_id).cbox;
+        const auto tile_cbox = calculate_tile_cbox(tile.pos);
         if (!cbox.collides(tile_cbox))
         {
             continue;
@@ -374,5 +387,14 @@ void draw_sprite(Game& game, const unsigned id)
     sprites.draw_part<SpriteArms>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
     sprites.draw_part<SpriteLegs>(game.texture_sheet, transform.pos, id, game.dt(), flipped);
     sprites.draw_part<SpriteExtra>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
+}
+
+BBox calculate_tile_cbox(rl::Vector2 pos)
+{
+    auto cbox = BBox();
+    cbox.set(pos, TILE_CBOX_SIZE);
+    cbox.set_offset(pos, TILE_CBOX_OFFSET);
+
+    return cbox;
 }
 } // namespace

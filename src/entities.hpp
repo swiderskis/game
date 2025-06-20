@@ -9,7 +9,6 @@
 enum class Entity : uint8_t
 {
     Player,
-    Tile,
     Projectile,
     Enemy,
     Melee,
@@ -17,8 +16,10 @@ enum class Entity : uint8_t
     DamageLine,
 };
 
-enum class Tile : uint8_t
+enum class Tile : int8_t
 {
+    None = -1,
+
     Brick,
 };
 

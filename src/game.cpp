@@ -27,8 +27,6 @@ inline constexpr auto PLAYER_HITBOX_SIZE = sl::SimpleVec2(12.0, 21.0);
 inline constexpr auto PLAYER_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
 inline constexpr auto ENEMY_HITBOX_SIZE = sl::SimpleVec2(22.0, 16.0);
 inline constexpr auto ENEMY_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
-inline constexpr auto TILE_CBOX_SIZE = sl::SimpleVec2(TILE_SIZE, TILE_SIZE);
-inline constexpr auto TILE_CBOX_OFFSET = sl::SimpleVec2(-8.0, 16.0);
 inline constexpr auto MELEE_OFFSET = sl::SimpleVec2(24.0, 9.0);
 
 inline constexpr int PLAYER_HEALTH = 100;
@@ -139,21 +137,18 @@ void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
 
 void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
 {
-    auto sprite_base = SpriteBase::None;
+    auto sprite = SpriteTile::None;
     switch (tile)
     {
+    case Tile::None:
+        sprite = SpriteTile::None;
+        break;
     case Tile::Brick:
-        sprite_base = SpriteBase::TileBrick;
+        sprite = SpriteTile::TileBrick;
         break;
     }
 
-    const auto id = entities.spawn(Entity::Tile);
-    auto comps = components.by_id(id);
-    auto& transform = comps.get<Tform>();
-    transform.pos = pos;
-    transform.cbox.set(pos, TILE_CBOX_SIZE);
-    transform.cbox.set_offset(pos, TILE_CBOX_OFFSET);
-    sprites.set(id, sprite_base);
+    tiles.spawn(tile, sprite, pos);
 }
 
 float Game::dt() const

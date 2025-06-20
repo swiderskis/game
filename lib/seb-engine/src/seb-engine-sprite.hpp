@@ -2,7 +2,7 @@
 #define SEB_ENGINE_SPRITE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seb-engine-ecs.hpp"
+#include "seb-engine.hpp"
 
 #include <ranges>
 #include <tuple>
