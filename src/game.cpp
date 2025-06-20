@@ -282,8 +282,8 @@ void Game::toggle_pause()
 
 void Game::reload_texture_sheet()
 {
-    sprites.texture_sheet().Unload();
-    sprites.texture_sheet().Load(TEXTURE_SHEET);
+    texture_sheet.Unload();
+    texture_sheet.Load(TEXTURE_SHEET);
     slog::log(slog::INF, "Texture sheet reloaded");
 }
 
