@@ -2,7 +2,7 @@
 #define COMPONENTS_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seblib.hpp"
+#include "seblib-math.hpp"
 
 #include <bitset>
 #include <cstdint>

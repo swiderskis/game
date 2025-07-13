@@ -1,4 +1,4 @@
-#include "seblib.hpp"
+#include "seblib-log.hpp"
 
 #include <cstdlib>
 

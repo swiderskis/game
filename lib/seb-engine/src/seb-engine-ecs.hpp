@@ -3,7 +3,7 @@
 
 #include "seb-engine-sprite.hpp"
 #include "seb-engine.hpp"
-#include "seblib.hpp"
+#include "seblib-log.hpp"
 
 #include <cstddef>
 #include <memory>
