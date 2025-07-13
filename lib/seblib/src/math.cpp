@@ -1,8 +1,8 @@
-#include "seblib.hpp"
+#include "seblib-math.hpp"
 
 namespace seblib::math
 {
-Circle::Circle(const RVector2 pos, const float radius) : pos(pos), radius(radius)
+Circle::Circle(const rl::Vector2 pos, const float radius) : pos(pos), radius(radius)
 {
 }
 
@@ -11,13 +11,13 @@ void Circle::draw_lines(const rl::Color color) const
     DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
 }
 
-Line::Line(const RVector2 pos1, const RVector2 pos2) : pos1(pos1), pos2(pos2)
+Line::Line(const rl::Vector2 pos1, const rl::Vector2 pos2) : pos1(pos1), pos2(pos2)
 {
 }
 
-Line::Line(const RVector2 pos, const float len, const float angle) : pos1(pos)
+Line::Line(const rl::Vector2 pos, const float len, const float angle) : pos1(pos)
 {
-    pos2 = pos1 + RVector2(len * cos(angle), len * sin(angle));
+    pos2 = pos1 + rl::Vector2(len * cos(angle), len * sin(angle));
 }
 
 float Line::len() const

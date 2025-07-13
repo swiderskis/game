@@ -4,7 +4,7 @@
 #include <string>
 
 #ifndef NDEBUG
-#include "seblib.hpp"
+#include "seblib-log.hpp"
 
 #include <filesystem>
 #include <system_error>

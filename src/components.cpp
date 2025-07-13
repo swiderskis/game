@@ -1,6 +1,8 @@
 #include "components.hpp"
 
 #include "seb-engine-sprite.hpp"
+#include "seblib-log.hpp"
+#include "seblib-math.hpp"
 #include "seblib.hpp"
 
 #include <cassert>
