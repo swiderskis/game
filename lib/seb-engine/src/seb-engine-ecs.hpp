@@ -100,9 +100,9 @@ public:
 template <typename TileEnum, typename SpriteEnum>
 struct Tile
 {
-    SpritePart<SpriteEnum> sprite = SpritePart<SpriteEnum>((SpriteEnum)-1);
+    SpritePart<SpriteEnum> sprite = SpritePart<SpriteEnum>(static_cast<SpriteEnum>(-1));
     raylib::Vector2 pos;
-    TileEnum type = (TileEnum)-1;
+    TileEnum type = static_cast<TileEnum>(-1);
 };
 
 // assumes TileEnum has a "no tile" value of -1
@@ -135,7 +135,7 @@ unsigned Entities<Entity>::spawn(const Entity type)
     unsigned entity_id = 0;
     for (const auto [id, entity] : m_entities | std::views::enumerate)
     {
-        if (static_cast<int>(entity) != -1)
+        if (entity != static_cast<Entity>(-1))
         {
             continue;
         }
@@ -185,7 +185,7 @@ void Entities<Entity>::destroy_entity(const unsigned id)
 {
     auto& entity = m_entities[id];
     // possible for an entity to be queued for destruction multiple times
-    if (static_cast<int>(entity) == -1)
+    if (entity == static_cast<Entity>(-1))
     {
         return;
     }
@@ -258,7 +258,7 @@ unsigned Tiles<TileEnum, SpriteEnum>::spawn(const TileEnum type, const SpriteEnu
     unsigned tile_id = 0;
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
-        if (tile.type != (TileEnum)-1)
+        if (tile.type != static_cast<TileEnum>(-1))
         {
             continue;
         }
