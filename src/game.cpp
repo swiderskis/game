@@ -49,20 +49,20 @@ Game::Game()
 
     for (int i = 0; i < 10; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, Coordinates(-3, i));
+        spawn_tile(Tile::Brick, se::Coord(-3, i));
     }
 
     for (int i = -10; i < 10; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, Coordinates(i, 0));
+        spawn_tile(Tile::Brick, se::Coord(i, 0));
     }
 
-    spawn_tile(Tile::Brick, Coordinates(-2, 7)); // NOLINT
-    spawn_tile(Tile::Brick, Coordinates(1, 6));  // NOLINT
-    spawn_tile(Tile::Brick, Coordinates(-1, 3));
+    spawn_tile(Tile::Brick, se::Coord(-2, 7)); // NOLINT
+    spawn_tile(Tile::Brick, se::Coord(1, 6));  // NOLINT
+    spawn_tile(Tile::Brick, se::Coord(-1, 3));
 
-    spawn_player(Coordinates(0, 2));
-    spawn_enemy(Enemy::Duck, Coordinates(2, 2));
+    spawn_player(se::Coord(0, 2));
+    spawn_enemy(Enemy::Duck, se::Coord(2, 2));
 }
 
 void Game::run()
@@ -95,7 +95,7 @@ void Game::run()
 
     if (inputs.spawn_enemy)
     {
-        spawn_enemy(Enemy::Duck, Coordinates(2, 2));
+        spawn_enemy(Enemy::Duck, se::Coord(2, 2));
     }
 }
 

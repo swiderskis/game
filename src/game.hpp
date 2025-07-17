@@ -1,12 +1,10 @@
 #ifndef GAME_HPP_
 #define GAME_HPP_
 
-#include "components.hpp"
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seb-engine-ecs.hpp"
 #include "seb-engine-ui.hpp"
-#include "seblib.hpp"
 #include "sprites.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
@@ -23,22 +21,6 @@ struct Inputs
     bool click = false;
     bool spawn_enemy = false;
     bool pause = false;
-};
-
-struct Coordinates
-{
-    seblib::SimpleVec2 pos;
-
-    Coordinates() = delete;
-
-    constexpr Coordinates(int x, int y) : pos(static_cast<float>(x) * TILE_SIZE, static_cast<float>(-y) * TILE_SIZE)
-    {
-    }
-
-    operator raylib::Vector2() const // NOLINT(hicpp-explicit-conversions)
-    {
-        return pos;
-    }
 };
 
 struct Game
