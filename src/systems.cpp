@@ -149,7 +149,7 @@ void Game::move_entities()
 {
     for (const auto [id, entity] : entities.entities() | std::views::enumerate)
     {
-        if (entity == std::nullopt)
+        if (entity == Entity::None)
         {
             continue;
         }
@@ -263,7 +263,7 @@ void Game::sync_children()
     for (const auto [id, entity] : entities.entities() | std::views::enumerate)
     {
         auto comps = components.by_id(id);
-        if (entity == std::nullopt || comps.get<Parent>().id == std::nullopt)
+        if (entity == Entity::None || comps.get<Parent>().id == std::nullopt)
         {
             continue;
         }

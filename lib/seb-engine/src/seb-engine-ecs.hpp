@@ -7,7 +7,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <optional>
 #include <ranges>
 #include <unordered_map>
 #include <vector>
@@ -16,17 +15,18 @@ namespace seb_engine
 {
 namespace rl = raylib;
 
+// assumes Entity has a "no entity" value of -1
 template <typename Entity>
 class Entities
 {
-    std::vector<std::optional<Entity>> m_entities{ MAX_ENTITIES, std::nullopt };
+    std::vector<Entity> m_entities{ MAX_ENTITIES, static_cast<Entity>(-1) };
     std::unordered_map<Entity, std::vector<unsigned>> m_entity_ids;
     std::vector<unsigned> m_to_destroy;
 
 public:
     [[nodiscard]] unsigned spawn(Entity type);
     void queue_destroy(unsigned id);
-    [[nodiscard]] std::vector<std::optional<Entity>> const& entities() const;
+    [[nodiscard]] std::vector<Entity> const& entities() const;
     [[nodiscard]] std::vector<unsigned> const& entity_ids(Entity entity);
     [[nodiscard]] std::vector<unsigned> const& to_destroy() const;
     void destroy_entity(unsigned id);
@@ -135,7 +135,7 @@ unsigned Entities<Entity>::spawn(const Entity type)
     unsigned entity_id = 0;
     for (const auto [id, entity] : m_entities | std::views::enumerate)
     {
-        if (entity != std::nullopt)
+        if (static_cast<int>(entity) != -1)
         {
             continue;
         }
@@ -162,7 +162,7 @@ void Entities<Entity>::queue_destroy(const unsigned id)
 }
 
 template <typename Entity>
-std::vector<std::optional<Entity>> const& Entities<Entity>::entities() const
+std::vector<Entity> const& Entities<Entity>::entities() const
 {
     return m_entities;
 }
@@ -184,15 +184,15 @@ template <typename Entity>
 void Entities<Entity>::destroy_entity(const unsigned id)
 {
     auto& entity = m_entities[id];
-    // possible for an entity to be queued for destruction multiple times, leads to already being nullopt
-    if (entity == std::nullopt)
+    // possible for an entity to be queued for destruction multiple times
+    if (static_cast<int>(entity) == -1)
     {
         return;
     }
 
-    auto& entity_ids = m_entity_ids[entity.value()];
+    auto& entity_ids = m_entity_ids[entity];
     entity_ids.erase(std::ranges::find(entity_ids, id));
-    entity = std::nullopt;
+    entity = static_cast<Entity>(-1);
 }
 
 template <typename Entity>

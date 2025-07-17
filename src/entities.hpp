@@ -6,8 +6,10 @@
 #include <cstdint>
 #include <variant>
 
-enum class Entity : uint8_t
+enum class Entity : int8_t
 {
+    None = -1,
+
     Player,
     Projectile,
     Enemy,
