@@ -38,7 +38,7 @@ static constexpr auto ENTITY_RENDER_ORDER = {
 };
 
 inline constexpr auto HEALTH_BAR_SIZE = sl::SimpleVec2(32.0, 4.0);
-inline constexpr auto TILE_CBOX_SIZE = sl::SimpleVec2(TILE_SIZE, TILE_SIZE);
+inline constexpr auto TILE_CBOX_SIZE = sl::SimpleVec2(se::TILE_SIZE, se::TILE_SIZE);
 inline constexpr auto TILE_CBOX_OFFSET = sl::SimpleVec2(-8.0, 16.0);
 
 inline constexpr float PLAYER_SPEED = 100.0;
