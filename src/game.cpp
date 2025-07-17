@@ -163,7 +163,7 @@ rl::Vector2 Game::get_mouse_pos() const
 
 void Game::destroy_entity(const unsigned id)
 {
-    if (entities.entities()[id] == std::nullopt)
+    if (entities.entities()[id] == Entity::None)
     {
         return;
     }
