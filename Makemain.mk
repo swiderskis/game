@@ -56,6 +56,9 @@ all: $(OBJ)
 	$(BUILD_SO)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $(BIN)
 
+so: $(OBJ)
+	$(BUILD_SO)
+
 clean:
 	$(RM) -r $(BUILD_DIR)
 
