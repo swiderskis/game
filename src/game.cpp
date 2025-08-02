@@ -2,6 +2,10 @@
 
 #include "components.hpp"
 #include "entities.hpp"
+#include "Rectangle.hpp"
+#include "seb-engine-sprite.hpp"
+#include "seblib-log.hpp"
+#include "seblib-math.hpp"
 #include "seblib.hpp"
 #include "sprites.hpp"
 
@@ -13,6 +17,7 @@
 namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
+namespace sm = seblib::math;
 namespace se = seb_engine;
 namespace sui = seb_engine::ui;
 
@@ -21,13 +26,15 @@ inline constexpr unsigned TARGET_FPS = 60;
 inline constexpr float DAMAGE_LINES_INV_FREQ = 5.0;
 inline constexpr float PROJECTILE_SIZE = 4.0;
 
-inline constexpr auto PLAYER_CBOX_SIZE = sl::SimpleVec2(20.0, 29.0);
-inline constexpr auto ENEMY_CBOX_SIZE = sl::SimpleVec2(30.0, 24.0);
-inline constexpr auto PLAYER_HITBOX_SIZE = sl::SimpleVec2(12.0, 21.0);
-inline constexpr auto PLAYER_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
-inline constexpr auto ENEMY_HITBOX_SIZE = sl::SimpleVec2(22.0, 16.0);
-inline constexpr auto ENEMY_HITBOX_OFFSET = sl::SimpleVec2(0.0, 4.0);
-inline constexpr auto MELEE_OFFSET = sl::SimpleVec2(24.0, 9.0);
+inline constexpr sl::SimpleVec2 PLAYER_CBOX_SIZE{ 20.0, 29.0 };
+inline constexpr sl::SimpleVec2 PLAYER_CBOX_OFFSET{ 6.0, 3.0 };
+inline constexpr sl::SimpleVec2 ENEMY_CBOX_SIZE{ 30.0, 24.0 };
+inline constexpr sl::SimpleVec2 ENEMY_CBOX_OFFSET{ 1.0, 8.0 };
+inline constexpr sl::SimpleVec2 PLAYER_HITBOX_SIZE{ 12.0, 21.0 };
+inline constexpr sl::SimpleVec2 PLAYER_HITBOX_OFFSET{ 10.0, 7.0 };
+inline constexpr sl::SimpleVec2 ENEMY_HITBOX_SIZE{ 22.0, 16.0 };
+inline constexpr sl::SimpleVec2 ENEMY_HITBOX_OFFSET{ 5.0, 12.0 };
+inline constexpr sl::SimpleVec2 PROJECTILE_OFFSET{ se::SPRITE_SIZE / 2, se::SPRITE_SIZE / 2 };
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -49,20 +56,19 @@ Game::Game()
 
     for (int i = 0; i < 10; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, se::Coord(-3, i));
+        spawn_tile(Tile::Brick, se::Coords(0, i));
     }
 
-    for (int i = -10; i < 10; i++) // NOLINT
+    for (int i = 0; i < 20; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, se::Coord(i, 0));
+        spawn_tile(Tile::Brick, se::Coords(i, 0));
     }
 
-    spawn_tile(Tile::Brick, se::Coord(-2, 7)); // NOLINT
-    spawn_tile(Tile::Brick, se::Coord(1, 6));  // NOLINT
-    spawn_tile(Tile::Brick, se::Coord(-1, 3));
+    spawn_tile(Tile::Brick, se::Coords(2, 7)); // NOLINT
+    spawn_tile(Tile::Brick, se::Coords(1, 6)); // NOLINT
 
-    spawn_player(se::Coord(0, 2));
-    spawn_enemy(Enemy::Duck, se::Coord(2, 2));
+    spawn_player(se::Coords(0, 2));
+    spawn_enemy(Enemy::Duck, se::Coords(6, 6)); // NOLINT
 }
 
 void Game::run()
@@ -95,25 +101,24 @@ void Game::run()
 
     if (inputs.spawn_enemy)
     {
-        spawn_enemy(Enemy::Duck, se::Coord(2, 2));
+        spawn_enemy(Enemy::Duck, se::Coords(6, 6)); // NOLINT
     }
 }
 
-void Game::spawn_player(const rl::Vector2 pos)
+void Game::spawn_player(const se::Coords coords)
 {
     const unsigned id = entities.spawn(Entity::Player);
     player_id = id;
     auto comps = components.by_id(id);
     auto& transform = comps.get<Tform>();
-    transform.pos = pos;
-    transform.cbox.set(pos, PLAYER_CBOX_SIZE);
+    transform.pos = coords;
+    transform.cbox = se::BBox{ rl::Rectangle{ coords, PLAYER_CBOX_SIZE }, PLAYER_CBOX_OFFSET };
     auto& combat = comps.get<Combat>();
     combat.health.set(PLAYER_HEALTH);
-    combat.hitbox.set(pos, PLAYER_HITBOX_SIZE);
-    combat.hitbox.set_offset(pos, PLAYER_HITBOX_OFFSET);
+    combat.hitbox = se::BBox{ rl::Rectangle{ coords, PLAYER_HITBOX_SIZE }, PLAYER_HITBOX_OFFSET };
 }
 
-void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
+void Game::spawn_enemy(const Enemy enemy, const se::Coords coords)
 {
     auto sprite_base = SpriteBase::None;
     switch (enemy)
@@ -126,16 +131,15 @@ void Game::spawn_enemy(const Enemy enemy, const rl::Vector2 pos)
     const unsigned id = entities.spawn(Entity::Enemy);
     auto comps = components.by_id(id);
     auto& transform = comps.get<Tform>();
-    transform.pos = pos;
-    transform.cbox.set(pos, ENEMY_CBOX_SIZE);
+    transform.pos = coords;
+    transform.cbox = se::BBox{ rl::Rectangle{ coords, ENEMY_CBOX_SIZE }, ENEMY_CBOX_OFFSET };
     auto& combat = comps.get<Combat>();
     combat.health.set(ENEMY_HEALTH);
-    combat.hitbox.set(pos, ENEMY_HITBOX_SIZE);
-    combat.hitbox.set_offset(pos, ENEMY_HITBOX_OFFSET);
+    combat.hitbox = se::BBox{ rl::Rectangle{ coords, ENEMY_HITBOX_SIZE }, ENEMY_HITBOX_OFFSET };
     sprites.set(id, sprite_base);
 }
 
-void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
+void Game::spawn_tile(const Tile tile, const se::Coords coords)
 {
     auto sprite = SpriteTile::None;
     switch (tile)
@@ -148,7 +152,7 @@ void Game::spawn_tile(const Tile tile, const rl::Vector2 pos)
         break;
     }
 
-    tiles.spawn(tile, sprite, pos);
+    world.spawn(coords, tile, sprite);
 }
 
 float Game::dt() const
@@ -198,10 +202,9 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         auto comps = components.by_id(id);
         auto& transform = comps.get<Tform>();
         transform.pos = source_pos;
-        auto combat = comps.get<Combat>();
+        auto& combat = comps.get<Combat>();
         combat.lifespan = details.lifespan;
-        combat.hitbox.set(source_pos, melee_details.size);
-        combat.hitbox.set_offset(source_pos, MELEE_OFFSET);
+        combat.hitbox = se::BBox{ rl::Rectangle{ source_pos, melee_details.size }, MELEE_OFFSET };
         combat.damage = details.damage;
         comps.get<Parent>().id = parent_id;
         break;
@@ -215,11 +218,11 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         auto& transform = comps.get<Tform>();
         transform.pos = source_pos;
         transform.vel = vel;
-        transform.cbox.set(source_pos, PROJECTILE_SIZE);
+        transform.cbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
         sprites.set(id, SpriteBase::Projectile);
         auto& combat = comps.get<Combat>();
         combat.lifespan = details.lifespan;
-        combat.hitbox.set(source_pos, PROJECTILE_SIZE);
+        combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
         combat.damage = details.damage;
         break;
     }
@@ -232,7 +235,8 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         slog::log(slog::TRC, "Spawning {} damage lines", damage_lines);
         const float angle_diff = sector_details.ang / static_cast<float>(damage_lines - 1.0);
         slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
-        const auto ext_offset = rl::Vector2(cos(angle), sin(angle)) * sector_details.external_offset;
+        const auto ext_offset = rl::Vector2{ cos(angle), sin(angle) } * sector_details.external_offset
+                                + rl::Vector2{ se::SPRITE_SIZE / 2, se::SPRITE_SIZE / 2 };
         const unsigned sector_id = entities.spawn(Entity::Sector);
         auto comps = components.by_id(sector_id);
         comps.get<Combat>().lifespan = details.lifespan;
@@ -241,13 +245,13 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         {
             const unsigned line_id = entities.spawn(Entity::DamageLine);
             const auto line_ang = initial_angle + (angle_diff * static_cast<float>(i));
-            const auto offset = ext_offset + rl::Vector2(cos(line_ang), sin(line_ang)) * sector_details.internal_offset;
+            const auto offset
+                = ext_offset + rl::Vector2{ cos(line_ang), sin(line_ang) } * sector_details.internal_offset;
             slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
             comps = components.by_id(line_id);
             comps.get<Tform>().pos = source_pos;
             auto& combat = comps.get<Combat>();
-            combat.hitbox.set(source_pos, sector_details.radius, line_ang);
-            combat.hitbox.set_offset(source_pos, offset);
+            combat.hitbox = se::BBox{ sm::Line{ source_pos, sector_details.radius, line_ang }, offset };
             combat.damage = details.damage;
             comps.get<Parent>().id = sector_id;
         }

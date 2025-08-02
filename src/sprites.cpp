@@ -1,6 +1,5 @@
 #include "sprites.hpp"
 
-#include "components.hpp"
 #include "entities.hpp"
 #include "seb-engine-sprite.hpp"
 
