@@ -16,7 +16,7 @@ else
 	export LD_LIBRARY_PATH := $(RAYLIB_DIR)/src:$(LD_LIBRARY_PATH)
 endif
 
-.PHONY: all run debug release clean clean_libs clean_raylib
+.PHONY: all run debug so release clean clean_libs clean_raylib
 
 all: debug
 
@@ -28,6 +28,10 @@ debug:
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED -C$(RAYLIB_DIR)/src
 	$(MAKE) BUILD_TYPE=DEBUG BUILD_DIR=build/debug -Clib
 	$(MAKE) BUILD_TYPE=DEBUG BUILD_DIR=build/debug -fMakemain.mk
+
+so:
+	$(MAKE) BUILD_TYPE=DEBUG BUILD_DIR=build/debug -Clib
+	$(MAKE) so BUILD_TYPE=DEBUG BUILD_DIR=build/debug -fMakemain.mk
 
 release:
 	$(MAKE) PLATFORM=PLATFORM_DESKTOP -C$(RAYLIB_DIR)/src
