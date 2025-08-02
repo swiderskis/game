@@ -4,7 +4,9 @@
 #include "seb-engine-sprite.hpp"
 #include "seb-engine.hpp"
 #include "seblib-log.hpp"
+#include "seblib-math.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <ranges>
@@ -14,6 +16,7 @@
 namespace seb_engine
 {
 namespace rl = raylib;
+namespace sm = seblib::math;
 
 // assumes Entity has a "no entity" value of -1
 template <typename Entity>
@@ -50,7 +53,7 @@ protected:
 template <typename Comp>
 class Component : public IComp
 {
-    std::vector<Comp> m_vec{ MAX_ENTITIES, Comp() };
+    std::vector<Comp> m_vec{ MAX_ENTITIES, Comp{} };
 
 public:
     void reset(unsigned id) override;
@@ -95,27 +98,50 @@ public:
     [[nodiscard]] Comp& get();
 };
 
-// assumes TileEnum has a "no tile" value of -1
-// assumes SpriteEnum has a "no sprite" value of -1
-template <typename TileEnum, typename SpriteEnum>
-struct Tile
+using BBoxVariant = std::variant<rl::Rectangle, sm::Circle, sm::Line>;
+
+class BBox
 {
-    SpritePart<SpriteEnum> sprite = SpritePart<SpriteEnum>(static_cast<SpriteEnum>(-1));
-    raylib::Vector2 pos;
-    TileEnum type = static_cast<TileEnum>(-1);
+    BBoxVariant m_bbox{ rl::Rectangle{} };
+    rl::Vector2 m_offset{ 0.0, 0.0 };
+
+public:
+    BBox() = default;
+    explicit BBox(BBoxVariant bbox, rl::Vector2 offset);
+
+    void sync(rl::Vector2 pos);
+    [[nodiscard]] bool collides(BBox other_bbox) const;
+    [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
+    [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
+    [[nodiscard]] BBoxVariant bbox() const;
+
+    enum Variant : uint8_t
+    {
+        RECTANGLE = 0,
+        CIRCLE = 1,
+        LINE = 2,
+    };
 };
 
 // assumes TileEnum has a "no tile" value of -1
-// assumes SpriteEnum has a "no sprite" value of -1
-template <typename TileEnum, typename SpriteEnum>
-class Tiles
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+class World
 {
-    std::vector<Tile<TileEnum, SpriteEnum>> m_tiles{ MAX_TILES, Tile<TileEnum, SpriteEnum>() };
+    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
+    Sprites<SpriteEnum> m_sprites{ Width * Height };
+
+    [[nodiscard]] TileEnum at(Coords coords) const;
+    [[nodiscard]] TileEnum& at_mut(Coords coords);
+    [[nodiscard]] Coords coords_from_id(size_t id) const;
+    [[nodiscard]] size_t id_from_coords(Coords coords) const;
 
 public:
-    [[maybe_unused]] unsigned spawn(TileEnum type, SpriteEnum sprite, raylib::Vector2 pos);
-    std::vector<Tile<TileEnum, SpriteEnum>> const& tiles();
-    void draw(rl::Texture const& texture_sheet, float dt, bool flipped);
+    void spawn(Coords coords, TileEnum tile, SpriteEnum sprite);
+    void draw(rl::Texture const& texture_sheet, float dt);
+    [[nodiscard]] std::vector<TileEnum> const& tiles() const;
+    [[nodiscard]] BBox cbox(Coords coords) const;
+    [[nodiscard]] BBox cbox(size_t id) const;
+    void draw_cboxes() const;
 };
 } // namespace seb_engine
 
@@ -190,6 +216,7 @@ void Entities<Entity>::destroy_entity(const unsigned id)
         return;
     }
 
+    slog::log(slog::TRC, "Destroying entity type {} with id {}", static_cast<int>(entity), id);
     auto& entity_ids = m_entity_ids[entity];
     entity_ids.erase(std::ranges::find(entity_ids, id));
     entity = static_cast<Entity>(-1);
@@ -252,46 +279,90 @@ Comp& EntityComponents::get()
     return m_components->component<Comp>()->vec()[m_id];
 }
 
-template <typename TileEnum, typename SpriteEnum>
-unsigned Tiles<TileEnum, SpriteEnum>::spawn(const TileEnum type, const SpriteEnum sprite, const raylib::Vector2 pos)
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const
 {
-    unsigned tile_id = 0;
-    for (const auto [id, tile] : m_tiles | std::views::enumerate)
-    {
-        if (tile.type != static_cast<TileEnum>(-1))
-        {
-            continue;
-        }
+    assert(coords.x <= Width);
+    assert(coords.y <= Height);
 
-        tile.type = type;
-        tile.sprite = SpritePart(sprite);
-        tile.pos = pos;
-        tile_id = id;
-        break;
-    }
-
-    slog::log(slog::TRC, "Spawning tile type {} with id {}", static_cast<int>(type), tile_id);
-    if (tile_id == MAX_TILES)
-    {
-        slog::log(slog::WRN, "Maximum tiles reached");
-    }
-
-    return tile_id;
+    return m_tiles[coords.y + (Height * coords.x)];
 }
 
-template <typename TileEnum, typename SpriteEnum>
-std::vector<Tile<TileEnum, SpriteEnum>> const& Tiles<TileEnum, SpriteEnum>::tiles()
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords)
+{
+    assert(coords.x <= Width);
+    assert(coords.y <= Height);
+
+    return m_tiles[coords.y + (Height * coords.x)];
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+Coords World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) const
+{
+    const size_t x = id / Height;
+    const size_t y = id % Height;
+
+    return Coords{ x, y };
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+size_t World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) const
+{
+    return (coords.x * Height) + coords.y;
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
+                                                       const TileEnum tile,
+                                                       const SpriteEnum sprite)
+{
+    at_mut(coords) = tile;
+    m_sprites.set(id_from_coords(coords), sprite);
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+void World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture_sheet, const float dt)
+{
+    for (const auto [id, tile] : m_tiles | std::views::enumerate)
+    {
+        m_sprites.draw(texture_sheet, coords_from_id(id), id, dt, false);
+    }
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+std::vector<TileEnum> const& World<TileEnum, SpriteEnum, Width, Height>::tiles() const
 {
     return m_tiles;
 }
 
-template <typename TileEnum, typename SpriteEnum>
-void Tiles<TileEnum, SpriteEnum>::draw(rl::Texture const& texture_sheet, const float dt, const bool flipped)
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const Coords coords) const
+{
+    if (at(coords) == static_cast<TileEnum>(-1))
+    {
+        return BBox{};
+    }
+
+    return BBox{ rl::Rectangle{ coords, TILE_CBOX_SIZE }, rl::Vector2{ 0.0, 0.0 } };
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
+{
+    return cbox(coords_from_id(id));
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+void World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
-        const auto pos = tile.pos;
-        tile.sprite.draw(texture_sheet, pos, dt, flipped);
+        if (tile != static_cast<TileEnum>(-1))
+        {
+            const auto coords = coords_from_id(id);
+            rl::Rectangle{ coords, TILE_CBOX_SIZE }.DrawLines(::RED);
+        }
     }
 }
 } // namespace seb_engine

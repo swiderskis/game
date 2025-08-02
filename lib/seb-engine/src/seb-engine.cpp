@@ -2,8 +2,8 @@
 
 namespace seb_engine
 {
-Coord::operator rl::Vector2() const
+Coords::operator rl::Vector2() const
 {
-    return pos;
+    return { static_cast<float>(x) * TILE_SIZE, -static_cast<float>(y) * TILE_SIZE };
 }
 } // namespace seb_engine

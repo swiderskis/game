@@ -22,7 +22,7 @@ struct SpriteDetails
     bool allow_movement_override = true;
 };
 
-// register sprite details by specialising this template in program
+// register sprite details by specialising this template
 template <typename SpriteEnum>
 struct SpriteDetailsLookup
 {
@@ -73,6 +73,9 @@ class Sprites
     [[nodiscard]] SpritePart<SpriteEnum> const& part(unsigned id) const;
 
 public:
+    Sprites() = default;
+    explicit Sprites(size_t sprites);
+
     void draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
     void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped);
     template <typename SpriteEnum>
@@ -244,6 +247,11 @@ template <typename SpriteEnum>
 SpritePart<SpriteEnum> const& Sprites<SpriteEnums...>::part(const unsigned id) const
 {
     return std::get<SpritePart<SpriteEnum>>(m_sprites[id]);
+}
+
+template <typename... SpriteEnums>
+Sprites<SpriteEnums...>::Sprites(const size_t sprites) : m_sprites{ sprites }
+{
 }
 
 template <typename... SpriteEnums>
