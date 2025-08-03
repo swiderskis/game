@@ -5,6 +5,7 @@
 #include "seb-engine.hpp"
 #include "seblib-log.hpp"
 #include "seblib-math.hpp"
+#include "seblib.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -17,9 +18,11 @@ namespace seb_engine
 {
 namespace rl = raylib;
 namespace sm = seblib::math;
+namespace sl = seblib;
 
 // assumes Entity has a "no entity" value of -1
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 class Entities
 {
     std::vector<Entity> m_entities{ MAX_ENTITIES, static_cast<Entity>(-1) };
@@ -125,6 +128,7 @@ public:
 
 // assumes TileEnum has a "no tile" value of -1
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 class World
 {
     std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
@@ -156,6 +160,7 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 unsigned Entities<Entity>::spawn(const Entity type)
 {
     unsigned entity_id = 0;
@@ -182,12 +187,14 @@ unsigned Entities<Entity>::spawn(const Entity type)
 }
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 void Entities<Entity>::queue_destroy(const unsigned id)
 {
     m_to_destroy.push_back(id);
 }
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 std::vector<Entity> const& Entities<Entity>::entities() const
 {
     return m_entities;
@@ -195,18 +202,21 @@ std::vector<Entity> const& Entities<Entity>::entities() const
 
 // not marked const to allow creating vector for key if it doesn't exist already
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 std::vector<unsigned> const& Entities<Entity>::entity_ids(const Entity entity)
 {
     return m_entity_ids[entity];
 }
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 std::vector<unsigned> const& Entities<Entity>::to_destroy() const
 {
     return m_to_destroy;
 }
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 void Entities<Entity>::destroy_entity(const unsigned id)
 {
     auto& entity = m_entities[id];
@@ -223,6 +233,7 @@ void Entities<Entity>::destroy_entity(const unsigned id)
 }
 
 template <typename Entity>
+    requires sl::Enumerable<Entity>
 void Entities<Entity>::clear_to_destroy()
 {
     m_to_destroy.clear();
@@ -280,6 +291,7 @@ Comp& EntityComponents::get()
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const
 {
     assert(coords.x <= Width);
@@ -289,6 +301,7 @@ TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) con
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords)
 {
     assert(coords.x <= Width);
@@ -298,6 +311,7 @@ TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 Coords World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) const
 {
     const size_t x = id / Height;
@@ -307,12 +321,14 @@ Coords World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) con
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 size_t World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) const
 {
     return (coords.x * Height) + coords.y;
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
 {
     const auto coords = coords_from_id(id);
@@ -321,6 +337,7 @@ BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
                                                        const TileEnum tile,
                                                        const SpriteEnum sprite)
@@ -330,6 +347,7 @@ void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 void World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture_sheet, const float dt)
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
@@ -339,12 +357,14 @@ void World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 std::vector<TileEnum> const& World<TileEnum, SpriteEnum, Width, Height>::tiles() const
 {
     return m_tiles;
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
 {
     return m_tiles | std::views::enumerate
@@ -353,6 +373,7 @@ auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 void World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
