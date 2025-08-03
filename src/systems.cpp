@@ -64,8 +64,8 @@ void Game::poll_inputs()
 
 void Game::render()
 {
-    const auto player_pos = components.get<Tform>(player_id).pos;
-    camera.SetTarget(player_pos + rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2);
+    const auto player_pos = components.get<se::Pos>(player_id);
+    camera.SetTarget(player_pos + (rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2));
     camera.BeginMode();
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
@@ -80,17 +80,18 @@ void Game::render()
                 continue;
             }
 
-            const auto transform = comps.get<Tform>();
-            sprites::lookup_set_movement_sprites(sprites, id, entity, transform.vel);
+            const auto vel = comps.get<se::Vel>();
+            const auto pos = comps.get<se::Pos>();
+            sprites::lookup_set_movement_sprites(sprites, id, entity, vel);
             draw_sprite(*this, id);
 
             const auto health = comps.get<Combat>().health;
             if (health.max != std::nullopt && health.current != health.max)
             {
-                const auto pos = transform.pos - rl::Vector2(0.0, HEALTH_BAR_Y_OFFSET);
+                const auto hp_bar_pos = pos - rl::Vector2(0.0, HEALTH_BAR_Y_OFFSET);
                 const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
-                rl::Rectangle(pos, HEALTH_BAR_SIZE).Draw(::RED);
-                rl::Rectangle(pos, rl::Vector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
+                rl::Rectangle(hp_bar_pos, HEALTH_BAR_SIZE).Draw(::RED);
+                rl::Rectangle(hp_bar_pos, rl::Vector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
             }
         }
     }
@@ -129,7 +130,7 @@ void Game::render()
 
 void Game::set_player_vel()
 {
-    auto& player_vel = components.get<Tform>(player_id).vel;
+    auto& player_vel = components.get<se::Vel>(player_id);
     player_vel.x = 0.0;
     player_vel.x += (inputs.right ? PLAYER_SPEED : 0.0F);
     player_vel.x -= (inputs.left ? PLAYER_SPEED : 0.0F);
@@ -148,21 +149,22 @@ void Game::move_entities()
         }
 
         auto comps = components.by_id(id);
-        auto& transform = comps.get<Tform>();
-        transform.pos += transform.vel * dt();
-        if (transform.vel.x != 0.0)
+        auto& pos = comps.get<se::Pos>();
+        auto& vel = comps.get<se::Vel>();
+        pos += vel * dt();
+        if (vel.x != 0.0)
         {
-            components.get<Flags>(id).set(Flags::FLIPPED, transform.vel.x < 0.0);
+            components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
         }
 
-        auto& cbox = comps.get<Tform>().cbox;
+        auto& cbox = comps.get<se::BBox>();
         const auto prev_cbox = cbox;
-        cbox.sync(transform.pos);
+        cbox.sync(pos);
         resolve_tile_collisions(*this, id, prev_cbox);
-        comps.get<Combat>().hitbox.sync(transform.pos);
+        comps.get<Combat>().hitbox.sync(pos);
         if (id == player_id)
         {
-            slog::log(slog::TRC, "Player pos ({}, {})", transform.pos.x, transform.pos.y);
+            slog::log(slog::TRC, "Player pos ({}, {})", pos.x, pos.y);
         }
     }
 }
@@ -273,18 +275,18 @@ void Game::sync_children()
             flipped.set(Flags::FLIPPED, is_parent_flipped);
             if (entity == Entity::Melee)
             {
-                auto& tform = comps.get<Tform>();
+                auto& pos = comps.get<se::Pos>();
                 auto& combat = comps.get<Combat>();
                 const auto details = std::get<MeleeDetails>(entities::attack_details(Attack::Melee).details);
-                combat.hitbox = se::BBox{ rl::Rectangle{ tform.pos, details.size },
+                combat.hitbox = se::BBox{ rl::Rectangle{ pos, details.size },
                                           (flipped.is_enabled(Flags::FLIPPED) ? MELEE_OFFSET_FLIPPED : MELEE_OFFSET) };
             }
         }
 
-        auto& pos = comps.get<Tform>().pos;
-        const auto parent_pos = parent_comps.get<Tform>().pos;
+        auto& pos = comps.get<se::Pos>();
+        const auto parent_pos = parent_comps.get<se::Pos>();
         pos = parent_pos;
-        comps.get<Tform>().cbox.sync(pos);
+        comps.get<se::BBox>().sync(pos);
         comps.get<Combat>().hitbox.sync(pos);
         slog::log(slog::TRC, "Child pos: ({}, {})", pos.x, pos.y);
         slog::log(slog::TRC, "Parent pos: ({}, {})", parent_pos.x, parent_pos.y);
@@ -333,8 +335,8 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
 {
     auto comps = game.components.by_id(id);
     const auto entity = game.entities.entities()[id];
-    auto& transform = comps.get<Tform>();
-    auto& cbox = transform.cbox;
+    auto& pos = comps.get<se::Pos>();
+    auto& cbox = comps.get<se::BBox>();
     for (const auto tile_cbox : game.world.cboxes())
     {
         if (!cbox.collides(tile_cbox))
@@ -358,8 +360,8 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
         {
-            transform.pos.x += x_adjust;
-            cbox.sync(transform.pos);
+            pos.x += x_adjust;
+            cbox.sync(pos);
         }
 
         const float y_adjust = sl::match(
@@ -371,8 +373,8 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
         {
-            transform.pos.y += y_adjust;
-            cbox.sync(transform.pos);
+            pos.y += y_adjust;
+            cbox.sync(pos);
         }
 
         if (id == game.player_id)
@@ -384,7 +386,7 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
 
 void draw_sprite(Game& game, const unsigned id)
 {
-    const auto transform = game.components.get<Tform>(id);
+    const auto pos = game.components.get<se::Pos>(id);
     const auto flags = game.components.get<Flags>(id);
     auto& sprites = game.sprites;
     const auto legs = sprites.sprite<SpriteLegs>(id);
@@ -392,10 +394,10 @@ void draw_sprite(Game& game, const unsigned id)
     const auto y_offset = (legs_frame % 2 == 0 ? 0.0 : sprites::alternate_frame_y_offset(legs));
     const auto offset = rl::Vector2(0.0, static_cast<float>(y_offset));
     const auto flipped = flags.is_enabled(Flags::FLIPPED);
-    sprites.draw_part<SpriteBase>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteHead>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteArms>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteLegs>(game.texture_sheet, transform.pos, id, game.dt(), flipped);
-    sprites.draw_part<SpriteExtra>(game.texture_sheet, transform.pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteBase>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteHead>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteArms>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+    sprites.draw_part<SpriteLegs>(game.texture_sheet, pos, id, game.dt(), flipped);
+    sprites.draw_part<SpriteExtra>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
 }
 } // namespace
