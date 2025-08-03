@@ -10,15 +10,6 @@
 
 inline constexpr unsigned FLAG_COUNT = 8;
 
-struct Tform
-{
-    raylib::Vector2 pos;
-    raylib::Vector2 vel;
-    seb_engine::BBox cbox;
-
-    Tform() = default;
-};
-
 struct Flags
 {
     std::bitset<FLAG_COUNT> flag;

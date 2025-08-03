@@ -10,6 +10,13 @@ namespace seb_engine
 {
 namespace sl = seblib;
 
+Components::Components()
+{
+    reg<Pos>();
+    reg<Vel>();
+    reg<BBox>();
+}
+
 void Components::uninit_destroyed_entity(const unsigned id)
 {
     for (auto& [_, component] : m_components)

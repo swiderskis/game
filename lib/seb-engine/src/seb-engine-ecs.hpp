@@ -75,6 +75,8 @@ class Components
     friend class EntityComponents;
 
 public:
+    Components();
+
     void uninit_destroyed_entity(unsigned id);
     [[nodiscard]] EntityComponents by_id(unsigned id);
     template <typename Comp>
@@ -147,6 +149,12 @@ public:
     [[nodiscard]] auto cboxes() const;
     void draw_cboxes() const;
 };
+
+struct Position;
+using Pos = seblib::Point<seb_engine::Position>;
+
+struct Velocity;
+using Vel = seblib::Point<seb_engine::Velocity>;
 } // namespace seb_engine
 
 /****************************
@@ -242,7 +250,7 @@ void Entities<Entity>::clear_to_destroy()
 template <typename Comp>
 void Component<Comp>::reset(const unsigned id)
 {
-    m_vec[id] = {};
+    m_vec[id] = Comp{};
 }
 
 template <typename Comp>

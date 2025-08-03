@@ -2,7 +2,6 @@
 
 #include "components.hpp"
 #include "entities.hpp"
-#include "Rectangle.hpp"
 #include "seb-engine-sprite.hpp"
 #include "seblib-log.hpp"
 #include "seblib-math.hpp"
@@ -49,7 +48,6 @@ Game::Game()
     window.SetTargetFPS(TARGET_FPS);
     window.SetExitKey(KEY_NULL);
 
-    components.reg<Tform>();
     components.reg<Flags>();
     components.reg<Combat>();
     components.reg<Parent>();
@@ -110,9 +108,8 @@ void Game::spawn_player(const se::Coords coords)
     const unsigned id = entities.spawn(Entity::Player);
     player_id = id;
     auto comps = components.by_id(id);
-    auto& transform = comps.get<Tform>();
-    transform.pos = coords;
-    transform.cbox = se::BBox{ rl::Rectangle{ coords, PLAYER_CBOX_SIZE }, PLAYER_CBOX_OFFSET };
+    comps.get<se::Pos>() = coords;
+    comps.get<se::BBox>() = se::BBox{ rl::Rectangle{ coords, PLAYER_CBOX_SIZE }, PLAYER_CBOX_OFFSET };
     auto& combat = comps.get<Combat>();
     combat.health.set(PLAYER_HEALTH);
     combat.hitbox = se::BBox{ rl::Rectangle{ coords, PLAYER_HITBOX_SIZE }, PLAYER_HITBOX_OFFSET };
@@ -130,9 +127,8 @@ void Game::spawn_enemy(const Enemy enemy, const se::Coords coords)
 
     const unsigned id = entities.spawn(Entity::Enemy);
     auto comps = components.by_id(id);
-    auto& transform = comps.get<Tform>();
-    transform.pos = coords;
-    transform.cbox = se::BBox{ rl::Rectangle{ coords, ENEMY_CBOX_SIZE }, ENEMY_CBOX_OFFSET };
+    comps.get<se::Pos>() = coords;
+    comps.get<se::BBox>() = se::BBox{ rl::Rectangle{ coords, ENEMY_CBOX_SIZE }, ENEMY_CBOX_OFFSET };
     auto& combat = comps.get<Combat>();
     combat.health.set(ENEMY_HEALTH);
     combat.hitbox = se::BBox{ rl::Rectangle{ coords, ENEMY_HITBOX_SIZE }, ENEMY_HITBOX_OFFSET };
@@ -187,9 +183,9 @@ void Game::destroy_entity(const unsigned id)
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
     const auto details = entities::attack_details(attack);
-    const auto source_pos = components.get<Tform>(parent_id).pos;
+    const auto source_pos = components.get<se::Pos>(parent_id);
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
-    const auto target_pos = (parent_id == player_id ? get_mouse_pos() : components.get<Tform>(player_id).pos);
+    const auto target_pos = (parent_id == player_id ? get_mouse_pos() : components.get<se::Pos>(player_id));
     slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
     const auto diff = target_pos - source_pos;
     const float angle = atan2(diff.y, diff.x);
@@ -200,8 +196,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const auto melee_details = std::get<MeleeDetails>(details.details);
         const unsigned id = entities.spawn(Entity::Melee);
         auto comps = components.by_id(id);
-        auto& transform = comps.get<Tform>();
-        transform.pos = source_pos;
+        comps.get<se::Pos>() = source_pos;
         auto& combat = comps.get<Combat>();
         combat.lifespan = details.lifespan;
         combat.hitbox = se::BBox{ rl::Rectangle{ source_pos, melee_details.size }, MELEE_OFFSET };
@@ -215,10 +210,9 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const auto vel = rl::Vector2(cos(angle), sin(angle)) * proj_details.speed;
         const unsigned id = entities.spawn(Entity::Projectile);
         auto comps = components.by_id(id);
-        auto& transform = comps.get<Tform>();
-        transform.pos = source_pos;
-        transform.vel = vel;
-        transform.cbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
+        comps.get<se::Pos>() = source_pos;
+        comps.get<se::Vel>() = vel;
+        comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
         sprites.set(id, SpriteBase::Projectile);
         auto& combat = comps.get<Combat>();
         combat.lifespan = details.lifespan;
@@ -249,7 +243,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
                 = ext_offset + rl::Vector2{ cos(line_ang), sin(line_ang) } * sector_details.internal_offset;
             slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
             comps = components.by_id(line_id);
-            comps.get<Tform>().pos = source_pos;
+            comps.get<se::Pos>() = source_pos;
             auto& combat = comps.get<Combat>();
             combat.hitbox = se::BBox{ sm::Line{ source_pos, sector_details.radius, line_ang }, offset };
             combat.damage = details.damage;
@@ -299,7 +293,6 @@ EXPORT bool check_reload_lib()
 
 namespace
 {
-
 sui::Screen pause_screen(Game& game)
 {
     sui::Screen screen;
