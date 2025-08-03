@@ -134,13 +134,13 @@ class World
     [[nodiscard]] TileEnum& at_mut(Coords coords);
     [[nodiscard]] Coords coords_from_id(size_t id) const;
     [[nodiscard]] size_t id_from_coords(Coords coords) const;
+    [[nodiscard]] BBox cbox(size_t id) const;
 
 public:
     void spawn(Coords coords, TileEnum tile, SpriteEnum sprite);
     void draw(rl::Texture const& texture_sheet, float dt);
     [[nodiscard]] std::vector<TileEnum> const& tiles() const;
-    [[nodiscard]] BBox cbox(Coords coords) const;
-    [[nodiscard]] BBox cbox(size_t id) const;
+    [[nodiscard]] auto cboxes() const;
     void draw_cboxes() const;
 };
 } // namespace seb_engine
@@ -313,6 +313,14 @@ size_t World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords)
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
+{
+    const auto coords = coords_from_id(id);
+
+    return BBox{ rl::Rectangle{ coords, TILE_CBOX_SIZE }, rl::Vector2{ 0.0, 0.0 } };
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
 void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
                                                        const TileEnum tile,
                                                        const SpriteEnum sprite)
@@ -337,20 +345,11 @@ std::vector<TileEnum> const& World<TileEnum, SpriteEnum, Width, Height>::tiles()
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const Coords coords) const
+auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
 {
-    if (at(coords) == static_cast<TileEnum>(-1))
-    {
-        return BBox{};
-    }
-
-    return BBox{ rl::Rectangle{ coords, TILE_CBOX_SIZE }, rl::Vector2{ 0.0, 0.0 } };
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
-{
-    return cbox(coords_from_id(id));
+    return m_tiles | std::views::enumerate
+           | std::views::filter([](const auto x) { return std::get<1>(x) != static_cast<TileEnum>(-1); })
+           | std::views::transform([this](const auto x) { return cbox(std::get<0>(x)); });
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>

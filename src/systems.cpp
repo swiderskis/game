@@ -335,9 +335,8 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
     const auto entity = game.entities.entities()[id];
     auto& transform = comps.get<Tform>();
     auto& cbox = transform.cbox;
-    for (const auto& [tile_id, tile] : game.world.tiles() | std::views::enumerate)
+    for (const auto tile_cbox : game.world.cboxes())
     {
-        const auto tile_cbox = game.world.cbox(tile_id);
         if (!cbox.collides(tile_cbox))
         {
             continue;
