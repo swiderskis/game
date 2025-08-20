@@ -21,25 +21,26 @@ namespace slhr = seblib::hot_reload;
 
 namespace
 {
-SLHR_MODULE lib = nullptr;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-unsigned rand_num = rand(); // NOLINT(cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe,
-                            // cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+SLHR_MODULE lib = nullptr;
+// NOLINTBEGIN(cert-err58-cpp, cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
+std::string so_temp_name = SO_TEMP_NAME + std::to_string(rand());
+// NOLINTEND(cert-err58-cpp, cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace
 
 GameFuncs hot_reload::reload_lib()
 {
     slhr::free_lib(lib);
-    std::string so_temp_name = SO_TEMP_NAME + std::to_string(rand_num);
     std::error_code ec;
     slog::log(slog::TRC, "Removing {}", so_temp_name);
     fs::remove(so_temp_name, ec);
     if (ec.value() != 0)
     {
-        slog::log(slog::FTL, "Failed to delete shared library file");
+        slog::log(slog::WRN, "Failed to delete shared library file");
     }
 
-    rand_num = rand(); // NOLINT(cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
-    so_temp_name = SO_TEMP_NAME + std::to_string(rand_num);
+    so_temp_name = SO_TEMP_NAME + std::to_string(rand()); // NOLINT(cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
     fs::copy(SO_NAME, so_temp_name, ec);
     if (ec.value() != 0)
     {
