@@ -41,7 +41,7 @@ GameFuncs hot_reload::reload_lib()
     }
 
     so_temp_name = SO_TEMP_NAME + std::to_string(rand()); // NOLINT(cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
-    fs::copy(SO_NAME, so_temp_name, ec);
+    fs::copy(SO_NAME, so_temp_name, fs::copy_options::overwrite_existing, ec);
     if (ec.value() != 0)
     {
         slog::log(slog::FTL, "Failed to copy shared library file");
