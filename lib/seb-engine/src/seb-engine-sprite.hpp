@@ -3,6 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seb-engine.hpp"
+#include "seblib-log.hpp"
 
 #include <ranges>
 #include <tuple>
@@ -95,6 +96,7 @@ public:
     [[nodiscard]] SpriteEnum sprite(unsigned id) const;
     template <typename SpriteEnum>
     [[nodiscard]] unsigned current_frame(unsigned id) const;
+    void unset(unsigned id);
 };
 
 template <typename... SpriteEnums>
@@ -126,6 +128,8 @@ public:
 
 namespace seb_engine
 {
+namespace slog = seblib::log;
+
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 rl::Rectangle SpritePart<SpriteEnum>::rect(const bool flipped) const
@@ -321,6 +325,14 @@ void Sprites<SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite, co
 
 template <typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
+template <typename SpriteEnum>
+void Sprites<SpriteEnums...>::movement_set(const unsigned id, const SpriteEnum sprite)
+{
+    part_mut<SpriteEnum>(id).movement_set(sprite);
+}
+
+template <typename... SpriteEnums>
+    requires(sl::Enumerable<SpriteEnums>, ...)
 EntitySprites<SpriteEnums...> Sprites<SpriteEnums...>::by_id(const unsigned id)
 {
     return { this, id };
@@ -344,10 +356,10 @@ unsigned Sprites<SpriteEnums...>::current_frame(const unsigned id) const
 
 template <typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
-template <typename SpriteEnum>
-void Sprites<SpriteEnums...>::movement_set(const unsigned id, const SpriteEnum sprite)
+void Sprites<SpriteEnums...>::unset(const unsigned id)
 {
-    part_mut<SpriteEnum>(id).movement_set(sprite);
+    slog::log(slog::TRC, "Unsetting sprite parts for entity id {}", id);
+    (part_mut<SpriteEnums>(id).unset(), ...);
 }
 
 template <typename... SpriteEnums>
