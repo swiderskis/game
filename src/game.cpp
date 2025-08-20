@@ -3,6 +3,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "seb-engine-sprite.hpp"
+#include "seblib-hot-reload.hpp"
 #include "seblib-log.hpp"
 #include "seblib-math.hpp"
 #include "seblib.hpp"
@@ -280,12 +281,12 @@ void Game::reload_texture_sheet()
     slog::log(slog::INF, "Texture sheet reloaded");
 }
 
-EXPORT void run(Game& game)
+SLHR_EXPORT void run(Game& game)
 {
     game.run();
 }
 
-EXPORT bool check_reload_lib()
+SLHR_EXPORT bool check_reload_lib()
 {
     return rl::Keyboard::IsKeyPressed(KEY_R);
 }
