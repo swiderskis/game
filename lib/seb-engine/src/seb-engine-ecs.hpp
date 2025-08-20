@@ -85,6 +85,7 @@ public:
     [[nodiscard]] std::vector<Comp>& vec();
     template <typename Comp>
     [[nodiscard]] Comp& get(unsigned id);
+    void move(float dt);
 };
 
 class EntityComponents
