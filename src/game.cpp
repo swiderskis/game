@@ -129,6 +129,7 @@ void Game::spawn_enemy(const Enemy enemy, const se::Coords coords)
     }
 
     const unsigned id = entities.spawn(Entity::Enemy);
+    slog::log(slog::TRC, "Spawning enemy with id {}", id);
     auto comps = components.by_id(id);
     comps.get<se::Pos>() = coords;
     comps.get<se::BBox>() = se::BBox{ rl::Rectangle{ coords, ENEMY_CBOX_SIZE }, ENEMY_CBOX_OFFSET };
@@ -173,8 +174,8 @@ void Game::destroy_entity(const unsigned id)
 
     entities.destroy_entity(id);
     components.uninit_destroyed_entity(id);
-    // destroy any child entities
-    for (const auto [child_id, parent] : components.vec<Parent>() | std::views::enumerate | std::views::as_const)
+    sprites.unset(id);
+    for (const auto [child_id, parent] : components.vec<Parent>() | std::views::enumerate)
     {
         if (parent.id != std::nullopt && parent.id.value() == id)
         {
