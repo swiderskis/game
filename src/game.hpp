@@ -65,7 +65,7 @@ struct Game
     void poll_inputs();
     void render();
     void set_player_vel();
-    void move_entities();
+    void resolve_collisions();
     void destroy_entities();
     void player_attack();
     void update_lifespans();
@@ -75,6 +75,7 @@ struct Game
     void render_ui();
     void check_pause_game();
     void ui_click_action();
+    void set_flipped();
 #ifndef NDEBUG
     void reload_texture_sheet();
 #endif

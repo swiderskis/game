@@ -4,6 +4,7 @@
 #include "seblib-math.hpp"
 #include "seblib.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 namespace seb_engine
@@ -23,6 +24,13 @@ void Components::uninit_destroyed_entity(const unsigned id)
     {
         component->reset(id);
     }
+}
+
+void Components::move(const float dt)
+{
+    auto& pos = vec<Pos>();
+    auto& vel = vec<Vel>();
+    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
 }
 
 EntityComponents Components::by_id(const unsigned id)

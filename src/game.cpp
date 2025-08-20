@@ -80,7 +80,9 @@ void Game::run()
     {
         // movement
         set_player_vel();
-        move_entities();
+        components.move(dt());
+        set_flipped();
+        resolve_collisions();
         sync_children();
 
         // combat

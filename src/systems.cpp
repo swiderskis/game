@@ -139,24 +139,12 @@ void Game::set_player_vel()
     player_vel.y += (inputs.down ? PLAYER_SPEED : 0.0F);
 }
 
-void Game::move_entities()
+void Game::resolve_collisions()
 {
     for (const auto [id, entity] : entities.entities() | std::views::enumerate)
     {
-        if (entity == Entity::None)
-        {
-            continue;
-        }
-
         auto comps = components.by_id(id);
         auto& pos = comps.get<se::Pos>();
-        auto& vel = comps.get<se::Vel>();
-        pos += vel * dt();
-        if (vel.x != 0.0)
-        {
-            components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
-        }
-
         auto& cbox = comps.get<se::BBox>();
         const auto prev_cbox = cbox;
         cbox.sync(pos);
@@ -261,7 +249,7 @@ void Game::sync_children()
     for (const auto [id, entity] : entities.entities() | std::views::enumerate)
     {
         auto comps = components.by_id(id);
-        if (entity == Entity::None || comps.get<Parent>().id == std::nullopt)
+        if (comps.get<Parent>().id == std::nullopt)
         {
             continue;
         }
@@ -326,6 +314,19 @@ void Game::ui_click_action()
     if (inputs.click && screen != std::nullopt)
     {
         screen->click_action(rl::Mouse::GetPosition());
+    }
+}
+
+void Game::set_flipped()
+{
+    for (const auto [id, entity] : entities.entities() | std::views::enumerate)
+    {
+        auto comps = components.by_id(id);
+        auto& vel = comps.get<se::Vel>();
+        if (vel.x != 0.0)
+        {
+            components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
+        }
     }
 }
 
