@@ -1,9 +1,8 @@
 #include "game.hpp"
-#ifndef NDEBUG
-#include "hot-reload.hpp"
-#endif
 
 #ifndef NDEBUG
+#include "hot-reload.hpp"
+
 namespace hr = hot_reload;
 #endif
 
