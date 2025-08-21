@@ -4,8 +4,8 @@ SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 
 CPPFLAGS := -MMD -MP
-CPPFLAGS += -isystem../../$(RAYLIB_DIR)/src
-CPPFLAGS += -iquote../../$(RAYLIB_CPP_DIR)/include
+CPPFLAGS += -isystem../$(RAYLIB_DIR)/src
+CPPFLAGS += -iquote../$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -std=c++23
 ifeq ($(BUILD_TYPE), RELEASE)
 	CPPFLAGS += -DNDEBUG -DLOGLVL=1

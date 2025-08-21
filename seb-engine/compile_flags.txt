@@ -1,4 +1,3 @@
--iquote../seb-engine/src
 -iquote../seblib/src
 -isystem../raylib/src
 -iquote../raylib-cpp/include

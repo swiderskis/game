@@ -7,7 +7,7 @@ SRC := $(wildcard src/*.cpp)
 OBJ := $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 
 CPPFLAGS := -MMD -MP
-CPPFLAGS += $(addsuffix /src, $(addprefix -iquotelib/, $(LIBS)))
+CPPFLAGS += $(addsuffix /src, $(addprefix -iquote, $(LIBS)))
 CPPFLAGS += -isystem$(RAYLIB_DIR)/src
 CPPFLAGS += -iquote$(RAYLIB_CPP_DIR)/include
 CXXFLAGS := -std=c++23
@@ -19,7 +19,7 @@ else
 	CXXFLAGS += -O2 -Wall -Wextra -Wpedantic -Werror
 endif
 
-LDFLAGS := $(LIBS:%=-Llib/%/$(BUILD_DIR))
+LDFLAGS := $(LIBS:%=-L%/$(BUILD_DIR))
 LDFLAGS += -L$(RAYLIB_DIR)/src
 LDLIBS := $(LIBS:%=-l%)
 ifeq ($(BUILD_TYPE), RELEASE)
