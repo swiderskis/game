@@ -19,7 +19,7 @@
 
 namespace rl = raylib;
 namespace sl = seblib;
-namespace smath = seblib::math;
+namespace sm = seblib::math;
 namespace slog = seblib::log;
 namespace se = seb_engine;
 
@@ -36,6 +36,9 @@ static constexpr auto FLIP_ON_SYNC_WITH_PARENT = {
 };
 static constexpr auto ENTITY_RENDER_ORDER = {
     Entity::DamageLine, Entity::Enemy, Entity::Player, Entity::Melee, Entity::Projectile,
+};
+static constexpr auto NON_FLIPPABLE = {
+    Entity::Projectile,
 };
 
 inline constexpr sl::SimpleVec2 HEALTH_BAR_SIZE{ 32.0, 4.0 };
@@ -65,7 +68,7 @@ void Game::poll_inputs()
 void Game::render()
 {
     const auto player_pos = components.get<se::Pos>(player_id);
-    camera.SetTarget(player_pos + (rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2));
+    camera.SetTarget(player_pos + (rl::Vector2{ se::SPRITE_SIZE, se::SPRITE_SIZE } / 2));
     camera.BeginMode();
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
@@ -75,7 +78,7 @@ void Game::render()
             auto comps = components.by_id(id);
             if (entity == Entity::DamageLine)
             {
-                const auto line = std::get<smath::Line>(comps.get<Combat>().hitbox.bbox());
+                const auto line = std::get<sm::Line>(comps.get<Combat>().hitbox.val());
                 line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
                 continue;
             }
@@ -88,10 +91,10 @@ void Game::render()
             const auto health = comps.get<Combat>().health;
             if (health.max != std::nullopt && health.current != health.max)
             {
-                const auto hp_bar_pos = pos - rl::Vector2(0.0, HEALTH_BAR_Y_OFFSET);
+                const auto hp_bar_pos = pos - rl::Vector2{ 0.0, HEALTH_BAR_Y_OFFSET };
                 const float current_bar_width = HEALTH_BAR_SIZE.x * health.percentage();
-                rl::Rectangle(hp_bar_pos, HEALTH_BAR_SIZE).Draw(::RED);
-                rl::Rectangle(hp_bar_pos, rl::Vector2(current_bar_width, HEALTH_BAR_SIZE.y)).Draw(::GREEN);
+                rl::Rectangle{ hp_bar_pos, HEALTH_BAR_SIZE }.Draw(::RED);
+                rl::Rectangle{ hp_bar_pos, rl::Vector2{ current_bar_width, HEALTH_BAR_SIZE.y } }.Draw(::GREEN);
             }
         }
     }
@@ -103,10 +106,22 @@ void Game::render()
         for (const unsigned id : entities.entity_ids(entity))
         {
             sl::match(
-                components.get<Tform>(id).cbox.bbox(),
-                [](const rl::Rectangle bbox) { bbox.DrawLines(::RED); },
-                [](const smath::Circle bbox) { bbox.draw_lines(::RED); },
-                [](const smath::Line bbox) { bbox.draw_line(::RED); });
+                components.get<se::BBox>(id).val(),
+                [](const rl::Rectangle bbox)
+                {
+                    slog::log(slog::TRC, "CBox pos ({}, {})", bbox.x, bbox.y);
+                    bbox.DrawLines(::RED);
+                },
+                [](const sm::Circle bbox)
+                {
+                    slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos.x, bbox.pos.y);
+                    bbox.draw_lines(::RED);
+                },
+                [](const sm::Line bbox)
+                {
+                    slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos1.x, bbox.pos2.y);
+                    bbox.draw_line(::RED);
+                });
         }
     }
 #endif
@@ -117,10 +132,10 @@ void Game::render()
         for (const unsigned id : entities.entity_ids(entity))
         {
             sl::match(
-                components.get<Combat>(id).hitbox.bbox(),
+                components.get<Combat>(id).hitbox.val(),
                 [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
-                [](const smath::Circle bbox) { bbox.draw_lines(::GREEN); },
-                [](const smath::Line bbox) { bbox.draw_line(::GREEN); });
+                [](const sm::Circle bbox) { bbox.draw_lines(::GREEN); },
+                [](const sm::Line bbox) { bbox.draw_line(::GREEN); });
         }
     }
 #endif
@@ -181,7 +196,7 @@ void Game::player_attack()
         return;
     }
 
-    const auto attack = Attack::Melee;
+    const auto attack = Attack::Projectile;
     const auto attack_details = entities::attack_details(attack);
     sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
     comps.get<Combat>().attack_cooldown = attack_details.cooldown;
@@ -323,7 +338,7 @@ void Game::set_flipped()
     {
         auto comps = components.by_id(id);
         auto& vel = comps.get<se::Vel>();
-        if (vel.x != 0.0)
+        if (vel.x != 0.0 && !std::ranges::contains(NON_FLIPPABLE, entity))
         {
             components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
         }
@@ -351,12 +366,12 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
             continue;
         }
 
-        const auto tile_rcbox = std::get<rl::Rectangle>(tile_cbox.bbox());
+        const auto tile_rcbox = std::get<rl::Rectangle>(tile_cbox.val());
         const float x_adjust = sl::match(
-            cbox.bbox(),
+            cbox.val(),
             [tile_rcbox](const rl::Rectangle cbox)
             { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
-            [tile_rcbox](const smath::Circle cbox)
+            [tile_rcbox](const sm::Circle cbox)
             { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
@@ -366,10 +381,10 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
         }
 
         const float y_adjust = sl::match(
-            cbox.bbox(),
+            cbox.val(),
             [tile_rcbox](const rl::Rectangle cbox)
             { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
-            [tile_rcbox](const smath::Circle cbox)
+            [tile_rcbox](const sm::Circle cbox)
             { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
             [tile_rcbox, prev_cbox](const auto) { return 0.0F; });
         if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
@@ -393,7 +408,7 @@ void draw_sprite(Game& game, const unsigned id)
     const auto legs = sprites.sprite<SpriteLegs>(id);
     const auto legs_frame = sprites.current_frame<SpriteLegs>(id);
     const auto y_offset = (legs_frame % 2 == 0 ? 0.0 : sprites::alternate_frame_y_offset(legs));
-    const auto offset = rl::Vector2(0.0, static_cast<float>(y_offset));
+    const rl::Vector2 offset{ 0.0, static_cast<float>(y_offset) };
     const auto flipped = flags.is_enabled(Flags::FLIPPED);
     sprites.draw_part<SpriteBase>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
     sprites.draw_part<SpriteHead>(game.texture_sheet, pos + offset, id, game.dt(), flipped);

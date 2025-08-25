@@ -2,7 +2,7 @@
 
 namespace seblib::math
 {
-Circle::Circle(const rl::Vector2 pos, const float radius) : pos(pos), radius(radius)
+Circle::Circle(const rl::Vector2 pos, const float radius) : pos{ pos.x + radius, pos.y + radius }, radius(radius)
 {
 }
 

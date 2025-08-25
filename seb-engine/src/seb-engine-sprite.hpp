@@ -251,8 +251,10 @@ rl::Vector2 SpritePart<SpriteEnum>::render_pos(const rl::Vector2 pos, const bool
     const auto details = s_details_lookup.get(m_sprite);
     // sprite draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
     const float x_offset = (details.size.x - SPRITE_SIZE) * flipped;
+    const rl::Vector2 render_pos{ pos - rl::Vector2{ x_offset, 0.0 } };
+    slog::log(slog::TRC, "Render pos ({}, {})", render_pos.x, render_pos.y);
 
-    return pos - rl::Vector2(x_offset, 0.0);
+    return render_pos;
 }
 
 template <typename... SpriteEnums>

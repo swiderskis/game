@@ -42,6 +42,10 @@ EntityComponents::EntityComponents(Components& components, const unsigned id) : 
 {
 }
 
+BBox::BBox(const BBoxVariant bbox) : BBox{ bbox, rl::Vector2{} }
+{
+}
+
 BBox::BBox(const BBoxVariant bbox, const rl::Vector2 offset) : m_bbox{ bbox }, m_offset{ offset }
 {
     sl::match(
@@ -66,6 +70,8 @@ void BBox::sync(rl::Vector2 pos)
         [pos, this](sm::Circle& bbox)
         {
             bbox.pos = pos;
+            bbox.pos.x += bbox.radius;
+            bbox.pos.y += bbox.radius;
             bbox.pos.x += m_offset.x;
             bbox.pos.y += m_offset.y;
             slog::log(slog::TRC, "Circle bbox pos: ({}, {}), radius: {}", bbox.pos.x, bbox.pos.y, bbox.radius);
@@ -150,7 +156,7 @@ bool BBox::y_overlaps(const BBox other_bbox) const
         });
 }
 
-BBoxVariant BBox::bbox() const
+BBoxVariant BBox::val() const
 {
     return m_bbox;
 }

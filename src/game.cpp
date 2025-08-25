@@ -34,7 +34,6 @@ inline constexpr sl::SimpleVec2 PLAYER_HITBOX_SIZE{ 12.0, 21.0 };
 inline constexpr sl::SimpleVec2 PLAYER_HITBOX_OFFSET{ 10.0, 7.0 };
 inline constexpr sl::SimpleVec2 ENEMY_HITBOX_SIZE{ 22.0, 16.0 };
 inline constexpr sl::SimpleVec2 ENEMY_HITBOX_OFFSET{ 5.0, 12.0 };
-inline constexpr sl::SimpleVec2 PROJECTILE_OFFSET{ se::SPRITE_SIZE / 2, se::SPRITE_SIZE / 2 };
 
 inline constexpr int PLAYER_HEALTH = 100;
 inline constexpr int ENEMY_HEALTH = 100;
@@ -211,16 +210,16 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
     case Attack::Projectile:
     {
         const auto proj_details = std::get<ProjectileDetails>(details.details);
-        const auto vel = rl::Vector2(cos(angle), sin(angle)) * proj_details.speed;
+        const auto vel = rl::Vector2{ cos(angle), sin(angle) } * proj_details.speed;
         const unsigned id = entities.spawn(Entity::Projectile);
         auto comps = components.by_id(id);
         comps.get<se::Pos>() = source_pos;
         comps.get<se::Vel>() = vel;
-        comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
+        comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
         sprites.set(id, SpriteBase::Projectile);
         auto& combat = comps.get<Combat>();
-        combat.lifespan = details.lifespan;
-        combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE }, PROJECTILE_OFFSET };
+        // combat.lifespan = details.lifespan; //TODO revert
+        combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
         combat.damage = details.damage;
         break;
     }
