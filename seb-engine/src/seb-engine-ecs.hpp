@@ -113,13 +113,14 @@ class BBox
 
 public:
     BBox() = default;
+    explicit BBox(BBoxVariant bbox);
     explicit BBox(BBoxVariant bbox, rl::Vector2 offset);
 
     void sync(rl::Vector2 pos);
     [[nodiscard]] bool collides(BBox other_bbox) const;
     [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
     [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
-    [[nodiscard]] BBoxVariant bbox() const;
+    [[nodiscard]] BBoxVariant val() const;
 
     enum Variant : uint8_t
     {

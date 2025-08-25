@@ -5,7 +5,7 @@
 #include <utility>
 
 namespace rl = raylib;
-namespace smath = seblib::math;
+namespace sm = seblib::math;
 
 namespace entities
 {
@@ -32,7 +32,7 @@ AttackDetails attack_details(const Attack attack)
     case Attack::Sector:
         return {
             .details = SectorDetails{ .radius = 50.0,
-                                      .ang = smath::degrees_to_radians(40.0),
+                                      .ang = sm::degrees_to_radians(40.0),
                                       .internal_offset = 20.0, 
                                       .external_offset = 15.0, },
             .lifespan = 0.3,
