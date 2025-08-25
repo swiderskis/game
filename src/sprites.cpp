@@ -1,7 +1,7 @@
 #include "sprites.hpp"
 
 #include "entities.hpp"
-#include "seb-engine-sprite.hpp"
+#include "se-sprite.hpp"
 
 #include <utility>
 

@@ -1,3 +1,5 @@
 -isystem../raylib/src
 -iquote../raylib-cpp/include
+-iquote../include
+-iquoteinclude
 -std=c++23

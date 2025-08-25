@@ -1,8 +1,8 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
-#include "seblib-log.hpp"
 #include "seblib.hpp"
+#include "sl-log.hpp"
 #include "sprites.hpp"
 
 #include <algorithm>

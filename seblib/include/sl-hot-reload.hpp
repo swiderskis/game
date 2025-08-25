@@ -1,7 +1,7 @@
 #ifndef SEBLIB_HOT_RELOAD_HPP_
 #define SEBLIB_HOT_RELOAD_HPP_
 
-#include "seblib-log.hpp"
+#include "sl-log.hpp"
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <libloaderapi.h>

@@ -2,7 +2,7 @@
 #define COMPONENTS_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seb-engine-ecs.hpp"
+#include "se-ecs.hpp"
 
 #include <bitset>
 #include <cstdint>

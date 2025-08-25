@@ -1,6 +1,6 @@
 #include "entities.hpp"
 
-#include "seblib-math.hpp"
+#include "sl-math.hpp"
 
 #include <utility>
 

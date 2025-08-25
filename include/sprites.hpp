@@ -2,7 +2,7 @@
 #define SPRITE_HPP_
 
 #include "entities.hpp"
-#include "seb-engine-sprite.hpp"
+#include "se-sprite.hpp"
 
 #include <cstdint>
 

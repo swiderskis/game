@@ -4,19 +4,20 @@ A C++ game, powered by [raylib](https://www.raylib.com/) using [raylib-cpp](http
 
 ## Getting started
 
-This project relies only on [GNU Make](https://www.gnu.org/software/make/) to build.
-This can be installed for Windows using [MSYS2](https://www.msys2.org/).
-Once installed, simply type `make run` to build the raylib library and the project.
+This project can be built using [CMake](https://cmake.org/) with the commands
+```
+mkdir build && cd build
+cmake ..
+```
 
-This project also contains a rudimentary [CMake](https://cmake.org/) file for quick building and running on Windows using MSVC, if you don't want to go through the hassle of setting up MSYS2.
-Simply use the commands
+and run using `./game`.
+A release build can be generated using
 ```
-cmake -B cmake-build
-cmake --build cmake-build
-.\cmake-build\Debug\game.exe
+mkdir build-release && cd build-release
+cmake -DCMAKE_BUILD_TYPE=Release ..
 ```
-to build and run the project.
-Note that it isn't my primary build tool and so will throw some warnings during the build.
+
+Note that attempting to run a release build will not work without copying `assets/` to the same directory as the binary.
 
 ## Credits
 

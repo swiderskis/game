@@ -1,4 +1,5 @@
--iquote../seblib/src
 -isystem../raylib/src
 -iquote../raylib-cpp/include
+-iquote../seblib/include
+-iquoteinclude
 -std=c++23

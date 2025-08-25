@@ -2,11 +2,11 @@
 
 #include "components.hpp"
 #include "entities.hpp"
-#include "seb-engine-sprite.hpp"
-#include "seblib-hot-reload.hpp"
-#include "seblib-log.hpp"
-#include "seblib-math.hpp"
+#include "se-sprite.hpp"
 #include "seblib.hpp"
+#include "sl-hot-reload.hpp"
+#include "sl-log.hpp"
+#include "sl-math.hpp"
 #include "sprites.hpp"
 
 #include <cassert>
@@ -218,7 +218,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
         sprites.set(id, SpriteBase::Projectile);
         auto& combat = comps.get<Combat>();
-        // combat.lifespan = details.lifespan; //TODO revert
+        combat.lifespan = details.lifespan;
         combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
         combat.damage = details.damage;
         break;
@@ -276,7 +276,7 @@ void Game::toggle_pause()
 #ifndef NDEBUG
 #include "hot-reload.hpp"
 
-void Game::reload_texture_sheet()
+SLHR_EXPORT void Game::reload_texture_sheet()
 {
     texture_sheet.Unload();
     texture_sheet.Load(TEXTURE_SHEET);
