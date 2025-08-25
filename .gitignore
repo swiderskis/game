@@ -2,7 +2,6 @@
 *.dll
 *.so
 /.cache
-/lib/*/*build*
 *.a
 *.d
 *.o

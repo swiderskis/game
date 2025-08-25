@@ -1,8 +1,8 @@
-#include "seb-engine-ecs.hpp"
+#include "se-ecs.hpp"
 
-#include "seblib-log.hpp"
-#include "seblib-math.hpp"
 #include "seblib.hpp"
+#include "sl-log.hpp"
+#include "sl-math.hpp"
 
 #include <algorithm>
 #include <cassert>

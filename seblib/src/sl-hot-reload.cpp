@@ -1,6 +1,6 @@
-#include "seblib-hot-reload.hpp"
+#include "sl-hot-reload.hpp"
 
-#include "seblib-log.hpp"
+#include "sl-log.hpp"
 
 namespace seblib::hot_reload
 {

@@ -1,4 +1,4 @@
-#include "seblib-math.hpp"
+#include "sl-math.hpp"
 
 namespace seblib::math
 {

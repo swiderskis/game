@@ -3,7 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seb-engine.hpp"
-#include "seblib-log.hpp"
+#include "sl-log.hpp"
 
 #include <ranges>
 #include <tuple>

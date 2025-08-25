@@ -1,9 +1,9 @@
-#include "seblib-log.hpp"
+#include "sl-log.hpp"
 
 #include <cstdlib>
 
-#ifndef LOGLVL
-#define LOGLVL 2
+#ifndef SLOG_LVL
+#define SLOG_LVL 2
 #endif
 
 namespace
@@ -11,7 +11,7 @@ namespace
 using namespace seblib::log;
 
 // this will need to change if doing any multithreading
-Level log_level = static_cast<Level>(LOGLVL); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+Level log_level = static_cast<Level>(SLOG_LVL); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace
 
 namespace seblib::log

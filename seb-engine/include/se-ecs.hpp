@@ -1,11 +1,11 @@
 #ifndef SEB_ENGINE_ECS_HPP_
 #define SEB_ENGINE_ECS_HPP_
 
-#include "seb-engine-sprite.hpp"
+#include "se-sprite.hpp"
 #include "seb-engine.hpp"
-#include "seblib-log.hpp"
-#include "seblib-math.hpp"
 #include "seblib.hpp"
+#include "sl-log.hpp"
+#include "sl-math.hpp"
 
 #include <cassert>
 #include <cstddef>

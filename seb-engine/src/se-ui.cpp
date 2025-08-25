@@ -1,4 +1,4 @@
-#include "seb-engine-ui.hpp"
+#include "se-ui.hpp"
 
 namespace seb_engine::ui
 {

@@ -4,14 +4,14 @@
 #include <string>
 
 #ifndef NDEBUG
-#include "seblib-hot-reload.hpp"
-#include "seblib-log.hpp"
+#include "sl-hot-reload.hpp"
+#include "sl-log.hpp"
 
 #include <filesystem>
 #include <system_error>
 
 #ifndef SO_NAME
-#define SO_NAME "build/debug/game" SLHR_SO_SUFFIX
+#define SO_NAME "build/libgamelib" SLHR_SO_SUFFIX
 #endif
 #define SO_TEMP_NAME SO_NAME ".tmp"
 

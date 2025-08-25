@@ -3,14 +3,18 @@
 
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seb-engine-ecs.hpp"
-#include "seb-engine-ui.hpp"
+#include "se-ecs.hpp"
+#include "se-ui.hpp"
 #include "seb-engine.hpp"
 #include "seblib.hpp"
 #include "sprites.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
+#ifndef TEXTURES
 static constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
+#else
+static constexpr auto TEXTURE_SHEET = TEXTURES;
+#endif
 
 inline constexpr float CAMERA_ZOOM = 2.0;
 
