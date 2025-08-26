@@ -8,7 +8,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    set(BUILD_SHARED_LIBS ON CACHE BOOL "")
 endif()
 
 add_executable(
@@ -40,9 +39,14 @@ target_include_directories(
     seblib/include
 )
 
-add_subdirectory(raylib)
 add_subdirectory(seblib)
 add_subdirectory(seb-engine)
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "")
+endif()
+
+add_subdirectory(raylib)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_definitions(SLOG_LVL=1)
