@@ -16,7 +16,7 @@ int main()
         if (game_funcs.check_reload_lib())
         {
             game_funcs = hr::reload_lib();
-            game.reload_texture_sheet();
+            game_funcs.reload_texture_sheet(&game);
         }
 
         game_funcs.run(&game);

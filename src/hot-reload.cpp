@@ -31,9 +31,10 @@ std::string so_temp_name = SO_TEMP_NAME + std::to_string(rand());
 
 GameFuncs hot_reload::reload_lib()
 {
+    slog::log(slog::INF, "Library file name: {}", SO_NAME);
     slhr::free_lib(lib);
     std::error_code ec;
-    slog::log(slog::TRC, "Removing {}", so_temp_name);
+    slog::log(slog::INF, "Removing {}", so_temp_name);
     fs::remove(so_temp_name, ec);
     if (ec.value() != 0)
     {
@@ -53,6 +54,7 @@ GameFuncs hot_reload::reload_lib()
     return {
         .run = slhr::get_func_address<RunFunc>(lib, "run", true),
         .check_reload_lib = slhr::get_func_address<CheckReloadLibFunc>(lib, "check_reload_lib", true),
+        .reload_texture_sheet = slhr::get_func_address<ReloadTextureSheetFunc>(lib, "reload_texture_sheet", true),
     };
 }
 

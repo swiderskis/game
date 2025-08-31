@@ -6,11 +6,13 @@ class Game;
 
 using RunFunc = void (*)(Game*);
 using CheckReloadLibFunc = bool (*)();
+using ReloadTextureSheetFunc = void (*)(Game*);
 
 struct GameFuncs
 {
     RunFunc run = nullptr;
     CheckReloadLibFunc check_reload_lib = nullptr;
+    ReloadTextureSheetFunc reload_texture_sheet = nullptr;
 };
 
 namespace hot_reload

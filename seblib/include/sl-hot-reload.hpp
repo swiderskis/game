@@ -4,17 +4,14 @@
 #include "sl-log.hpp"
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <libloaderapi.h>
-#include <minwindef.h>
+#include <windows.h>
 
-#define SLHR_EXPORT extern "C" __declspec(dllexport)
 #define SLHR_MODULE HMODULE
 #define SLHR_PROC FARPROC
 #define SLHR_SO_SUFFIX ".dll"
 #else
 #include <dlfcn.h>
 
-#define SLHR_EXPORT extern "C" __attribute__((visibility("default")))
 #define SLHR_MODULE void*
 #define SLHR_PROC void*
 #define SLHR_SO_SUFFIX ".so"
