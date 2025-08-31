@@ -4,17 +4,20 @@ project(seblib)
 
 add_library(
     seblib
+    STATIC
     src/sl-hot-reload.cpp
     src/sl-log.cpp
     src/sl-math.cpp
 )
 
-target_compile_options(seblib PRIVATE -Wall)
-target_compile_options(seblib PRIVATE -Wextra)
-target_compile_options(seblib PRIVATE -Werror)
-target_compile_options(seblib PRIVATE -Wpedantic)
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(seblib PRIVATE -O2)
+if(NOT WIN32)
+    target_compile_options(seblib PRIVATE -Wall)
+    target_compile_options(seblib PRIVATE -Wextra)
+    target_compile_options(seblib PRIVATE -Werror)
+    target_compile_options(seblib PRIVATE -Wpedantic)
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(seblib PRIVATE -O2)
+    endif()
 endif()
 
 target_include_directories(

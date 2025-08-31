@@ -4,17 +4,20 @@ project(seb-engine)
 
 add_library(
     seb-engine
+    STATIC
     src/se-ecs.cpp
     src/se-ui.cpp
     src/seb-engine.cpp
 )
 
-target_compile_options(seb-engine PRIVATE -Wall)
-target_compile_options(seb-engine PRIVATE -Wextra)
-target_compile_options(seb-engine PRIVATE -Werror)
-target_compile_options(seb-engine PRIVATE -Wpedantic)
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(seb-engine PRIVATE -O2)
+if(NOT WIN32)
+    target_compile_options(seb-engine PRIVATE -Wall)
+    target_compile_options(seb-engine PRIVATE -Wextra)
+    target_compile_options(seb-engine PRIVATE -Werror)
+    target_compile_options(seb-engine PRIVATE -Wpedantic)
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(seb-engine PRIVATE -O2)
+    endif()
 endif()
 
 target_include_directories(

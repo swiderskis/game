@@ -80,9 +80,6 @@ struct Game
     void check_pause_game();
     void ui_click_action();
     void set_flipped();
-#ifndef NDEBUG
-    void reload_texture_sheet();
-#endif
 };
 
 #endif

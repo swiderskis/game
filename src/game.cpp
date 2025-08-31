@@ -4,7 +4,7 @@
 #include "entities.hpp"
 #include "se-sprite.hpp"
 #include "seblib.hpp"
-#include "sl-hot-reload.hpp"
+#include "sl-extern.hpp"
 #include "sl-log.hpp"
 #include "sl-math.hpp"
 #include "sprites.hpp"
@@ -276,10 +276,10 @@ void Game::toggle_pause()
 #ifndef NDEBUG
 #include "hot-reload.hpp"
 
-SLHR_EXPORT void Game::reload_texture_sheet()
+SLHR_EXPORT void reload_texture_sheet(Game& game)
 {
-    texture_sheet.Unload();
-    texture_sheet.Load(TEXTURE_SHEET);
+    game.texture_sheet.Unload();
+    game.texture_sheet.Load(TEXTURE_SHEET);
     slog::log(slog::INF, "Texture sheet reloaded");
 }
 
