@@ -1,5 +1,5 @@
-#ifndef SEBLIB_EXTERN_HPP_
-#define SEBLIB_EXTERN_HPP_
+#ifndef SL_EXTERN_HPP_
+#define SL_EXTERN_HPP_
 
 // required to prevent header clashes between raylib.h and windows.h
 #if defined(_WIN32) || defined(__CYGWIN__)

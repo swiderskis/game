@@ -1,5 +1,5 @@
-#ifndef SEBLIB_MATH_HPP_
-#define SEBLIB_MATH_HPP_
+#ifndef SL_MATH_HPP_
+#define SL_MATH_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 

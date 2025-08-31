@@ -1,5 +1,5 @@
-#ifndef SEB_ENGINE_UI_HPP_
-#define SEB_ENGINE_UI_HPP_
+#ifndef SE_UI_HPP_
+#define SE_UI_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 

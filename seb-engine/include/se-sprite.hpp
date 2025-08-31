@@ -1,5 +1,5 @@
-#ifndef SEB_ENGINE_SPRITE_HPP_
-#define SEB_ENGINE_SPRITE_HPP_
+#ifndef SE_SPRITE_HPP_
+#define SE_SPRITE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seb-engine.hpp"
