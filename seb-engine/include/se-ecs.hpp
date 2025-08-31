@@ -1,5 +1,5 @@
-#ifndef SEB_ENGINE_ECS_HPP_
-#define SEB_ENGINE_ECS_HPP_
+#ifndef SE_ECS_HPP_
+#define SE_ECS_HPP_
 
 #include "se-sprite.hpp"
 #include "seb-engine.hpp"

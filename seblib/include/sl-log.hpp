@@ -1,5 +1,5 @@
-#ifndef SEBLIB_LOG_HPP_
-#define SEBLIB_LOG_HPP_
+#ifndef SL_LOG_HPP_
+#define SL_LOG_HPP_
 
 #include <cstdint>
 #include <filesystem>

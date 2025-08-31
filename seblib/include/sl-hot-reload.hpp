@@ -1,5 +1,5 @@
-#ifndef SEBLIB_HOT_RELOAD_HPP_
-#define SEBLIB_HOT_RELOAD_HPP_
+#ifndef SL_HOT_RELOAD_HPP_
+#define SL_HOT_RELOAD_HPP_
 
 #include "sl-log.hpp"
 
