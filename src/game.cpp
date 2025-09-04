@@ -22,7 +22,7 @@ namespace sui = seb_engine::ui;
 
 inline constexpr unsigned TARGET_FPS = 60;
 
-inline constexpr float DAMAGE_LINES_INV_FREQ = 5.0;
+inline constexpr float LINE_ANGLE_SPACING = 5.0;
 inline constexpr float PROJECTILE_SIZE = 4.0;
 
 inline constexpr sl::SimpleVec2 PLAYER_CBOX_SIZE{ 20.0, 29.0 };
@@ -40,6 +40,11 @@ inline constexpr int ENEMY_HEALTH = 100;
 namespace
 {
 sui::Screen pause_screen(Game& game);
+void spawn_melee(Game& game, rl::Vector2 source_pos, unsigned parent_id);
+void spawn_projectile(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos);
+void spawn_sector(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos, unsigned parent_id);
+void spawn_sector_lines(
+    Game& game, unsigned line_count, rl::Vector2 source_pos, rl::Vector2 target_pos, unsigned sector_id);
 } // namespace
 
 Game::Game()
@@ -184,78 +189,21 @@ void Game::destroy_entity(const unsigned id)
 
 void Game::spawn_attack(const Attack attack, const unsigned parent_id)
 {
-    const auto details{ entities::attack_details(attack) };
     const auto source_pos{ components.get<se::Pos>(parent_id) };
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
     const auto target_pos{ (parent_id == player_id ? get_mouse_pos() : components.get<se::Pos>(player_id)) };
     slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
-    const auto diff{ target_pos - source_pos };
-    const float angle{ atan2(diff.y, diff.x) };
     switch (attack)
     {
     case Attack::Melee:
-    {
-        const auto melee_details{ std::get<MeleeDetails>(details.details) };
-        const unsigned id{ entities.spawn(Entity::Melee) };
-        auto comps{ components.by_id(id) };
-        comps.get<se::Pos>() = source_pos;
-        auto& combat{ comps.get<Combat>() };
-        combat.lifespan = details.lifespan;
-        combat.hitbox = se::BBox{ rl::Rectangle{ source_pos, melee_details.size }, MELEE_OFFSET };
-        combat.damage = details.damage;
-        comps.get<Parent>().id = parent_id;
+        spawn_melee(*this, source_pos, parent_id);
         break;
-    }
     case Attack::Projectile:
-    {
-        const auto proj_details{ std::get<ProjectileDetails>(details.details) };
-        const auto vel{ rl::Vector2{ cos(angle), sin(angle) } * proj_details.speed };
-        const unsigned id{ entities.spawn(Entity::Projectile) };
-        auto comps{ components.by_id(id) };
-        comps.get<se::Pos>()
-            = source_pos + rl::Vector2{ (SPRITE_SIZE / 2) - PROJECTILE_SIZE, (SPRITE_SIZE / 2) - PROJECTILE_SIZE };
-        comps.get<se::Vel>() = vel;
-        comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
-        sprites.set(id, SpriteBase::Projectile);
-        auto& combat{ comps.get<Combat>() };
-        combat.lifespan = details.lifespan;
-        combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
-        combat.damage = details.damage;
+        spawn_projectile(*this, source_pos, target_pos);
         break;
-    }
     case Attack::Sector:
-    {
-        const auto sector_details{ std::get<SectorDetails>(details.details) };
-        const float initial_angle{ angle - (sector_details.ang / 2) };
-        const unsigned damage_lines{
-            1 + static_cast<unsigned>(ceil(sector_details.radius * sector_details.ang / DAMAGE_LINES_INV_FREQ))
-        };
-        slog::log(slog::TRC, "Spawning {} damage lines", damage_lines);
-        const float angle_diff{ sector_details.ang / static_cast<float>(damage_lines - 1.0) };
-        slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
-        const auto ext_offset{ rl::Vector2{ cos(angle), sin(angle) } * sector_details.external_offset
-                               + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2) };
-        const unsigned sector_id{ entities.spawn(Entity::Sector) };
-        auto comps{ components.by_id(sector_id) };
-        comps.get<Combat>().lifespan = details.lifespan;
-        comps.get<Parent>().id = parent_id;
-        for (unsigned i = 0; i < damage_lines; i++)
-        {
-            const unsigned line_id{ entities.spawn(Entity::DamageLine) };
-            const auto line_ang{ initial_angle + (angle_diff * static_cast<float>(i)) };
-            const auto offset{ ext_offset
-                               + rl::Vector2{ cos(line_ang), sin(line_ang) } * sector_details.internal_offset };
-            slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
-            comps = components.by_id(line_id);
-            comps.get<se::Pos>() = source_pos;
-            auto& combat{ comps.get<Combat>() };
-            combat.hitbox = se::BBox{ sm::Line{ source_pos, sector_details.radius, line_ang }, offset };
-            combat.damage = details.damage;
-            comps.get<Parent>().id = sector_id;
-        }
-
+        spawn_sector(*this, source_pos, target_pos, parent_id);
         break;
-    }
     }
 }
 
@@ -317,5 +265,83 @@ sui::Screen pause_screen(Game& game)
     exit.element->on_click = [&game]() { game.close = true; };
 
     return screen;
+}
+
+void spawn_melee(Game& game, const rl::Vector2 source_pos, const unsigned parent_id)
+{
+    const auto details{ entities::attack_details(Attack::Melee) };
+    const auto melee_details{ std::get<MeleeDetails>(details.details) };
+    const unsigned id{ game.entities.spawn(Entity::Melee) };
+    auto comps{ game.components.by_id(id) };
+    comps.get<se::Pos>() = source_pos;
+    auto& combat{ comps.get<Combat>() };
+    combat.lifespan = details.lifespan;
+    combat.hitbox = se::BBox{ rl::Rectangle{ source_pos, melee_details.size }, MELEE_OFFSET };
+    combat.damage = details.damage;
+    comps.get<Parent>().id = parent_id;
+}
+
+void spawn_projectile(Game& game, const rl::Vector2 source_pos, const rl::Vector2 target_pos)
+{
+    const auto diff{ target_pos - source_pos };
+    const float angle{ atan2(diff.y, diff.x) };
+    const auto details{ entities::attack_details(Attack::Projectile) };
+    const auto proj_details{ std::get<ProjectileDetails>(details.details) };
+    const auto vel{ rl::Vector2{ cos(angle), sin(angle) } * proj_details.speed };
+    const unsigned id{ game.entities.spawn(Entity::Projectile) };
+    auto comps{ game.components.by_id(id) };
+    comps.get<se::Pos>()
+        = source_pos + rl::Vector2{ (SPRITE_SIZE / 2) - PROJECTILE_SIZE, (SPRITE_SIZE / 2) - PROJECTILE_SIZE };
+    comps.get<se::Vel>() = vel;
+    comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
+    game.sprites.set(id, SpriteBase::Projectile);
+    auto& combat{ comps.get<Combat>() };
+    combat.lifespan = details.lifespan;
+    combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
+    combat.damage = details.damage;
+}
+
+void spawn_sector(Game& game, const rl::Vector2 source_pos, const rl::Vector2 target_pos, const unsigned parent_id)
+{
+    const auto details{ entities::attack_details(Attack::Sector) };
+    const auto sector_det{ std::get<SectorDetails>(details.details) };
+    const unsigned line_count{ static_cast<unsigned>(ceil(sector_det.radius * sector_det.angle / LINE_ANGLE_SPACING))
+                               + 1 };
+    slog::log(slog::TRC, "Spawning {} damage lines", line_count);
+    const unsigned sector_id{ game.entities.spawn(Entity::Sector) };
+    auto comps{ game.components.by_id(sector_id) };
+    comps.get<Combat>().lifespan = details.lifespan;
+    comps.get<Parent>().id = parent_id;
+    spawn_sector_lines(game, line_count, source_pos, target_pos, sector_id);
+}
+
+void spawn_sector_lines(Game& game,
+                        const unsigned line_count,
+                        const rl::Vector2 source_pos,
+                        const rl::Vector2 target_pos,
+                        const unsigned sector_id)
+{
+    const auto diff{ target_pos - source_pos };
+    const float angle{ atan2(diff.y, diff.x) };
+    const auto details{ entities::attack_details(Attack::Sector) };
+    const auto sector_details{ std::get<SectorDetails>(details.details) };
+    const float initial_angle{ angle - (sector_details.angle / 2) };
+    const float angle_diff{ sector_details.angle / static_cast<float>(line_count - 1.0) };
+    slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
+    const auto sector_offset{ (rl::Vector2{ cos(angle), sin(angle) } * sector_details.sector_offset)
+                              + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2) };
+    for (unsigned i = 0; i < line_count; i++)
+    {
+        const unsigned line_id{ game.entities.spawn(Entity::DamageLine) };
+        const auto line_ang{ initial_angle + (angle_diff * static_cast<float>(i)) };
+        const auto offset{ sector_offset + rl::Vector2{ cos(line_ang), sin(line_ang) } * sector_details.line_offset };
+        slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
+        auto comps{ game.components.by_id(line_id) };
+        comps.get<se::Pos>() = source_pos;
+        auto& combat{ comps.get<Combat>() };
+        combat.hitbox = se::BBox{ sm::Line{ source_pos, sector_details.radius, line_ang }, offset };
+        combat.damage = details.damage;
+        comps.get<Parent>().id = sector_id;
+    }
 }
 } // namespace

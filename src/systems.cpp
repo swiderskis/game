@@ -188,8 +188,8 @@ void Game::destroy_entities()
 
 void Game::player_attack()
 {
-    auto comps = components.by_id(player_id);
-    auto& attack_cooldown = comps.get<Combat>().attack_cooldown;
+    auto comps{ components.by_id(player_id) };
+    auto& attack_cooldown{ comps.get<Combat>().attack_cooldown };
     if (attack_cooldown > 0.0)
     {
         attack_cooldown -= dt();
@@ -200,8 +200,8 @@ void Game::player_attack()
         return;
     }
 
-    const auto attack = Attack::Projectile;
-    const auto attack_details = entities::attack_details(attack);
+    const auto attack{ Attack::Sector };
+    const auto attack_details{ entities::attack_details(attack) };
     sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
     comps.get<Combat>().attack_cooldown = attack_details.cooldown;
     spawn_attack(attack, player_id);

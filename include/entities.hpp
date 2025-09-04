@@ -45,9 +45,9 @@ struct ProjectileDetails
 struct SectorDetails
 {
     float radius;
-    float ang;
-    float internal_offset; // offset from sector origin point
-    float external_offset; // offset from parent entity
+    float angle;
+    float line_offset;   // offset of lines from sector origin point
+    float sector_offset; // offset from parent entity
 };
 
 struct AttackDetails
