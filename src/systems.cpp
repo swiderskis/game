@@ -1,6 +1,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
+#include "se-sprite.hpp"
 #include "seblib.hpp"
 #include "sl-log.hpp"
 #include "sprites.hpp"
@@ -9,6 +10,7 @@
 #include <cassert>
 #include <optional>
 #include <ranges>
+#include <type_traits>
 
 #ifndef NDEBUG
 #define SHOW_CBOXES
@@ -52,6 +54,8 @@ namespace
 {
 void resolve_tile_collisions(Game& game, unsigned id, se::BBox prev_cbox);
 void draw_sprite(Game& game, unsigned id);
+template <typename SpriteEnum>
+void draw_sprite_part(Game& game, unsigned id);
 } // namespace
 
 void Game::poll_inputs()
@@ -68,7 +72,7 @@ void Game::poll_inputs()
 void Game::render()
 {
     const auto player_pos = components.get<se::Pos>(player_id);
-    camera.SetTarget(player_pos + (rl::Vector2{ se::SPRITE_SIZE, se::SPRITE_SIZE } / 2));
+    camera.SetTarget(player_pos + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2));
     camera.BeginMode();
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
@@ -402,18 +406,33 @@ void resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
 
 void draw_sprite(Game& game, const unsigned id)
 {
-    const auto pos = game.components.get<se::Pos>(id);
-    const auto flags = game.components.get<Flags>(id);
-    auto& sprites = game.sprites;
-    const auto legs = sprites.sprite<SpriteLegs>(id);
-    const auto legs_frame = sprites.current_frame<SpriteLegs>(id);
-    const auto y_offset = (legs_frame % 2 == 0 ? 0.0 : sprites::alternate_frame_y_offset(legs));
-    const rl::Vector2 offset{ 0.0, static_cast<float>(y_offset) };
-    const auto flipped = flags.is_enabled(Flags::FLIPPED);
-    sprites.draw_part<SpriteBase>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteHead>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteArms>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
-    sprites.draw_part<SpriteLegs>(game.texture_sheet, pos, id, game.dt(), flipped);
-    sprites.draw_part<SpriteExtra>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+    draw_sprite_part<SpriteBase>(game, id);
+    draw_sprite_part<SpriteHead>(game, id);
+    draw_sprite_part<SpriteArms>(game, id);
+    draw_sprite_part<SpriteLegs>(game, id);
+    draw_sprite_part<SpriteExtra>(game, id);
+}
+
+template <typename SpriteEnum>
+void draw_sprite_part(Game& game, const unsigned id)
+{
+    const auto pos{ game.components.get<se::Pos>(id) };
+    const auto flags{ game.components.get<Flags>(id) };
+    auto& sprites{ game.sprites };
+    const auto flipped{ flags.is_enabled(Flags::FLIPPED) };
+    if constexpr (std::is_same_v<SpriteEnum, SpriteLegs>)
+    {
+        sprites.draw_part<SpriteEnum>(game.texture_sheet, pos, id, game.dt(), flipped);
+    }
+    else
+    {
+        const auto sprite_size{ game.sprites.details<SpriteEnum>(id).size };
+        const float x_offset{ (flipped ? sprites::flipped_x_offset(sprite_size) : 0.0F) };
+        const auto legs{ sprites.sprite<SpriteLegs>(id) };
+        const auto legs_frame{ sprites.current_frame<SpriteLegs>(id) };
+        const float y_offset{ (legs_frame % 2 == 0 ? 0.0F : sprites::alternate_frame_y_offset(legs)) };
+        const rl::Vector2 offset{ x_offset, y_offset };
+        sprites.draw_part<SpriteEnum>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+    }
 }
 } // namespace
