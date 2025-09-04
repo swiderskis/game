@@ -10,8 +10,6 @@
 
 namespace seb_engine
 {
-inline constexpr float SPRITE_SIZE = 32.0;
-
 namespace rl = raylib;
 
 struct SpriteDetails
@@ -41,11 +39,11 @@ class SpritePart
     unsigned m_current_frame = 0;
     float m_frame_duration = 0.0;
 
-    static SpriteDetailsLookup<SpriteEnum> s_details_lookup;
-
     [[nodiscard]] rl::Rectangle rect(bool flipped) const;
 
 public:
+    static SpriteDetailsLookup<SpriteEnum> s_details;
+
     SpritePart() = default;
     explicit SpritePart(SpriteEnum sprite);
 
@@ -57,7 +55,6 @@ public:
     void movement_set(SpriteEnum sprite);
     void unset();
     void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
-    [[nodiscard]] rl::Vector2 render_pos(rl::Vector2 pos, bool flipped) const;
 };
 
 template <typename... SpriteEnums>
@@ -97,6 +94,8 @@ public:
     template <typename SpriteEnum>
     [[nodiscard]] unsigned current_frame(unsigned id) const;
     void unset(unsigned id);
+    template <typename SpriteEnum>
+    [[nodiscard]] SpriteDetails details(unsigned id) const;
 };
 
 template <typename... SpriteEnums>
@@ -134,7 +133,7 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 rl::Rectangle SpritePart<SpriteEnum>::rect(const bool flipped) const
 {
-    const auto details = s_details_lookup.get(m_sprite);
+    const auto details = s_details.get(m_sprite);
     const auto pos = rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
     const auto size = rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
 
@@ -156,7 +155,7 @@ void SpritePart<SpriteEnum>::set(const SpriteEnum sprite)
         return;
     }
 
-    const auto details = s_details_lookup.get(sprite);
+    const auto details = s_details.get(sprite);
     m_sprite = sprite;
     m_current_frame = 0;
     m_frame_update_dt = details.frame_duration;
@@ -182,7 +181,7 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 void SpritePart<SpriteEnum>::check_update_frame(const float dt)
 {
-    const auto details = s_details_lookup.get(m_sprite);
+    const auto details = s_details.get(m_sprite);
     if (m_frame_duration == 0.0)
     {
         return;
@@ -220,7 +219,7 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 void SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite)
 {
-    if (s_details_lookup.get(m_sprite).allow_movement_override)
+    if (s_details.get(m_sprite).allow_movement_override)
     {
         set(sprite);
     }
@@ -240,21 +239,8 @@ void SpritePart<SpriteEnum>::draw(rl::Texture const& texture_sheet,
                                   const float dt,
                                   const bool flipped)
 {
-    texture_sheet.Draw(rect(flipped), render_pos(pos, flipped));
+    texture_sheet.Draw(rect(flipped), pos);
     check_update_frame(dt);
-}
-
-template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
-rl::Vector2 SpritePart<SpriteEnum>::render_pos(const rl::Vector2 pos, const bool flipped) const
-{
-    const auto details = s_details_lookup.get(m_sprite);
-    // sprite draw pos needs to be offset if it is wider than default sprite size and the sprite is flipped
-    const float x_offset = (details.size.x - SPRITE_SIZE) * flipped;
-    const rl::Vector2 render_pos{ pos - rl::Vector2{ x_offset, 0.0 } };
-    slog::log(slog::TRC, "Render pos ({}, {})", render_pos.x, render_pos.y);
-
-    return render_pos;
 }
 
 template <typename... SpriteEnums>
@@ -362,6 +348,17 @@ void Sprites<SpriteEnums...>::unset(const unsigned id)
 {
     slog::log(slog::TRC, "Unsetting sprite parts for entity id {}", id);
     (part_mut<SpriteEnums>(id).unset(), ...);
+}
+
+template <typename... SpriteEnums>
+    requires(sl::Enumerable<SpriteEnums>, ...)
+template <typename SpriteEnum>
+SpriteDetails Sprites<SpriteEnums...>::details(unsigned id) const
+{
+    const auto sprite_part{ part<SpriteEnum>(id) };
+    const auto sprite{ sprite_part.sprite() };
+
+    return sprite_part.s_details.get(sprite);
 }
 
 template <typename... SpriteEnums>

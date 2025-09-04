@@ -2,7 +2,6 @@
 
 #include "components.hpp"
 #include "entities.hpp"
-#include "se-sprite.hpp"
 #include "seblib.hpp"
 #include "sl-extern.hpp"
 #include "sl-log.hpp"
@@ -161,7 +160,7 @@ float Game::dt() const
 
 rl::Vector2 Game::get_mouse_pos() const
 {
-    return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2(se::SPRITE_SIZE, se::SPRITE_SIZE) / 2;
+    return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2;
 }
 
 void Game::destroy_entity(const unsigned id)
@@ -233,7 +232,7 @@ void Game::spawn_attack(const Attack attack, const unsigned parent_id)
         const float angle_diff = sector_details.ang / static_cast<float>(damage_lines - 1.0);
         slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
         const auto ext_offset = rl::Vector2{ cos(angle), sin(angle) } * sector_details.external_offset
-                                + rl::Vector2{ se::SPRITE_SIZE / 2, se::SPRITE_SIZE / 2 };
+                                + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2);
         const unsigned sector_id = entities.spawn(Entity::Sector);
         auto comps = components.by_id(sector_id);
         comps.get<Combat>().lifespan = details.lifespan;

@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+inline constexpr float SPRITE_SIZE{ 32.0 };
+
 enum class SpriteBase : int8_t
 {
     None = -1,
@@ -61,6 +63,7 @@ namespace sprites
 {
 void lookup_set_movement_sprites(Sprites& sprites, unsigned id, Entity entity, raylib::Vector2 vel);
 [[nodiscard]] float alternate_frame_y_offset(SpriteLegs legs);
+[[nodiscard]] float flipped_x_offset(raylib::Vector2 sprite_size);
 } // namespace sprites
 
 #endif

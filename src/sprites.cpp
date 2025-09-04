@@ -27,17 +27,17 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteBase>::get(SpriteBase sprite)
     case SpriteBase::PlayerIdle:
         return {
             .pos = { 128.0, 32.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     case SpriteBase::Projectile:
         return {
             .pos = { 128.0, 224.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     case SpriteBase::EnemyDuck:
         return {
             .pos = { 128.0, 256.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     } // NOLINTEND(*magic-numbers)
 
@@ -57,7 +57,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteHead>::get(SpriteHead sprite)
     case SpriteHead::PlayerIdle:
         return {
             .pos = { 128.0, 0.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     } // NOLINTEND(*magic-numbers)
 
@@ -77,17 +77,17 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteArms>::get(SpriteArms sprite)
     case SpriteArms::PlayerIdle:
         return {
             .pos = { 128.0, 64.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     case SpriteArms::PlayerJump:
         return {
             .pos = { 160.0, 64.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     case SpriteArms::PlayerAttack:
         return {
             .pos = { 192.0, 64.0 },
-            .size = { 2 * se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { 2 * SPRITE_SIZE, SPRITE_SIZE },
             .frame_duration = 0.3,
             .allow_movement_override = false,
         };
@@ -109,21 +109,21 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteLegs>::get(SpriteLegs sprite)
     case SpriteLegs::PlayerIdle:
         return {
             .pos = { 128.0, 96.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
             .frames = 2,
             .frame_duration = 0.5,
         };
     case SpriteLegs::PlayerWalk:
         return {
             .pos = { 128.0, 128.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
             .frames = 4,
             .frame_duration = 0.16,
         };
     case SpriteLegs::PlayerJump:
         return {
             .pos = { 128.0, 96.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
         };
     } // NOLINTEND(*magic-numbers)
 
@@ -143,14 +143,14 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite)
     case SpriteExtra::PlayerScarfWalk:
         return {
             .pos = { 128.0, 160.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
             .frames = 4,
             .frame_duration = 0.16,
         };
     case SpriteExtra::PlayerScarfFall:
         return {
             .pos = { 128.0, 192.0 },
-            .size = { se::SPRITE_SIZE, se::SPRITE_SIZE },
+            .size = { SPRITE_SIZE, SPRITE_SIZE },
             .frames = 4,
             .frame_duration = 0.1,
         };
@@ -200,6 +200,11 @@ float alternate_frame_y_offset(const SpriteLegs legs)
     } // NOLINTEND(*magic-numbers)
 
     std::unreachable();
+}
+
+float flipped_x_offset(const rl::Vector2 sprite_size)
+{
+    return SPRITE_SIZE - sprite_size.x;
 }
 } // namespace sprites
 
