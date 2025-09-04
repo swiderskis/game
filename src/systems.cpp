@@ -420,7 +420,7 @@ void draw_sprite_part(Game& game, const unsigned id)
     const auto flags{ game.components.get<Flags>(id) };
     auto& sprites{ game.sprites };
     const auto flipped{ flags.is_enabled(Flags::FLIPPED) };
-    if (std::is_same_v<SpriteEnum, SpriteLegs>)
+    if constexpr (std::is_same_v<SpriteEnum, SpriteLegs>)
     {
         sprites.draw_part<SpriteEnum>(game.texture_sheet, pos, id, game.dt(), flipped);
     }
