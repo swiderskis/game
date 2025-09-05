@@ -23,7 +23,7 @@ namespace sui = seb_engine::ui;
 inline constexpr unsigned TARGET_FPS = 60;
 
 inline constexpr float LINE_ANGLE_SPACING = 5.0;
-inline constexpr float PROJECTILE_SIZE = 4.0;
+inline constexpr float PROJECTILE_RADIUS = 4.0;
 
 inline constexpr sl::SimpleVec2 PLAYER_CBOX_SIZE{ 20.0, 29.0 };
 inline constexpr sl::SimpleVec2 PLAYER_CBOX_OFFSET{ 6.0, 3.0 };
@@ -165,7 +165,7 @@ float Game::dt() const
 
 rl::Vector2 Game::get_mouse_pos() const
 {
-    return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2;
+    return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - SPRITE_SIZE / 2;
 }
 
 void Game::destroy_entity(const unsigned id)
@@ -290,14 +290,13 @@ void spawn_projectile(Game& game, const rl::Vector2 source_pos, const rl::Vector
     const auto vel{ rl::Vector2{ cos(angle), sin(angle) } * proj_details.speed };
     const unsigned id{ game.entities.spawn(Entity::Projectile) };
     auto comps{ game.components.by_id(id) };
-    comps.get<se::Pos>()
-        = source_pos + rl::Vector2{ (SPRITE_SIZE / 2) - PROJECTILE_SIZE, (SPRITE_SIZE / 2) - PROJECTILE_SIZE };
+    comps.get<se::Pos>() = source_pos + (SPRITE_SIZE / 2) - rl::Vector2{ PROJECTILE_RADIUS, PROJECTILE_RADIUS };
     comps.get<se::Vel>() = vel;
-    comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
+    comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_RADIUS } };
     game.sprites.set(id, SpriteBase::Projectile);
     auto& combat{ comps.get<Combat>() };
     combat.lifespan = details.lifespan;
-    combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_SIZE } };
+    combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_RADIUS } };
     combat.damage = details.damage;
 }
 
@@ -329,7 +328,7 @@ void spawn_sector_lines(Game& game,
     const float angle_diff{ sector_details.angle / static_cast<float>(line_count - 1.0) };
     slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
     const auto sector_offset{ (rl::Vector2{ cos(angle), sin(angle) } * sector_details.sector_offset)
-                              + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2) };
+                              + (SPRITE_SIZE / 2) };
     for (unsigned i = 0; i < line_count; i++)
     {
         const unsigned line_id{ game.entities.spawn(Entity::DamageLine) };

@@ -72,7 +72,7 @@ void Game::poll_inputs()
 void Game::render()
 {
     const auto player_pos = components.get<se::Pos>(player_id);
-    camera.SetTarget(player_pos + (rl::Vector2{ SPRITE_SIZE, SPRITE_SIZE } / 2));
+    camera.SetTarget(player_pos + (SPRITE_SIZE / 2));
     camera.BeginMode();
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
