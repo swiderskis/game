@@ -3,6 +3,7 @@
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seb-engine.hpp"
+#include "seblib.hpp"
 #include "sl-log.hpp"
 
 #include <ranges>
@@ -11,6 +12,7 @@
 namespace seb_engine
 {
 namespace rl = raylib;
+namespace sl = seblib;
 
 struct SpriteDetails
 {

@@ -2,6 +2,7 @@
 
 #include "entities.hpp"
 #include "se-sprite.hpp"
+#include "tiles.hpp"
 
 #include <utility>
 
@@ -172,7 +173,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite)
     case SpriteTile::TileBrick:
         return {
             .pos = { 0.0, 0.0 },
-            .size = { TILE_SIZE, TILE_SIZE },
+            .size = TILE_SIZE,
         };
     } // NOLINTEND(*magic-numbers)
 
