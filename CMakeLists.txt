@@ -19,6 +19,7 @@ add_executable(
     src/main.cpp
     src/sprites.cpp
     src/systems.cpp
+    src/tiles.cpp
 )
 
 if(NOT WIN32)
@@ -79,6 +80,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
         src/hot-reload.cpp
         src/sprites.cpp
         src/systems.cpp
+        src/tiles.cpp
     )
 
     if(NOT WIN32)

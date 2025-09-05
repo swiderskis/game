@@ -2,20 +2,16 @@
 #define SEB_ENGINE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seblib.hpp"
 
 #include <cstddef>
 
 namespace seb_engine
 {
 namespace rl = raylib;
-namespace sl = seblib;
 
-inline constexpr unsigned MAX_ENTITIES = 1024;
+inline constexpr unsigned MAX_ENTITIES{ 1024 };
 
-inline constexpr float TILE_SIZE = 16.0;
-
-inline constexpr sl::SimpleVec2 TILE_CBOX_SIZE{ TILE_SIZE, TILE_SIZE };
+inline constexpr float COORD_SIZE{ 16.0 };
 
 struct Coords
 {

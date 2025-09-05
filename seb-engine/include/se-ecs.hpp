@@ -130,6 +130,20 @@ public:
     };
 };
 
+struct TileDetails
+{
+    rl::Vector2 cbox_size;
+};
+
+// register tile details by specialising this template
+template <typename TileEnum>
+    requires sl::Enumerable<TileEnum>
+struct TileDetailsLookup
+
+{
+    static TileDetails get(TileEnum);
+};
+
 // assumes TileEnum has a "no tile" value of -1
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
@@ -139,12 +153,16 @@ class World
     Sprites<SpriteEnum> m_sprites{ Width * Height };
 
     [[nodiscard]] TileEnum at(Coords coords) const;
+    [[nodiscard]] TileEnum at(size_t id) const;
     [[nodiscard]] TileEnum& at_mut(Coords coords);
+    [[nodiscard]] TileEnum& at_mut(size_t id);
     [[nodiscard]] Coords coords_from_id(size_t id) const;
     [[nodiscard]] size_t id_from_coords(Coords coords) const;
     [[nodiscard]] BBox cbox(size_t id) const;
 
 public:
+    static TileDetailsLookup<TileEnum> s_details;
+
     void spawn(Coords coords, TileEnum tile, SpriteEnum sprite);
     void draw(rl::Texture const& texture_sheet, float dt);
     [[nodiscard]] std::vector<TileEnum> const& tiles() const;
@@ -312,12 +330,26 @@ TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) con
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const size_t id) const
+{
+    return at(coords_from_id(id));
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords)
 {
     assert(coords.x <= Width);
     assert(coords.y <= Height);
 
     return m_tiles[coords.y + (Height * coords.x)];
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const size_t id)
+{
+    return at_mut(coords_from_id(id));
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
@@ -341,9 +373,10 @@ template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
 {
-    const auto coords = coords_from_id(id);
+    const auto coords{ coords_from_id(id) };
+    const auto cbox_size{ s_details.get(at(id)).cbox_size };
 
-    return BBox{ rl::Rectangle{ coords, TILE_CBOX_SIZE }, rl::Vector2{ 0.0, 0.0 } };
+    return BBox{ rl::Rectangle{ coords, cbox_size }, rl::Vector2{ 0.0, 0.0 } };
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
@@ -390,8 +423,7 @@ void World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const
     {
         if (tile != static_cast<TileEnum>(-1))
         {
-            const auto coords = coords_from_id(id);
-            rl::Rectangle{ coords, TILE_CBOX_SIZE }.DrawLines(::RED);
+            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox }.DrawLines(::RED);
         }
     }
 }
