@@ -10,6 +10,10 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 add_executable(
     game
     src/main.cpp
@@ -56,7 +60,7 @@ target_link_libraries(game PRIVATE seblib)
 target_link_libraries(game PRIVATE seb-engine)
 
 # https://stackoverflow.com/questions/14089284/copy-all-dlls-that-an-executable-links-to-to-the-executable-directory/73550650#73550650
-if (WIN32)
+if(WIN32)
   add_custom_command(
     TARGET game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:game> $<TARGET_FILE_DIR:game>
