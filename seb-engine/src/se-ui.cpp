@@ -6,6 +6,10 @@ namespace seb_engine::ui
 {
 namespace sl = seblib;
 
+PercentSize::PercentSize(const unsigned width, const unsigned height) : width(width), height(height)
+{
+}
+
 TextAbsSize::TextAbsSize(const unsigned size) : size(size)
 {
 }

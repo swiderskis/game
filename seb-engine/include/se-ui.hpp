@@ -20,6 +20,8 @@ struct PercentSize
 {
     unsigned width{ 100 };  // NOLINT(*magic-numbers)
     unsigned height{ 100 }; // NOLINT(*magic-numbers)
+
+    explicit PercentSize(unsigned width, unsigned height);
 };
 
 struct TextAbsSize
