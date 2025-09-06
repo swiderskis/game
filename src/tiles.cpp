@@ -1,6 +1,5 @@
 #include "tiles.hpp"
 
-#include "entities.hpp"
 #include "se-ecs.hpp"
 
 namespace se = seb_engine;

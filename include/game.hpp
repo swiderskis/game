@@ -9,6 +9,7 @@
 #include "seblib.hpp"
 #include "settings.hpp"
 #include "sprites.hpp"
+#include "tiles.hpp"
 
 static constexpr auto WINDOW_TITLE{ "Game Title" };
 #ifndef TEXTURES
