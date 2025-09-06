@@ -11,6 +11,13 @@
 #include "sprites.hpp"
 #include "tiles.hpp"
 
+#ifndef NDEBUG
+#define SHOW_CBOXES
+#undef SHOW_CBOXES
+#define SHOW_HITBOXES
+#undef SHOW_HITBOXES
+#endif
+
 static constexpr auto WINDOW_TITLE{ "Game Title" };
 #ifndef TEXTURES
 static constexpr auto TEXTURE_SHEET{ "assets/texture-sheet.png" };
@@ -69,7 +76,7 @@ struct Game
 
     // systems
     auto poll_inputs() -> void;
-    auto render() -> void;
+    auto render_sprites() -> void;
     auto set_player_vel() -> void;
     auto resolve_collisions() -> void;
     auto destroy_entities() -> void;
@@ -82,6 +89,15 @@ struct Game
     auto check_pause_game() -> void;
     auto ui_click_action() -> void;
     auto set_flipped() -> void;
+    auto render_damage_lines() -> void;
+
+#ifdef SHOW_CBOXES
+    auto render_cboxes() -> void;
+#endif
+
+#ifdef SHOW_HITBOXES
+    auto render_hitboxes() -> void;
+#endif
 };
 
 #endif

@@ -99,7 +99,18 @@ auto Game::run() -> void
     // render
     window.BeginDrawing();
     window.ClearBackground(::SKYBLUE);
-    render();
+    camera.SetTarget(components.get<se::Pos>(player_id) + (SPRITE_SIZE / 2));
+    camera.BeginMode();
+    render_damage_lines();
+    render_sprites();
+#ifdef SHOW_CBOXES
+    render_cboxes();
+#endif
+#ifdef SHOW_HITBOXES
+    render_hitboxes();
+#endif
+
+    camera.EndMode();
     render_ui();
     window.EndDrawing();
 
@@ -239,7 +250,7 @@ SLHR_EXPORT auto run(Game& game) -> void
 
 SLHR_EXPORT auto check_reload_lib() -> bool
 {
-    return rl::Keyboard::IsKeyPressed(KEY_R);
+    return rl::Keyboard::IsKeyPressed(::KEY_R);
 }
 #endif
 
