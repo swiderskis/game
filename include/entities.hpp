@@ -18,13 +18,6 @@ enum class Entity : uint8_t
     DamageLine,
 };
 
-enum class Tile : uint8_t
-{
-    None = 0,
-
-    Brick,
-};
-
 enum class Attack : uint8_t
 {
     Melee,
