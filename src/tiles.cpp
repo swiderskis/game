@@ -6,7 +6,7 @@
 namespace se = seb_engine;
 
 template <>
-se::TileDetails se::TileDetailsLookup<Tile>::get(Tile tile)
+auto se::TileDetailsLookup<Tile>::get(const Tile tile) -> se::TileDetails
 {
     switch (tile)
     { // NOLINTBEGIN(*magic-numbers)

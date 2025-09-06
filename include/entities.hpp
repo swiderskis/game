@@ -66,7 +66,7 @@ enum class Enemy : uint8_t
 
 namespace entities
 {
-AttackDetails attack_details(Attack attack);
+auto attack_details(Attack attack) -> AttackDetails;
 } // namespace entities
 
 #endif

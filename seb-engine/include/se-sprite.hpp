@@ -17,9 +17,9 @@ struct SpriteDetails
 {
     rl::Vector2 pos;
     rl::Vector2 size;
-    unsigned frames = 1;
-    float frame_duration = 0.0;
-    bool allow_movement_override = true;
+    unsigned frames{ 1 };
+    float frame_duration{ 0.0 };
+    bool allow_movement_override{ true };
 };
 
 // register sprite details by specialising this template
@@ -27,7 +27,7 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 struct SpriteDetailsLookup
 {
-    static SpriteDetails get(SpriteEnum);
+    static auto get(SpriteEnum) -> SpriteDetails;
 };
 
 // assumes SpriteEnum has a "no sprite" value of -1
@@ -35,27 +35,28 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 class SpritePart
 {
-    SpriteEnum m_sprite = (SpriteEnum)-1;
-    float m_frame_update_dt = 0.0;
-    unsigned m_current_frame = 0;
-    float m_frame_duration = 0.0;
-
-    [[nodiscard]] rl::Rectangle rect(bool flipped) const;
-
 public:
     static SpriteDetailsLookup<SpriteEnum> s_details;
 
     SpritePart() = default;
     explicit SpritePart(SpriteEnum sprite);
 
-    void set(SpriteEnum sprite);
-    void set(SpriteEnum sprite, float frame_duration);
-    void check_update_frame(float dt);
-    [[nodiscard]] SpriteEnum sprite() const;
-    [[nodiscard]] unsigned current_frame() const;
-    void movement_set(SpriteEnum sprite);
-    void unset();
-    void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
+    auto set(SpriteEnum sprite) -> void;
+    auto set(SpriteEnum sprite, float frame_duration) -> void;
+    auto check_update_frame(float dt) -> void;
+    [[nodiscard]] auto sprite() const -> SpriteEnum;
+    [[nodiscard]] auto current_frame() const -> unsigned;
+    auto movement_set(SpriteEnum sprite) -> void;
+    auto unset() -> void;
+    auto draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped) -> void;
+
+private:
+    SpriteEnum m_sprite{ static_cast<SpriteEnum>(-1) };
+    float m_frame_update_dt{ 0.0 };
+    unsigned m_current_frame{ 0 };
+    float m_frame_duration{ 0.0 };
+
+    [[nodiscard]] auto rect(bool flipped) const -> rl::Rectangle;
 };
 
 template <size_t MaxEntities, typename... SpriteEnums>
@@ -66,56 +67,56 @@ template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 class Sprites
 {
-    std::vector<std::tuple<SpritePart<SpriteEnums>...>> m_sprites{ MaxEntities };
-
-    template <typename SpriteEnum>
-    [[nodiscard]] rl::Vector2 render_pos(rl::Vector2 pos, unsigned id, bool flipped) const;
-    template <typename SpriteEnum>
-    [[nodiscard]] SpritePart<SpriteEnum>& part_mut(unsigned id);
-    template <typename SpriteEnum>
-    [[nodiscard]] SpritePart<SpriteEnum> const& part(unsigned id) const;
-
 public:
     Sprites() = default;
 
-    void draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped);
-    void draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped);
+    auto draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped) -> void;
+    auto draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped) -> void;
     template <typename SpriteEnum>
-    void draw_part(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped);
+    auto draw_part(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped) -> void;
     template <typename SpriteEnum>
-    void set(unsigned id, SpriteEnum sprite);
+    auto set(unsigned id, SpriteEnum sprite) -> void;
     template <typename SpriteEnum>
-    void set(unsigned id, SpriteEnum sprite, float duration);
+    auto set(unsigned id, SpriteEnum sprite, float duration) -> void;
     template <typename SpriteEnum>
-    void movement_set(unsigned id, SpriteEnum sprite);
-    [[nodiscard]] EntitySprites<MaxEntities, SpriteEnums...> by_id(unsigned id);
+    auto movement_set(unsigned id, SpriteEnum sprite) -> void;
+    [[nodiscard]] auto by_id(unsigned id) -> EntitySprites<MaxEntities, SpriteEnums...>;
     template <typename SpriteEnum>
-    [[nodiscard]] SpriteEnum sprite(unsigned id) const;
+    [[nodiscard]] auto sprite(unsigned id) const -> SpriteEnum;
     template <typename SpriteEnum>
-    [[nodiscard]] unsigned current_frame(unsigned id) const;
-    void unset(unsigned id);
+    [[nodiscard]] auto current_frame(unsigned id) const -> unsigned;
+    auto unset(unsigned id) -> void;
     template <typename SpriteEnum>
-    [[nodiscard]] SpriteDetails details(unsigned id) const;
+    [[nodiscard]] auto details(unsigned id) const -> SpriteDetails;
+
+private:
+    std::vector<std::tuple<SpritePart<SpriteEnums>...>> m_sprites{ MaxEntities };
+
+    template <typename SpriteEnum>
+    [[nodiscard]] auto part_mut(unsigned id) -> SpritePart<SpriteEnum>&;
+    template <typename SpriteEnum>
+    [[nodiscard]] auto part(unsigned id) const -> SpritePart<SpriteEnum> const&;
 };
 
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 class EntitySprites
 {
-    Sprites<MaxEntities, SpriteEnums...>* m_sprites;
-    unsigned m_id;
-
-    EntitySprites(Sprites<MaxEntities, SpriteEnums...>* sprites, unsigned id);
-
-    friend class Sprites<MaxEntities, SpriteEnums...>;
-
 public:
     EntitySprites() = delete;
 
     template <typename SpriteEnum>
-    [[maybe_unused]] EntitySprites<MaxEntities, SpriteEnums...>& set(SpriteEnum sprite);
+    [[maybe_unused]] auto set(SpriteEnum sprite) -> EntitySprites<MaxEntities, SpriteEnums...>&;
     template <typename SpriteEnum>
-    [[maybe_unused]] EntitySprites<MaxEntities, SpriteEnums...>& movement_set(SpriteEnum sprite);
+    [[maybe_unused]] auto movement_set(SpriteEnum sprite) -> EntitySprites<MaxEntities, SpriteEnums...>&;
+
+    friend class Sprites<MaxEntities, SpriteEnums...>;
+
+private:
+    Sprites<MaxEntities, SpriteEnums...>* m_sprites;
+    unsigned m_id;
+
+    EntitySprites(Sprites<MaxEntities, SpriteEnums...>* sprites, unsigned id);
 };
 } // namespace seb_engine
 
@@ -131,31 +132,20 @@ namespace slog = seblib::log;
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-rl::Rectangle SpritePart<SpriteEnum>::rect(const bool flipped) const
-{
-    const auto details = s_details.get(m_sprite);
-    const auto pos = rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos;
-    const auto size = rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size;
-
-    return { pos, size };
-}
-
-template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
 SpritePart<SpriteEnum>::SpritePart(const SpriteEnum sprite) : m_sprite(sprite)
 {
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::set(const SpriteEnum sprite)
+auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite) -> void
 {
     if (m_sprite == sprite)
     {
         return;
     }
 
-    const auto details = s_details.get(sprite);
+    const auto details{ s_details.get(sprite) };
     m_sprite = sprite;
     m_current_frame = 0;
     m_frame_update_dt = details.frame_duration;
@@ -164,60 +154,56 @@ void SpritePart<SpriteEnum>::set(const SpriteEnum sprite)
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::set(const SpriteEnum sprite, const float frame_duration)
+auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite, const float frame_duration) -> void
 {
-    if (m_sprite == sprite)
+    if (m_sprite != sprite)
     {
-        return;
+        m_sprite = sprite;
+        m_current_frame = 0;
+        m_frame_update_dt = frame_duration;
+        m_frame_duration = frame_duration;
     }
-
-    m_sprite = sprite;
-    m_current_frame = 0;
-    m_frame_update_dt = frame_duration;
-    m_frame_duration = frame_duration;
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::check_update_frame(const float dt)
+auto SpritePart<SpriteEnum>::check_update_frame(const float dt) -> void
 {
-    const auto details = s_details.get(m_sprite);
+    const auto details{ s_details.get(m_sprite) };
     if (m_frame_duration == 0.0)
     {
         return;
     }
 
     m_frame_update_dt -= dt;
-    if (m_frame_update_dt > 0.0)
+    if (m_frame_update_dt <= 0.0)
     {
-        return;
-    }
-
-    m_frame_update_dt = m_frame_duration;
-    m_current_frame += 1;
-    if (m_current_frame == details.frames)
-    {
-        unset();
+        m_frame_update_dt = m_frame_duration;
+        m_current_frame += 1;
+        if (m_current_frame == details.frames)
+        {
+            unset();
+        }
     }
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-SpriteEnum SpritePart<SpriteEnum>::sprite() const
+auto SpritePart<SpriteEnum>::sprite() const -> SpriteEnum
 {
     return m_sprite;
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-unsigned SpritePart<SpriteEnum>::current_frame() const
+auto SpritePart<SpriteEnum>::current_frame() const -> unsigned
 {
     return m_current_frame;
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite)
+auto SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite) -> void
 {
     if (s_details.get(m_sprite).allow_movement_override)
     {
@@ -227,44 +213,39 @@ void SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite)
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::unset()
+auto SpritePart<SpriteEnum>::unset() -> void
 {
-    set((SpriteEnum)-1);
+    set(static_cast<SpriteEnum>(-1));
 }
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-void SpritePart<SpriteEnum>::draw(rl::Texture const& texture_sheet,
+auto SpritePart<SpriteEnum>::draw(rl::Texture const& texture_sheet,
                                   const rl::Vector2 pos,
                                   const float dt,
-                                  const bool flipped)
+                                  const bool flipped) -> void
 {
     texture_sheet.Draw(rect(flipped), pos);
     check_update_frame(dt);
 }
 
-template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-SpritePart<SpriteEnum>& Sprites<MaxEntities, SpriteEnums...>::part_mut(const unsigned id)
+    requires sl::Enumerable<SpriteEnum>
+auto SpritePart<SpriteEnum>::rect(const bool flipped) const -> rl::Rectangle
 {
-    return std::get<SpritePart<SpriteEnum>>(m_sprites[id]);
+    const auto details{ s_details.get(m_sprite) };
+    const auto pos{ rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos };
+    const auto size{ rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size };
+
+    return { pos, size };
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
-template <typename SpriteEnum>
-SpritePart<SpriteEnum> const& Sprites<MaxEntities, SpriteEnums...>::part(const unsigned id) const
-{
-    return std::get<SpritePart<SpriteEnum>>(m_sprites[id]);
-}
-
-template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
-void Sprites<MaxEntities, SpriteEnums...>::draw_all(rl::Texture const& texture_sheet,
+auto Sprites<MaxEntities, SpriteEnums...>::draw_all(rl::Texture const& texture_sheet,
                                                     const rl::Vector2 pos,
                                                     const float dt,
-                                                    const bool flipped)
+                                                    const bool flipped) -> void
 {
     for (const auto [id, sprite] : m_sprites | std::views::enumerate)
     {
@@ -274,8 +255,9 @@ void Sprites<MaxEntities, SpriteEnums...>::draw_all(rl::Texture const& texture_s
 
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
-void Sprites<MaxEntities, SpriteEnums...>::draw(
+auto Sprites<MaxEntities, SpriteEnums...>::draw(
     rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped)
+    -> void
 {
     (draw_part<SpriteEnums>(texture_sheet, pos, id, dt, flipped), ...);
 }
@@ -283,8 +265,9 @@ void Sprites<MaxEntities, SpriteEnums...>::draw(
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-void Sprites<MaxEntities, SpriteEnums...>::draw_part(
+auto Sprites<MaxEntities, SpriteEnums...>::draw_part(
     rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped)
+    -> void
 {
     part_mut<SpriteEnum>(id).draw(texture_sheet, pos, dt, flipped);
 }
@@ -292,7 +275,7 @@ void Sprites<MaxEntities, SpriteEnums...>::draw_part(
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-void Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite)
+auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite) -> void
 {
     part_mut<SpriteEnum>(id).set(sprite);
 }
@@ -300,7 +283,7 @@ void Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEn
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-void Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite, const float duration)
+auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite, const float duration) -> void
 {
     part_mut<SpriteEnum>(id).set(sprite, duration);
 }
@@ -308,14 +291,14 @@ void Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEn
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-void Sprites<MaxEntities, SpriteEnums...>::movement_set(const unsigned id, const SpriteEnum sprite)
+auto Sprites<MaxEntities, SpriteEnums...>::movement_set(const unsigned id, const SpriteEnum sprite) -> void
 {
     part_mut<SpriteEnum>(id).movement_set(sprite);
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
-EntitySprites<MaxEntities, SpriteEnums...> Sprites<MaxEntities, SpriteEnums...>::by_id(const unsigned id)
+auto Sprites<MaxEntities, SpriteEnums...>::by_id(const unsigned id) -> EntitySprites<MaxEntities, SpriteEnums...>
 {
     return { this, id };
 }
@@ -323,7 +306,7 @@ EntitySprites<MaxEntities, SpriteEnums...> Sprites<MaxEntities, SpriteEnums...>:
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-SpriteEnum Sprites<MaxEntities, SpriteEnums...>::sprite(const unsigned id) const
+auto Sprites<MaxEntities, SpriteEnums...>::sprite(const unsigned id) const -> SpriteEnum
 {
     return part<SpriteEnum>(id).sprite();
 }
@@ -331,14 +314,14 @@ SpriteEnum Sprites<MaxEntities, SpriteEnums...>::sprite(const unsigned id) const
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-unsigned Sprites<MaxEntities, SpriteEnums...>::current_frame(const unsigned id) const
+auto Sprites<MaxEntities, SpriteEnums...>::current_frame(const unsigned id) const -> unsigned
 {
     return part<SpriteEnum>(id).current_frame();
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
-void Sprites<MaxEntities, SpriteEnums...>::unset(const unsigned id)
+auto Sprites<MaxEntities, SpriteEnums...>::unset(const unsigned id) -> void
 {
     slog::log(slog::TRC, "Unsetting sprite parts for entity id {}", id);
     (part_mut<SpriteEnums>(id).unset(), ...);
@@ -347,12 +330,28 @@ void Sprites<MaxEntities, SpriteEnums...>::unset(const unsigned id)
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-SpriteDetails Sprites<MaxEntities, SpriteEnums...>::details(unsigned id) const
+auto Sprites<MaxEntities, SpriteEnums...>::details(unsigned id) const -> SpriteDetails
 {
     const auto sprite_part{ part<SpriteEnum>(id) };
     const auto sprite{ sprite_part.sprite() };
 
     return sprite_part.s_details.get(sprite);
+}
+
+template <size_t MaxEntities, typename... SpriteEnums>
+    requires(sl::Enumerable<SpriteEnums>, ...)
+template <typename SpriteEnum>
+auto Sprites<MaxEntities, SpriteEnums...>::part_mut(const unsigned id) -> SpritePart<SpriteEnum>&
+{
+    return std::get<SpritePart<SpriteEnum>>(m_sprites[id]);
+}
+
+template <size_t MaxEntities, typename... SpriteEnums>
+    requires(sl::Enumerable<SpriteEnums>, ...)
+template <typename SpriteEnum>
+auto Sprites<MaxEntities, SpriteEnums...>::part(const unsigned id) const -> SpritePart<SpriteEnum> const&
+{
+    return std::get<SpritePart<SpriteEnum>>(m_sprites[id]);
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
@@ -365,7 +364,8 @@ EntitySprites<MaxEntities, SpriteEnums...>::EntitySprites(Sprites<MaxEntities, S
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-EntitySprites<MaxEntities, SpriteEnums...>& EntitySprites<MaxEntities, SpriteEnums...>::set(const SpriteEnum sprite)
+auto EntitySprites<MaxEntities, SpriteEnums...>::set(const SpriteEnum sprite)
+    -> EntitySprites<MaxEntities, SpriteEnums...>&
 {
     m_sprites->set(m_id, sprite);
 
@@ -375,8 +375,8 @@ EntitySprites<MaxEntities, SpriteEnums...>& EntitySprites<MaxEntities, SpriteEnu
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
-EntitySprites<MaxEntities, SpriteEnums...>& EntitySprites<MaxEntities, SpriteEnums...>::movement_set(
-    const SpriteEnum sprite)
+auto EntitySprites<MaxEntities, SpriteEnums...>::movement_set(const SpriteEnum sprite)
+    -> EntitySprites<MaxEntities, SpriteEnums...>&
 {
     m_sprites->movement_set(m_id, sprite);
 

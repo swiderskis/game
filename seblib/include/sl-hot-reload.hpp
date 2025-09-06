@@ -19,10 +19,10 @@
 
 namespace seblib::hot_reload
 {
-SLHR_MODULE load_lib(const char* so_name, bool exit_on_fail);
+auto load_lib(const char* so_name, bool exit_on_fail) -> SLHR_MODULE;
 template <typename F>
-F get_func_address(SLHR_MODULE lib, const char* func_name, bool exit_on_fail);
-void free_lib(SLHR_MODULE lib);
+auto get_func_address(SLHR_MODULE lib, const char* func_name, bool exit_on_fail) -> F;
+auto free_lib(SLHR_MODULE lib) -> void;
 } // namespace seblib::hot_reload
 
 /****************************
@@ -36,12 +36,12 @@ namespace seblib::hot_reload
 namespace slog = seblib::log;
 
 template <typename F>
-F get_func_address(SLHR_MODULE lib, const char* func_name, const bool exit_on_fail)
+auto get_func_address(SLHR_MODULE lib, const char* func_name, const bool exit_on_fail) -> F
 {
 #if defined(_WIN32) || defined(__CYGWIN__)
-    SLHR_PROC func_address = GetProcAddress(lib, func_name);
+    SLHR_PROC func_address{ GetProcAddress(lib, func_name) };
 #else
-    SLHR_PROC func_address = dlsym(lib, func_name);
+    SLHR_PROC func_address{ dlsym(lib, func_name) };
 #endif
     if (func_address == nullptr)
     {

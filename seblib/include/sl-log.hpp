@@ -30,8 +30,8 @@ struct log // NOLINT(readability-identifier-naming)
 
 template <typename... Args>
 log(Level level, std::format_string<Args...> fmt, Args&&... args) -> log<Args...>;
-int level();
-void set_level(Level level);
+auto level() -> int;
+auto set_level(Level level) -> void;
 } // namespace seblib::log
 
 /****************************
@@ -44,7 +44,7 @@ namespace seblib::log
 {
 namespace fs = std::filesystem;
 
-inline constexpr unsigned FILENAME_WIDTH = 16;
+inline constexpr unsigned FILENAME_WIDTH{ 16 };
 
 template <typename... Args>
 log<Args...>::log(const Level lvl,
@@ -77,7 +77,7 @@ log<Args...>::log(const Level lvl,
         break;
     }
 
-    const auto filename = fs::path(loc.file_name()).filename().string();
+    const auto filename{ fs::path(loc.file_name()).filename().string() };
     std::clog << "[" << level_text << "] " << std::format("{:>{}}", filename, FILENAME_WIDTH)
               << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
 

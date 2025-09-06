@@ -11,17 +11,17 @@ namespace
 using namespace seblib::log;
 
 // this will need to change if doing any multithreading
-Level log_level = static_cast<Level>(SLOG_LVL); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+Level log_level{ static_cast<Level>(SLOG_LVL) }; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace
 
 namespace seblib::log
 {
-int level()
+auto level() -> int
 {
     return log_level;
 }
 
-void set_level(const Level level)
+auto set_level(const Level level) -> void
 {
     log_level = level;
 }

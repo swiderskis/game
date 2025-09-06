@@ -10,14 +10,14 @@ using ReloadTextureSheetFunc = void (*)(Game*);
 
 struct GameFuncs
 {
-    RunFunc run = nullptr;
-    CheckReloadLibFunc check_reload_lib = nullptr;
-    ReloadTextureSheetFunc reload_texture_sheet = nullptr;
+    RunFunc run{ nullptr };
+    CheckReloadLibFunc check_reload_lib{ nullptr };
+    ReloadTextureSheetFunc reload_texture_sheet{ nullptr };
 };
 
 namespace hot_reload
 {
-GameFuncs reload_lib();
+auto reload_lib() -> GameFuncs;
 } // namespace hot_reload
 #endif
 

@@ -4,18 +4,17 @@
 
 #include <utility>
 
-namespace rl = raylib;
 namespace sm = seblib::math;
 
 namespace entities
 {
-AttackDetails attack_details(const Attack attack)
+auto attack_details(const Attack attack) -> AttackDetails
 {
     switch (attack)
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
         return {
-            .details = MeleeDetails{ rl::Vector2{ 18.0, 7.0 } },
+            .details = MeleeDetails{ { 18.0, 7.0 } },
             .lifespan = 0.3,
             .delay = 0.0,
             .cooldown = 0.5,

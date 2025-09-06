@@ -14,22 +14,22 @@ namespace rl = raylib;
 template <typename P>
 struct Point
 {
-    float x = 0.0;
-    float y = 0.0;
+    float x{ 0.0 };
+    float y{ 0.0 };
 
     Point() = default;
     constexpr Point(float x, float y);
 
     operator rl::Vector2() const; // NOLINT(hicpp-explicit-conversions)
-    Point& operator=(rl::Vector2 vec);
-    Point operator+(rl::Vector2 vec) const;
-    Point operator-(rl::Vector2 vec) const;
-    Point operator*(float f) const;
-    Point operator/(float f) const;
-    Point& operator+=(rl::Vector2 vec);
-    Point& operator-=(rl::Vector2 vec);
-    Point& operator*=(float f);
-    Point& operator/=(float f);
+    [[maybe_unused]] auto operator=(rl::Vector2 vec) -> Point&;
+    [[nodiscard]] auto operator+(rl::Vector2 vec) const -> Point;
+    [[nodiscard]] auto operator-(rl::Vector2 vec) const -> Point;
+    [[nodiscard]] auto operator*(float f) const -> Point;
+    [[nodiscard]] auto operator/(float f) const -> Point;
+    [[maybe_unused]] auto operator+=(rl::Vector2 vec) -> Point&;
+    [[maybe_unused]] auto operator-=(rl::Vector2 vec) -> Point&;
+    [[maybe_unused]] auto operator*=(float f) -> Point&;
+    [[maybe_unused]] auto operator/=(float f) -> Point&;
 };
 
 // taken from https://en.cppreference.com/w/cpp/utility/variant/visit
@@ -70,7 +70,7 @@ Point<P>::operator rl::Vector2() const
 }
 
 template <typename P>
-Point<P>& Point<P>::operator=(const rl::Vector2 vec)
+auto Point<P>::operator=(const rl::Vector2 vec) -> Point<P>&
 {
     x = vec.x;
     y = vec.y;
@@ -79,31 +79,31 @@ Point<P>& Point<P>::operator=(const rl::Vector2 vec)
 }
 
 template <typename P>
-Point<P> Point<P>::operator+(const rl::Vector2 vec) const
+auto Point<P>::operator+(const rl::Vector2 vec) const -> Point<P>
 {
-    return Point<P>{ x + vec.x, y + vec.y };
+    return { x + vec.x, y + vec.y };
 }
 
 template <typename P>
-Point<P> Point<P>::operator-(const rl::Vector2 vec) const
+auto Point<P>::operator-(const rl::Vector2 vec) const -> Point<P>
 {
-    return Point<P>{ x - vec.x, y - vec.y };
+    return { x - vec.x, y - vec.y };
 }
 
 template <typename P>
-Point<P> Point<P>::operator*(const float f) const
+auto Point<P>::operator*(const float f) const -> Point<P>
 {
-    return Point<P>{ x * f, y * f };
+    return { x * f, y * f };
 }
 
 template <typename P>
-Point<P> Point<P>::operator/(const float f) const
+auto Point<P>::operator/(const float f) const -> Point<P>
 {
-    return Point<P>{ x / f, x / f };
+    return { x / f, x / f };
 }
 
 template <typename P>
-Point<P>& Point<P>::operator+=(const rl::Vector2 vec)
+auto Point<P>::operator+=(const rl::Vector2 vec) -> Point<P>&
 {
     x += vec.x;
     y += vec.y;
@@ -112,7 +112,7 @@ Point<P>& Point<P>::operator+=(const rl::Vector2 vec)
 }
 
 template <typename P>
-Point<P>& Point<P>::operator-=(const rl::Vector2 vec)
+auto Point<P>::operator-=(const rl::Vector2 vec) -> Point<P>&
 {
     x -= vec.x;
     y -= vec.y;
@@ -121,7 +121,7 @@ Point<P>& Point<P>::operator-=(const rl::Vector2 vec)
 }
 
 template <typename P>
-Point<P>& Point<P>::operator*=(const float f)
+auto Point<P>::operator*=(const float f) -> Point<P>&
 {
     x *= f;
     y *= f;
@@ -130,7 +130,7 @@ Point<P>& Point<P>::operator*=(const float f)
 }
 
 template <typename P>
-Point<P>& Point<P>::operator/=(const float f)
+auto Point<P>::operator/=(const float f) -> Point<P>&
 {
     x /= f;
     y /= f;

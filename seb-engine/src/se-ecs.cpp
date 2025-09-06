@@ -23,7 +23,7 @@ BBox::BBox(const BBoxVariant bbox, const rl::Vector2 offset) : m_bbox{ bbox }, m
         [this](sm::Line bbox) { sync(rl::Vector2{ bbox.pos1.x, bbox.pos1.y }); });
 }
 
-void BBox::sync(rl::Vector2 pos)
+auto BBox::sync(rl::Vector2 pos) -> void
 {
     sl::match(
         m_bbox,
@@ -57,7 +57,7 @@ void BBox::sync(rl::Vector2 pos)
         });
 }
 
-bool BBox::collides(const BBox other_bbox) const
+auto BBox::collides(const BBox other_bbox) const -> bool
 {
     return sl::match(m_bbox,
                      [other_bbox](const auto bbox)
@@ -68,7 +68,7 @@ bool BBox::collides(const BBox other_bbox) const
                      });
 }
 
-bool BBox::x_overlaps(const BBox other_bbox) const
+auto BBox::x_overlaps(const BBox other_bbox) const -> bool
 {
     // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bbox.index() == RECTANGLE);
@@ -96,7 +96,7 @@ bool BBox::x_overlaps(const BBox other_bbox) const
         });
 }
 
-bool BBox::y_overlaps(const BBox other_bbox) const
+auto BBox::y_overlaps(const BBox other_bbox) const -> bool
 {
     // method currently should only be used for tile collision correction, tiles always have rectangular bboxes
     assert(m_bbox.index() == RECTANGLE);
@@ -124,7 +124,7 @@ bool BBox::y_overlaps(const BBox other_bbox) const
         });
 }
 
-BBoxVariant BBox::val() const
+auto BBox::val() const -> BBoxVariant
 {
     return m_bbox;
 }

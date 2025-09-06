@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <optional>
 
-inline constexpr unsigned FLAG_COUNT = 8;
+inline constexpr size_t FLAG_COUNT{ 8 };
 
 struct Flags
 {
@@ -19,28 +19,27 @@ struct Flags
         FLIPPED,
     };
 
-    [[nodiscard]] bool is_enabled(Flag flag) const;
-    void set(Flag flag, bool val);
+    [[nodiscard]] auto is_enabled(Flag flag) const -> bool;
+    auto set(Flag flag, bool val) -> void;
 };
 
 struct Health
-
 {
-    std::optional<int> max = std::nullopt;
-    int current = 0;
+    std::optional<int> max;
+    int current{ 0 };
 
-    void set(int health);
-    [[nodiscard]] float percentage() const;
+    auto set(int health) -> void;
+    [[nodiscard]] auto percentage() const -> float;
 };
 
 struct Combat
 {
     seb_engine::BBox hitbox;
     Health health;
-    std::optional<float> lifespan = std::nullopt;
-    float attack_cooldown = 0.0;
-    float invuln_time = 0.0;
-    unsigned damage = 0;
+    std::optional<float> lifespan;
+    float attack_cooldown{ 0.0 };
+    float invuln_time{ 0.0 };
+    unsigned damage{ 0 };
 };
 
 struct Parent

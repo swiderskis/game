@@ -12,11 +12,11 @@ namespace rl = raylib;
 struct Circle
 {
     rl::Vector2 pos;
-    float radius = 0.0;
+    float radius{ 0.0 };
 
     Circle(rl::Vector2 pos, float radius);
 
-    void draw_lines(rl::Color color) const;
+    auto draw_lines(rl::Color color) const -> void;
 };
 
 struct Line
@@ -28,21 +28,21 @@ struct Line
     Line(rl::Vector2 pos1, rl::Vector2 pos2);
     Line(rl::Vector2 pos, float len, float angle);
 
-    [[nodiscard]] float len() const;
-    void draw_line(rl::Color color) const;
+    [[nodiscard]] auto len() const -> float;
+    auto draw_line(rl::Color color) const -> void;
 };
 
-constexpr float degrees_to_radians(float ang);
-constexpr float radians_to_degrees(float ang);
-bool check_collision(rl::Rectangle rectangle1, rl::Rectangle rectangle2);
-bool check_collision(rl::Rectangle rectangle, Circle circle);
-bool check_collision(rl::Rectangle rectangle, Line line);
-bool check_collision(Circle circle, rl::Rectangle rectangle);
-bool check_collision(Circle circle1, Circle circle2);
-bool check_collision(Circle circle, Line line);
-bool check_collision(Line line, rl::Rectangle rectangle);
-bool check_collision(Line line, Circle circle);
-bool check_collision(Line line1, Line line2);
+constexpr auto degrees_to_radians(float ang) -> float;
+constexpr auto radians_to_degrees(float ang) -> float;
+auto check_collision(rl::Rectangle rectangle1, rl::Rectangle rectangle2) -> bool;
+auto check_collision(rl::Rectangle rectangle, Circle circle) -> bool;
+auto check_collision(rl::Rectangle rectangle, Line line) -> bool;
+auto check_collision(Circle circle, rl::Rectangle rectangle) -> bool;
+auto check_collision(Circle circle1, Circle circle2) -> bool;
+auto check_collision(Circle circle, Line line) -> bool;
+auto check_collision(Line line, rl::Rectangle rectangle) -> bool;
+auto check_collision(Line line, Circle circle) -> bool;
+auto check_collision(Line line1, Line line2) -> bool;
 } // namespace seblib::math
 
 /****************************
@@ -53,12 +53,12 @@ bool check_collision(Line line1, Line line2);
 
 namespace seblib::math
 {
-constexpr float degrees_to_radians(const float ang)
+constexpr auto degrees_to_radians(const float ang) -> float
 {
     return static_cast<float>(ang * std::numbers::pi / 180.0); // NOLINT(*magic-numbers)
 }
 
-constexpr float radians_to_degrees(const float ang)
+constexpr auto radians_to_degrees(const float ang) -> float
 {
     return static_cast<float>(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
 }
