@@ -11,12 +11,12 @@ namespace se = seb_engine;
 
 namespace
 {
-void lookup_set_walk_sprites(Sprites& sprites, unsigned id, Entity entity);
-void lookup_set_idle_sprites(Sprites& sprites, unsigned id, Entity entity);
+auto lookup_set_walk_sprites(Sprites& sprites, unsigned id, Entity entity) -> void;
+auto lookup_set_idle_sprites(Sprites& sprites, unsigned id, Entity entity) -> void;
 } // namespace
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteBase>::get(SpriteBase sprite)
+auto se::SpriteDetailsLookup<SpriteBase>::get(SpriteBase sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -46,7 +46,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteBase>::get(SpriteBase sprite)
 }
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteHead>::get(SpriteHead sprite)
+auto se::SpriteDetailsLookup<SpriteHead>::get(SpriteHead sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -66,7 +66,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteHead>::get(SpriteHead sprite)
 }
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteArms>::get(SpriteArms sprite)
+auto se::SpriteDetailsLookup<SpriteArms>::get(SpriteArms sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -98,7 +98,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteArms>::get(SpriteArms sprite)
 }
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteLegs>::get(SpriteLegs sprite)
+auto se::SpriteDetailsLookup<SpriteLegs>::get(SpriteLegs sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -132,7 +132,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteLegs>::get(SpriteLegs sprite)
 }
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite)
+auto se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -161,7 +161,7 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite)
 }
 
 template <>
-se::SpriteDetails se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite)
+auto se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite) -> se::SpriteDetails
 {
     switch (sprite)
     { // NOLINTBEGIN(*magic-numbers)
@@ -182,13 +182,14 @@ se::SpriteDetails se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite)
 
 namespace sprites
 {
-void lookup_set_movement_sprites(Sprites& sprites, const unsigned id, const Entity entity, const rl::Vector2 vel)
+auto lookup_set_movement_sprites(Sprites& sprites, const unsigned id, const Entity entity, const rl::Vector2 vel)
+    -> void
 {
     vel != rl::Vector2(0.0, 0.0) ? lookup_set_walk_sprites(sprites, id, entity)
                                  : lookup_set_idle_sprites(sprites, id, entity);
 }
 
-float alternate_frame_y_offset(const SpriteLegs legs)
+auto alternate_frame_y_offset(const SpriteLegs legs) -> float
 {
     switch (legs)
     { // NOLINTBEGIN(*magic-numbers)
@@ -203,7 +204,7 @@ float alternate_frame_y_offset(const SpriteLegs legs)
     std::unreachable();
 }
 
-float flipped_x_offset(const rl::Vector2 sprite_size)
+auto flipped_x_offset(const rl::Vector2 sprite_size) -> float
 {
     return SPRITE_LEN - sprite_size.x;
 }
@@ -211,7 +212,7 @@ float flipped_x_offset(const rl::Vector2 sprite_size)
 
 namespace
 {
-void lookup_set_walk_sprites(Sprites& sprites, const unsigned id, const Entity entity)
+auto lookup_set_walk_sprites(Sprites& sprites, const unsigned id, const Entity entity) -> void
 {
     switch (entity)
     {
@@ -228,7 +229,7 @@ void lookup_set_walk_sprites(Sprites& sprites, const unsigned id, const Entity e
     }
 }
 
-void lookup_set_idle_sprites(Sprites& sprites, const unsigned id, const Entity entity)
+auto lookup_set_idle_sprites(Sprites& sprites, const unsigned id, const Entity entity) -> void
 {
     switch (entity)
     {

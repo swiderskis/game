@@ -26,29 +26,32 @@ template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
 class Entities
 {
+public:
+    [[nodiscard]] auto spawn(Entity type) -> unsigned;
+    auto queue_destroy(unsigned id) -> void;
+    [[nodiscard]] auto entities() const -> std::vector<Entity> const&;
+    [[nodiscard]] auto entity_ids(Entity entity) -> std::vector<unsigned> const&;
+    [[nodiscard]] auto to_destroy() const -> std::vector<unsigned> const&;
+    auto destroy_entity(unsigned id) -> void;
+    auto clear_to_destroy() -> void;
+
+private:
     std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(-1) };
     std::unordered_map<Entity, std::vector<unsigned>> m_entity_ids;
     std::vector<unsigned> m_to_destroy;
-
-public:
-    [[nodiscard]] unsigned spawn(Entity type);
-    void queue_destroy(unsigned id);
-    [[nodiscard]] std::vector<Entity> const& entities() const;
-    [[nodiscard]] std::vector<unsigned> const& entity_ids(Entity entity);
-    [[nodiscard]] std::vector<unsigned> const& to_destroy() const;
-    void destroy_entity(unsigned id);
-    void clear_to_destroy();
 };
 
-struct IComp
+class IComp
 {
+public:
     IComp(const IComp&) = default;
     IComp(IComp&&) = default;
-    IComp& operator=(const IComp&) = default;
-    IComp& operator=(IComp&&) = default;
     virtual ~IComp() = default;
 
-    virtual void reset(unsigned id) = 0;
+    virtual auto reset(unsigned id) -> void = 0;
+
+    auto operator=(const IComp&) -> IComp& = default;
+    auto operator=(IComp&&) -> IComp& = default;
 
 protected:
     IComp() = default;
@@ -57,11 +60,12 @@ protected:
 template <size_t MaxEntities, typename Comp>
 class Component : public IComp
 {
-    std::vector<Comp> m_vec{ MaxEntities, Comp{} };
-
 public:
-    void reset(unsigned id) override;
-    std::vector<Comp>& vec();
+    auto reset(unsigned id) -> void override;
+    auto vec() -> std::vector<Comp>&;
+
+private:
+    std::vector<Comp> m_vec{ MaxEntities, Comp{} };
 };
 
 template <size_t MaxEntities>
@@ -70,61 +74,60 @@ class EntityComponents;
 template <size_t MaxEntities>
 class Components
 {
-    std::unordered_map<size_t, std::unique_ptr<IComp>> m_components;
-
-    template <typename Comp>
-    Component<MaxEntities, Comp>* component();
-
-    friend class EntityComponents<MaxEntities>;
-
 public:
     Components();
 
-    void uninit_destroyed_entity(unsigned id);
-    [[nodiscard]] EntityComponents<MaxEntities> by_id(unsigned id);
+    auto uninit_destroyed_entity(unsigned id) -> void;
+    [[nodiscard]] auto by_id(unsigned id) -> EntityComponents<MaxEntities>;
     template <typename Comp>
-    [[maybe_unused]] Component<MaxEntities, Comp>* reg();
+    [[maybe_unused]] auto reg() -> Component<MaxEntities, Comp>*;
     template <typename Comp>
-    [[nodiscard]] std::vector<Comp>& vec();
+    [[nodiscard]] auto vec() -> std::vector<Comp>&;
     template <typename Comp>
-    [[nodiscard]] Comp& get(unsigned id);
-    void move(float dt);
+    [[nodiscard]] auto get(unsigned id) -> Comp&;
+    auto move(float dt) -> void;
+
+    friend class EntityComponents<MaxEntities>;
+
+private:
+    std::unordered_map<size_t, std::unique_ptr<IComp>> m_components;
+
+    template <typename Comp>
+    auto component() -> Component<MaxEntities, Comp>*;
 };
 
 template <size_t MaxEntities>
 class EntityComponents
 {
-    Components<MaxEntities>* m_components;
-    unsigned m_id;
-
-    EntityComponents(Components<MaxEntities>& components, unsigned id);
-
-    friend class Components<MaxEntities>;
-
 public:
     EntityComponents() = delete;
 
     template <typename Comp>
-    [[nodiscard]] Comp& get();
+    [[nodiscard]] auto get() -> Comp&;
+
+    friend class Components<MaxEntities>;
+
+private:
+    Components<MaxEntities>* m_components;
+    unsigned m_id;
+
+    EntityComponents(Components<MaxEntities>& components, unsigned id);
 };
 
 using BBoxVariant = std::variant<rl::Rectangle, sm::Circle, sm::Line>;
 
 class BBox
 {
-    BBoxVariant m_bbox{ rl::Rectangle{} };
-    rl::Vector2 m_offset{ 0.0, 0.0 };
-
 public:
     BBox() = default;
     explicit BBox(BBoxVariant bbox);
     explicit BBox(BBoxVariant bbox, rl::Vector2 offset);
 
-    void sync(rl::Vector2 pos);
-    [[nodiscard]] bool collides(BBox other_bbox) const;
-    [[nodiscard]] bool x_overlaps(BBox other_bbox) const;
-    [[nodiscard]] bool y_overlaps(BBox other_bbox) const;
-    [[nodiscard]] BBoxVariant val() const;
+    auto sync(rl::Vector2 pos) -> void;
+    [[nodiscard]] auto collides(BBox other_bbox) const -> bool;
+    [[nodiscard]] auto x_overlaps(BBox other_bbox) const -> bool;
+    [[nodiscard]] auto y_overlaps(BBox other_bbox) const -> bool;
+    [[nodiscard]] auto val() const -> BBoxVariant;
 
     enum Variant : uint8_t
     {
@@ -132,6 +135,10 @@ public:
         CIRCLE = 1,
         LINE = 2,
     };
+
+private:
+    BBoxVariant m_bbox;
+    rl::Vector2 m_offset;
 };
 
 struct TileDetails
@@ -143,9 +150,8 @@ struct TileDetails
 template <typename TileEnum>
     requires sl::Enumerable<TileEnum>
 struct TileDetailsLookup
-
 {
-    static TileDetails get(TileEnum);
+    static auto get(TileEnum) -> TileDetails;
 };
 
 // assumes TileEnum has a "no tile" value of -1
@@ -153,25 +159,26 @@ template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 class World
 {
-    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
-    Sprites<Width * Height, SpriteEnum> m_sprites;
-
-    [[nodiscard]] TileEnum at(Coords coords) const;
-    [[nodiscard]] TileEnum at(size_t id) const;
-    [[nodiscard]] TileEnum& at_mut(Coords coords);
-    [[nodiscard]] TileEnum& at_mut(size_t id);
-    [[nodiscard]] Coords coords_from_id(size_t id) const;
-    [[nodiscard]] size_t id_from_coords(Coords coords) const;
-    [[nodiscard]] BBox cbox(size_t id) const;
-
 public:
     static TileDetailsLookup<TileEnum> s_details;
 
-    void spawn(Coords coords, TileEnum tile, SpriteEnum sprite);
-    void draw(rl::Texture const& texture_sheet, float dt);
-    [[nodiscard]] std::vector<TileEnum> const& tiles() const;
+    auto spawn(Coords coords, TileEnum tile, SpriteEnum sprite) -> void;
+    auto draw(rl::Texture const& texture_sheet, float dt) -> void;
+    [[nodiscard]] auto tiles() const -> std::vector<TileEnum> const&;
     [[nodiscard]] auto cboxes() const;
-    void draw_cboxes() const;
+    auto draw_cboxes() const -> void;
+
+private:
+    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
+    Sprites<Width * Height, SpriteEnum> m_sprites;
+
+    [[nodiscard]] auto at(Coords coords) const -> TileEnum;
+    [[nodiscard]] auto at(size_t id) const -> TileEnum;
+    [[nodiscard]] auto at_mut(Coords coords) -> TileEnum&;
+    [[nodiscard]] auto at_mut(size_t id) -> TileEnum&;
+    [[nodiscard]] auto coords_from_id(size_t id) const -> Coords;
+    [[nodiscard]] auto id_from_coords(Coords coords) const -> size_t;
+    [[nodiscard]] auto cbox(size_t id) const -> BBox;
 };
 
 struct Position;
@@ -193,9 +200,9 @@ namespace slog = seblib::log;
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-unsigned Entities<MaxEntities, Entity>::spawn(const Entity type)
+auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> unsigned
 {
-    unsigned entity_id = 0;
+    unsigned entity_id{ 0 };
     for (const auto [id, entity] : m_entities | std::views::enumerate)
     {
         if (entity != static_cast<Entity>(-1))
@@ -220,14 +227,14 @@ unsigned Entities<MaxEntities, Entity>::spawn(const Entity type)
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<MaxEntities, Entity>::queue_destroy(const unsigned id)
+auto Entities<MaxEntities, Entity>::queue_destroy(const unsigned id) -> void
 {
     m_to_destroy.push_back(id);
 }
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<Entity> const& Entities<MaxEntities, Entity>::entities() const
+auto Entities<MaxEntities, Entity>::entities() const -> std::vector<Entity> const&
 {
     return m_entities;
 }
@@ -235,23 +242,23 @@ std::vector<Entity> const& Entities<MaxEntities, Entity>::entities() const
 // not marked const to allow creating vector for key if it doesn't exist already
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<unsigned> const& Entities<MaxEntities, Entity>::entity_ids(const Entity entity)
+auto Entities<MaxEntities, Entity>::entity_ids(const Entity entity) -> std::vector<unsigned> const&
 {
     return m_entity_ids[entity];
 }
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<unsigned> const& Entities<MaxEntities, Entity>::to_destroy() const
+auto Entities<MaxEntities, Entity>::to_destroy() const -> std::vector<unsigned> const&
 {
     return m_to_destroy;
 }
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<MaxEntities, Entity>::destroy_entity(const unsigned id)
+auto Entities<MaxEntities, Entity>::destroy_entity(const unsigned id) -> void
 {
-    auto& entity = m_entities[id];
+    auto& entity{ m_entities[id] };
     // possible for an entity to be queued for destruction multiple times
     if (entity == static_cast<Entity>(-1))
     {
@@ -259,33 +266,87 @@ void Entities<MaxEntities, Entity>::destroy_entity(const unsigned id)
     }
 
     slog::log(slog::TRC, "Destroying entity type {} with id {}", static_cast<int>(entity), id);
-    auto& entity_ids = m_entity_ids[entity];
+    auto& entity_ids{ m_entity_ids[entity] };
     entity_ids.erase(std::ranges::find(entity_ids, id));
     entity = static_cast<Entity>(-1);
 }
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<MaxEntities, Entity>::clear_to_destroy()
+auto Entities<MaxEntities, Entity>::clear_to_destroy() -> void
 {
     m_to_destroy.clear();
 }
 
 template <size_t MaxEntities, typename Comp>
-void Component<MaxEntities, Comp>::reset(const unsigned id)
+auto Component<MaxEntities, Comp>::reset(const unsigned id) -> void
 {
     m_vec[id] = Comp{};
 }
 
 template <size_t MaxEntities, typename Comp>
-std::vector<Comp>& Component<MaxEntities, Comp>::vec()
+auto Component<MaxEntities, Comp>::vec() -> std::vector<Comp>&
 {
     return m_vec;
 }
 
 template <size_t MaxEntities>
+Components<MaxEntities>::Components()
+{
+    reg<Pos>();
+    reg<Vel>();
+    reg<BBox>();
+}
+
+template <size_t MaxEntities>
+auto Components<MaxEntities>::uninit_destroyed_entity(const unsigned id) -> void
+{
+    for (auto& [_, component] : m_components)
+    {
+        component->reset(id);
+    }
+}
+
+template <size_t MaxEntities>
+auto Components<MaxEntities>::by_id(const unsigned id) -> EntityComponents<MaxEntities>
+{
+    return { *this, id };
+}
+
+template <size_t MaxEntities>
 template <typename Comp>
-Component<MaxEntities, Comp>* Components<MaxEntities>::component()
+auto Components<MaxEntities>::reg() -> Component<MaxEntities, Comp>*
+{
+    m_components.emplace(typeid(Comp).hash_code(), std::make_unique<Component<MaxEntities, Comp>>());
+
+    return component<Comp>();
+}
+
+template <size_t MaxEntities>
+template <typename Comp>
+auto Components<MaxEntities>::vec() -> std::vector<Comp>&
+{
+    return component<Comp>()->vec();
+}
+
+template <size_t MaxEntities>
+template <typename Comp>
+auto Components<MaxEntities>::get(const unsigned id) -> Comp&
+{
+    return component<Comp>()->vec()[id];
+}
+
+template <size_t MaxEntities>
+auto Components<MaxEntities>::move(const float dt) -> void
+{
+    auto& pos = vec<Pos>();
+    auto& vel = vec<Vel>();
+    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
+}
+
+template <size_t MaxEntities>
+template <typename Comp>
+auto Components<MaxEntities>::component() -> Component<MaxEntities, Comp>*
 {
 #ifndef NDEBUG
     if (!m_components.contains(typeid(Comp).hash_code()))
@@ -298,57 +359,10 @@ Component<MaxEntities, Comp>* Components<MaxEntities>::component()
 }
 
 template <size_t MaxEntities>
-Components<MaxEntities>::Components()
-{
-    reg<Pos>();
-    reg<Vel>();
-    reg<BBox>();
-}
-
-template <size_t MaxEntities>
-void Components<MaxEntities>::uninit_destroyed_entity(const unsigned id)
-{
-    for (auto& [_, component] : m_components)
-    {
-        component->reset(id);
-    }
-}
-
-template <size_t MaxEntities>
-EntityComponents<MaxEntities> Components<MaxEntities>::by_id(const unsigned id)
-{
-    return { *this, id };
-}
-
-template <size_t MaxEntities>
 template <typename Comp>
-Component<MaxEntities, Comp>* Components<MaxEntities>::reg()
+auto EntityComponents<MaxEntities>::get() -> Comp&
 {
-    m_components.emplace(typeid(Comp).hash_code(), std::make_unique<Component<MaxEntities, Comp>>());
-
-    return component<Comp>();
-}
-
-template <size_t MaxEntities>
-template <typename Comp>
-std::vector<Comp>& Components<MaxEntities>::vec()
-{
-    return component<Comp>()->vec();
-}
-
-template <size_t MaxEntities>
-template <typename Comp>
-Comp& Components<MaxEntities>::get(const unsigned id)
-{
-    return component<Comp>()->vec()[id];
-}
-
-template <size_t MaxEntities>
-void Components<MaxEntities>::move(const float dt)
-{
-    auto& pos = vec<Pos>();
-    auto& vel = vec<Vel>();
-    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
+    return m_components->template component<Comp>()->vec()[m_id];
 }
 
 template <size_t MaxEntities>
@@ -357,79 +371,11 @@ EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities>& compone
 {
 }
 
-template <size_t MaxEntities>
-template <typename Comp>
-Comp& EntityComponents<MaxEntities>::get()
-{
-    return m_components->template component<Comp>()->vec()[m_id];
-}
-
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const
-{
-    assert(coords.x <= Width);
-    assert(coords.y <= Height);
-
-    return m_tiles[coords.y + (Height * coords.x)];
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-TileEnum World<TileEnum, SpriteEnum, Width, Height>::at(const size_t id) const
-{
-    return at(coords_from_id(id));
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords)
-{
-    assert(coords.x <= Width);
-    assert(coords.y <= Height);
-
-    return m_tiles[coords.y + (Height * coords.x)];
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-TileEnum& World<TileEnum, SpriteEnum, Width, Height>::at_mut(const size_t id)
-{
-    return at_mut(coords_from_id(id));
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-Coords World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) const
-{
-    const size_t x = id / Height;
-    const size_t y = id % Height;
-
-    return Coords{ x, y };
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-size_t World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) const
-{
-    return (coords.x * Height) + coords.y;
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-BBox World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const
-{
-    const auto coords{ coords_from_id(id) };
-    const auto cbox_size{ s_details.get(at(id)).cbox_size };
-
-    return BBox{ rl::Rectangle{ coords, cbox_size }, rl::Vector2{ 0.0, 0.0 } };
-}
-
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
+auto World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
                                                        const TileEnum tile,
-                                                       const SpriteEnum sprite)
+                                                       const SpriteEnum sprite) -> void
 {
     at_mut(coords) = tile;
     m_sprites.set(id_from_coords(coords), sprite);
@@ -437,7 +383,7 @@ void World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-void World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture_sheet, const float dt)
+auto World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture_sheet, const float dt) -> void
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
@@ -447,7 +393,7 @@ void World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-std::vector<TileEnum> const& World<TileEnum, SpriteEnum, Width, Height>::tiles() const
+auto World<TileEnum, SpriteEnum, Width, Height>::tiles() const -> std::vector<TileEnum> const&
 {
     return m_tiles;
 }
@@ -463,7 +409,7 @@ auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-void World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const
+auto World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const -> void
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
@@ -472,6 +418,61 @@ void World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const
             rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox }.DrawLines(::RED);
         }
     }
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const -> TileEnum
+{
+    assert(coords.x <= Width);
+    assert(coords.y <= Height);
+
+    return m_tiles[coords.y + (Height * coords.x)];
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::at(const size_t id) const -> TileEnum
+{
+    return at(coords_from_id(id));
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords) -> TileEnum&
+{
+    assert(coords.x <= Width);
+    assert(coords.y <= Height);
+
+    return m_tiles[coords.y + (Height * coords.x)];
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::at_mut(const size_t id) -> TileEnum&
+{
+    return at_mut(coords_from_id(id));
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) const -> Coords
+{
+    return Coords{ id / Height, id % Height };
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) const -> size_t
+{
+    return (coords.x * Height) + coords.y;
+}
+
+template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
+    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+auto World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const -> BBox
+{
+    return BBox{ rl::Rectangle{ coords_from_id(id), s_details.get(at(id)).cbox_size } };
 }
 } // namespace seb_engine
 

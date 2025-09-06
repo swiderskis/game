@@ -4,23 +4,23 @@
 #include <cmath>
 #include <optional>
 
-bool Flags::is_enabled(const Flag flag_enum) const
+auto Flags::is_enabled(const Flag flag_enum) const -> bool
 {
     return flag[flag_enum];
 }
 
-void Flags::set(const Flag flag_enum, const bool val)
+auto Flags::set(const Flag flag_enum, const bool val) -> void
 {
     flag[flag_enum] = val;
 }
 
-void Health::set(const int health)
+auto Health::set(const int health) -> void
 {
     current = health;
     max = health;
 }
 
-float Health::percentage() const
+auto Health::percentage() const -> float
 {
     assert(max != std::nullopt);
 

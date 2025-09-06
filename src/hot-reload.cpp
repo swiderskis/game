@@ -22,14 +22,14 @@ namespace slhr = seblib::hot_reload;
 namespace
 {
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-SLHR_MODULE lib = nullptr;
+SLHR_MODULE lib{ nullptr };
 // NOLINTBEGIN(cert-err58-cpp, cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
-std::string so_temp_name = SO_TEMP_NAME + std::to_string(rand());
+std::string so_temp_name{ SO_TEMP_NAME + std::to_string(rand()) };
 // NOLINTEND(cert-err58-cpp, cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace
 
-GameFuncs hot_reload::reload_lib()
+auto hot_reload::reload_lib() -> GameFuncs
 {
     slog::log(slog::INF, "Library file name: {}", SO_NAME);
     slhr::free_lib(lib);

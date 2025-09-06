@@ -6,11 +6,11 @@
 namespace hr = hot_reload;
 #endif
 
-int main()
+auto main() -> int
 {
     Game game;
 #ifndef NDEBUG
-    GameFuncs game_funcs = hr::reload_lib();
+    GameFuncs game_funcs{ hr::reload_lib() };
     while (!game.close && !game.window.ShouldClose())
     {
         if (game_funcs.check_reload_lib())

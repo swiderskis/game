@@ -10,37 +10,37 @@
 #include "settings.hpp"
 #include "sprites.hpp"
 
-static constexpr auto WINDOW_TITLE = "Game Title";
+static constexpr auto WINDOW_TITLE{ "Game Title" };
 #ifndef TEXTURES
-static constexpr auto TEXTURE_SHEET = "assets/texture-sheet.png";
+static constexpr auto TEXTURE_SHEET{ "assets/texture-sheet.png" };
 #else
-static constexpr auto TEXTURE_SHEET = TEXTURES;
+static constexpr auto TEXTURE_SHEET{ TEXTURES };
 #endif
 
-inline constexpr float CAMERA_ZOOM = 2.0;
+inline constexpr float CAMERA_ZOOM{ 2.0 };
 
-inline constexpr unsigned WORLD_WIDTH = 32;
-inline constexpr unsigned WORLD_HEIGHT = 16;
+inline constexpr size_t WORLD_WIDTH{ 32 };
+inline constexpr size_t WORLD_HEIGHT{ 16 };
 
 inline constexpr seblib::SimpleVec2 MELEE_OFFSET{ 32.0, 16.0 };
 inline constexpr seblib::SimpleVec2 MELEE_OFFSET_FLIPPED{ -17.0, 16.0 };
 
 struct Inputs
 {
-    bool left = false;
-    bool right = false;
-    bool up = false;
-    bool down = false;
-    bool click = false;
-    bool spawn_enemy = false;
-    bool pause = false;
+    bool left{ false };
+    bool right{ false };
+    bool up{ false };
+    bool down{ false };
+    bool click{ false };
+    bool spawn_enemy{ false };
+    bool pause{ false };
 };
 
 struct Game
 {
     raylib::Window window{ seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT, WINDOW_TITLE };
-    raylib::Camera2D camera{ raylib::Vector2(seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT) / 2,
-                             raylib::Vector2(0.0, 0.0),
+    raylib::Camera2D camera{ raylib::Vector2{ seb_engine::ui::WINDOW_WIDTH, seb_engine::ui::WINDOW_HEIGHT } / 2,
+                             raylib::Vector2{},
                              0.0,
                              CAMERA_ZOOM };
     raylib::Texture texture_sheet{ TEXTURE_SHEET };
@@ -51,36 +51,36 @@ struct Game
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
     unsigned player_id{ 0 };
-    bool paused = false;
-    bool close = false;
+    bool paused{ false };
+    bool close{ false };
 
     Game();
 
-    void run();
-    void spawn_player(seb_engine::Coords coords);
-    void spawn_enemy(Enemy enemy, seb_engine::Coords coords);
-    void spawn_tile(Tile tile, seb_engine::Coords coords);
-    [[nodiscard]] float dt() const;
-    [[nodiscard]] raylib::Vector2 get_mouse_pos() const;
-    void destroy_entity(unsigned id);
-    void spawn_attack(Attack attack, unsigned parent_id);
-    void toggle_pause();
+    auto run() -> void;
+    auto spawn_player(seb_engine::Coords coords) -> void;
+    auto spawn_enemy(Enemy enemy, seb_engine::Coords coords) -> void;
+    auto spawn_tile(Tile tile, seb_engine::Coords coords) -> void;
+    [[nodiscard]] auto dt() const -> float;
+    [[nodiscard]] auto get_mouse_pos() const -> raylib::Vector2;
+    auto destroy_entity(unsigned id) -> void;
+    auto spawn_attack(Attack attack, unsigned parent_id) -> void;
+    auto toggle_pause() -> void;
 
     // systems
-    void poll_inputs();
-    void render();
-    void set_player_vel();
-    void resolve_collisions();
-    void destroy_entities();
-    void player_attack();
-    void update_lifespans();
-    void damage_entities();
-    void sync_children();
-    void update_invuln_times();
-    void render_ui();
-    void check_pause_game();
-    void ui_click_action();
-    void set_flipped();
+    auto poll_inputs() -> void;
+    auto render() -> void;
+    auto set_player_vel() -> void;
+    auto resolve_collisions() -> void;
+    auto destroy_entities() -> void;
+    auto player_attack() -> void;
+    auto update_lifespans() -> void;
+    auto damage_entities() -> void;
+    auto sync_children() -> void;
+    auto update_invuln_times() -> void;
+    auto render_ui() -> void;
+    auto check_pause_game() -> void;
+    auto ui_click_action() -> void;
+    auto set_flipped() -> void;
 };
 
 #endif

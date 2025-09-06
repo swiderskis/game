@@ -65,9 +65,9 @@ using Sprites = seb_engine::Sprites<MAX_ENTITIES, SpriteBase, SpriteHead, Sprite
 
 namespace sprites
 {
-void lookup_set_movement_sprites(Sprites& sprites, unsigned id, Entity entity, raylib::Vector2 vel);
-[[nodiscard]] float alternate_frame_y_offset(SpriteLegs legs);
-[[nodiscard]] float flipped_x_offset(raylib::Vector2 sprite_size);
+auto lookup_set_movement_sprites(Sprites& sprites, unsigned id, Entity entity, raylib::Vector2 vel) -> void;
+[[nodiscard]] auto alternate_frame_y_offset(SpriteLegs legs) -> float;
+[[nodiscard]] auto flipped_x_offset(raylib::Vector2 sprite_size) -> float;
 } // namespace sprites
 
 #endif
