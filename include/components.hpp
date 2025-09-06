@@ -44,7 +44,7 @@ struct Combat
 
 struct Parent
 {
-    std::optional<unsigned> id;
+    std::optional<size_t> id;
 };
 
 #endif

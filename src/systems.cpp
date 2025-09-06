@@ -53,10 +53,10 @@ inline constexpr float DAMAGE_LINE_THICKNESS{ 1.33 };
 
 namespace
 {
-auto resolve_tile_collisions(Game& game, unsigned id, se::BBox prev_cbox) -> void;
-auto draw_sprite(Game& game, unsigned id) -> void;
+auto resolve_tile_collisions(Game& game, size_t id, se::BBox prev_cbox) -> void;
+auto draw_sprite(Game& game, size_t id) -> void;
 template <typename SpriteEnum>
-auto draw_sprite_part(Game& game, unsigned id) -> void;
+auto draw_sprite_part(Game& game, size_t id) -> void;
 } // namespace
 
 auto Game::poll_inputs() -> void
@@ -78,7 +78,7 @@ auto Game::render() -> void
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const unsigned id : entities.entity_ids(entity))
+        for (const auto id : entities.entity_ids(entity))
         {
             auto comps{ components.by_id(id) };
             if (entity == Entity::DamageLine)
@@ -108,7 +108,7 @@ auto Game::render() -> void
     world.draw_cboxes();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const unsigned id : entities.entity_ids(entity))
+        for (const auto id : entities.entity_ids(entity))
         {
             sl::match(
                 components.get<se::BBox>(id).val(),
@@ -134,7 +134,7 @@ auto Game::render() -> void
 #ifdef SHOW_HITBOXES
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const unsigned id : entities.entity_ids(entity))
+        for (const auto id : entities.entity_ids(entity))
         {
             sl::match(
                 components.get<Combat>(id).hitbox.val(),
@@ -170,7 +170,7 @@ auto Game::resolve_collisions() -> void
         cbox.sync(pos);
         resolve_tile_collisions(*this, id, prev_cbox);
         comps.get<Combat>().hitbox.sync(pos);
-        if (id == player_id)
+        if (static_cast<size_t>(id) == player_id)
         {
             slog::log(slog::TRC, "Player pos ({}, {})", pos.x, pos.y);
         }
@@ -179,7 +179,7 @@ auto Game::resolve_collisions() -> void
 
 auto Game::destroy_entities() -> void
 {
-    for (const unsigned id : entities.to_destroy())
+    for (const auto id : entities.to_destroy())
     {
         destroy_entity(id);
     }
@@ -230,11 +230,11 @@ auto Game::damage_entities() -> void
 {
     for (const auto entity : DAMAGING_ENTITIES)
     {
-        for (const unsigned id : entities.entity_ids(entity))
+        for (const auto id : entities.entity_ids(entity))
         {
             auto comps{ components.by_id(id) };
             const auto projectile_bbox{ comps.get<Combat>().hitbox };
-            for (const unsigned enemy_id : entities.entity_ids(Entity::Enemy))
+            for (const auto enemy_id : entities.entity_ids(Entity::Enemy))
             {
                 auto& enemy_combat_comps{ components.by_id(enemy_id).get<Combat>() };
                 const auto enemy_bbox{ enemy_combat_comps.hitbox };
@@ -352,7 +352,7 @@ auto Game::set_flipped() -> void
 
 namespace
 {
-auto resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_cbox) -> void
+auto resolve_tile_collisions(Game& game, const size_t id, const se::BBox prev_cbox) -> void
 {
     auto comps{ game.components.by_id(id) };
     const auto entity{ game.entities.entities()[id] };
@@ -405,7 +405,7 @@ auto resolve_tile_collisions(Game& game, const unsigned id, const se::BBox prev_
     }
 }
 
-auto draw_sprite(Game& game, const unsigned id) -> void
+auto draw_sprite(Game& game, const size_t id) -> void
 {
     draw_sprite_part<SpriteBase>(game, id);
     draw_sprite_part<SpriteHead>(game, id);
@@ -415,7 +415,7 @@ auto draw_sprite(Game& game, const unsigned id) -> void
 }
 
 template <typename SpriteEnum>
-auto draw_sprite_part(Game& game, const unsigned id) -> void
+auto draw_sprite_part(Game& game, const size_t id) -> void
 {
     const auto pos{ game.components.get<se::Pos>(id) };
     const auto flags{ game.components.get<Flags>(id) };

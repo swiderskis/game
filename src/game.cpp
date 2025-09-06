@@ -40,11 +40,11 @@ inline constexpr int ENEMY_HEALTH{ 100 };
 namespace
 {
 auto pause_screen(Game& game) -> sui::Screen;
-auto spawn_melee(Game& game, rl::Vector2 source_pos, unsigned parent_id) -> void;
+auto spawn_melee(Game& game, rl::Vector2 source_pos, size_t parent_id) -> void;
 auto spawn_projectile(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos) -> void;
-auto spawn_sector(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos, unsigned parent_id) -> void;
+auto spawn_sector(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos, size_t parent_id) -> void;
 auto spawn_sector_lines(
-    Game& game, unsigned line_count, rl::Vector2 source_pos, rl::Vector2 target_pos, unsigned sector_id) -> void;
+    Game& game, unsigned line_count, rl::Vector2 source_pos, rl::Vector2 target_pos, size_t sector_id) -> void;
 } // namespace
 
 Game::Game()
@@ -168,7 +168,7 @@ auto Game::get_mouse_pos() const -> rl::Vector2
     return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - SPRITE_SIZE / 2;
 }
 
-auto Game::destroy_entity(const unsigned id) -> void
+auto Game::destroy_entity(const size_t id) -> void
 {
     if (entities.entities()[id] == Entity::None)
     {
@@ -187,7 +187,7 @@ auto Game::destroy_entity(const unsigned id) -> void
     }
 }
 
-auto Game::spawn_attack(const Attack attack, const unsigned parent_id) -> void
+auto Game::spawn_attack(const Attack attack, const size_t parent_id) -> void
 {
     const auto source_pos{ components.get<se::Pos>(parent_id) };
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
@@ -267,7 +267,7 @@ auto pause_screen(Game& game) -> sui::Screen
     return screen;
 }
 
-void spawn_melee(Game& game, const rl::Vector2 source_pos, const unsigned parent_id)
+void spawn_melee(Game& game, const rl::Vector2 source_pos, const size_t parent_id)
 {
     const auto details{ entities::attack_details(Attack::Melee) };
     const auto melee_details{ std::get<MeleeDetails>(details.details) };
@@ -300,7 +300,7 @@ void spawn_projectile(Game& game, const rl::Vector2 source_pos, const rl::Vector
     combat.damage = details.damage;
 }
 
-void spawn_sector(Game& game, const rl::Vector2 source_pos, const rl::Vector2 target_pos, const unsigned parent_id)
+void spawn_sector(Game& game, const rl::Vector2 source_pos, const rl::Vector2 target_pos, const size_t parent_id)
 {
     const auto details{ entities::attack_details(Attack::Sector) };
     const auto sector_det{ std::get<SectorDetails>(details.details) };
@@ -317,7 +317,7 @@ void spawn_sector_lines(Game& game,
                         const unsigned line_count,
                         const rl::Vector2 source_pos,
                         const rl::Vector2 target_pos,
-                        const unsigned sector_id)
+                        const size_t sector_id)
 {
     const auto diff{ target_pos - source_pos };
     const auto angle{ atan2(diff.y, diff.x) };

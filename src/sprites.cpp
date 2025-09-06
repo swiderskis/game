@@ -11,8 +11,8 @@ namespace se = seb_engine;
 
 namespace
 {
-auto lookup_set_walk_sprites(Sprites& sprites, unsigned id, Entity entity) -> void;
-auto lookup_set_idle_sprites(Sprites& sprites, unsigned id, Entity entity) -> void;
+auto lookup_set_walk_sprites(Sprites& sprites, size_t id, Entity entity) -> void;
+auto lookup_set_idle_sprites(Sprites& sprites, size_t id, Entity entity) -> void;
 } // namespace
 
 template <>
@@ -182,8 +182,7 @@ auto se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite) -> se::SpriteDe
 
 namespace sprites
 {
-auto lookup_set_movement_sprites(Sprites& sprites, const unsigned id, const Entity entity, const rl::Vector2 vel)
-    -> void
+auto lookup_set_movement_sprites(Sprites& sprites, const size_t id, const Entity entity, const rl::Vector2 vel) -> void
 {
     vel != rl::Vector2(0.0, 0.0) ? lookup_set_walk_sprites(sprites, id, entity)
                                  : lookup_set_idle_sprites(sprites, id, entity);
@@ -212,7 +211,7 @@ auto flipped_x_offset(const rl::Vector2 sprite_size) -> float
 
 namespace
 {
-auto lookup_set_walk_sprites(Sprites& sprites, const unsigned id, const Entity entity) -> void
+auto lookup_set_walk_sprites(Sprites& sprites, const size_t id, const Entity entity) -> void
 {
     switch (entity)
     {
@@ -229,7 +228,7 @@ auto lookup_set_walk_sprites(Sprites& sprites, const unsigned id, const Entity e
     }
 }
 
-auto lookup_set_idle_sprites(Sprites& sprites, const unsigned id, const Entity entity) -> void
+auto lookup_set_idle_sprites(Sprites& sprites, const size_t id, const Entity entity) -> void
 {
     switch (entity)
     {
