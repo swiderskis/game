@@ -50,7 +50,7 @@ struct Game
     seb_engine::World<Tile, SpriteTile, WORLD_WIDTH, WORLD_HEIGHT> world;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
-    unsigned player_id{ 0 };
+    size_t player_id{ 0 };
     bool paused{ false };
     bool close{ false };
 
@@ -62,8 +62,8 @@ struct Game
     auto spawn_tile(Tile tile, seb_engine::Coords coords) -> void;
     [[nodiscard]] auto dt() const -> float;
     [[nodiscard]] auto get_mouse_pos() const -> raylib::Vector2;
-    auto destroy_entity(unsigned id) -> void;
-    auto spawn_attack(Attack attack, unsigned parent_id) -> void;
+    auto destroy_entity(size_t id) -> void;
+    auto spawn_attack(Attack attack, size_t parent_id) -> void;
     auto toggle_pause() -> void;
 
     // systems
