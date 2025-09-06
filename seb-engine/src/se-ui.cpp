@@ -1,32 +1,38 @@
 #include "se-ui.hpp"
 
+#include "seblib.hpp"
+
 namespace seb_engine::ui
 {
+namespace sl = seblib;
+
+TextAbsSize::TextAbsSize(const unsigned size) : size(size)
+{
+}
+
+TextPctSize::TextPctSize(const unsigned size) : size(size)
+{
+}
+
+auto TextPctSize::abs() const -> unsigned
+{
+    return static_cast<unsigned>(WINDOW_HEIGHT * (size / 100.0));
+}
+
 auto Text::width() const -> int
 {
-    return rl::MeasureText(text, m_size);
+    return rl::MeasureText(text, static_cast<int>(text_size()));
 }
 
 auto Text::draw(const rl::Vector2 pos) const -> void
 {
-    rl::DrawText(text, static_cast<int>(pos.x), static_cast<int>(pos.y), m_size, ::BLACK);
+    rl::DrawText(text, static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(text_size()), ::BLACK);
 }
 
-auto Text::set_size(const int size) -> void
+auto Text::text_size() const -> unsigned
 {
-    this->m_size = size;
-    m_is_percent_size = false;
-}
-
-auto Text::set_percent_size(const unsigned size) -> void
-{
-    this->m_size = static_cast<int>(WINDOW_HEIGHT * (size / 100.0));
-    m_is_percent_size = true;
-}
-
-auto Text::size() const -> int
-{
-    return m_size;
+    return sl::match(
+        size, [](const TextAbsSize size) { return size.size; }, [](const TextPctSize size) { return size.abs(); });
 }
 
 auto Element::set_pos(const PercentSize pos) -> void
@@ -54,7 +60,7 @@ auto Button::render() -> void
 {
     rect.Draw(color);
     const float x{ rect.x + ((rect.width - static_cast<float>(text.width())) / 2) };
-    const float y{ rect.y + ((rect.height - static_cast<float>(text.size())) / 2) };
+    const float y{ rect.y + ((rect.height - static_cast<float>(text.text_size())) / 2) };
     text.draw(rl::Vector2{ x, y });
 }
 
