@@ -4,6 +4,7 @@
 #include "entities.hpp"
 #include "se-sprite.hpp"
 #include "seblib.hpp"
+#include "settings.hpp"
 
 #include <cstdint>
 
@@ -60,7 +61,7 @@ enum class SpriteTile : int8_t
     TileBrick,
 };
 
-using Sprites = seb_engine::Sprites<SpriteBase, SpriteHead, SpriteArms, SpriteLegs, SpriteExtra>;
+using Sprites = seb_engine::Sprites<MAX_ENTITIES, SpriteBase, SpriteHead, SpriteArms, SpriteLegs, SpriteExtra>;
 
 namespace sprites
 {

@@ -4,43 +4,11 @@
 #include "sl-log.hpp"
 #include "sl-math.hpp"
 
-#include <algorithm>
 #include <cassert>
 
 namespace seb_engine
 {
 namespace sl = seblib;
-
-Components::Components()
-{
-    reg<Pos>();
-    reg<Vel>();
-    reg<BBox>();
-}
-
-void Components::uninit_destroyed_entity(const unsigned id)
-{
-    for (auto& [_, component] : m_components)
-    {
-        component->reset(id);
-    }
-}
-
-void Components::move(const float dt)
-{
-    auto& pos = vec<Pos>();
-    auto& vel = vec<Vel>();
-    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
-}
-
-EntityComponents Components::by_id(const unsigned id)
-{
-    return { *this, id };
-}
-
-EntityComponents::EntityComponents(Components& components, const unsigned id) : m_components(&components), m_id(id)
-{
-}
 
 BBox::BBox(const BBoxVariant bbox) : BBox{ bbox, rl::Vector2{} }
 {
