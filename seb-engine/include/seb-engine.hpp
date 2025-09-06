@@ -9,16 +9,12 @@ namespace seb_engine
 {
 namespace rl = raylib;
 
-inline constexpr unsigned MAX_ENTITIES{ 1024 };
-
 inline constexpr float COORD_SIZE{ 16.0 };
 
 struct Coords
 {
-    size_t x;
-    size_t y;
-
-    Coords() = delete;
+    size_t x{ 0 };
+    size_t y{ 0 };
 
     constexpr Coords(size_t x, size_t y);
 

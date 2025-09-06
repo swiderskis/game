@@ -7,6 +7,7 @@
 #include "sl-log.hpp"
 #include "sl-math.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -21,11 +22,11 @@ namespace sm = seblib::math;
 namespace sl = seblib;
 
 // assumes Entity has a "no entity" value of -1
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
 class Entities
 {
-    std::vector<Entity> m_entities{ MAX_ENTITIES, static_cast<Entity>(-1) };
+    std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(-1) };
     std::unordered_map<Entity, std::vector<unsigned>> m_entity_ids;
     std::vector<unsigned> m_to_destroy;
 
@@ -53,34 +54,36 @@ protected:
     IComp() = default;
 };
 
-template <typename Comp>
+template <size_t MaxEntities, typename Comp>
 class Component : public IComp
 {
-    std::vector<Comp> m_vec{ MAX_ENTITIES, Comp{} };
+    std::vector<Comp> m_vec{ MaxEntities, Comp{} };
 
 public:
     void reset(unsigned id) override;
     std::vector<Comp>& vec();
 };
 
+template <size_t MaxEntities>
 class EntityComponents;
 
+template <size_t MaxEntities>
 class Components
 {
     std::unordered_map<size_t, std::unique_ptr<IComp>> m_components;
 
     template <typename Comp>
-    Component<Comp>* component();
+    Component<MaxEntities, Comp>* component();
 
-    friend class EntityComponents;
+    friend class EntityComponents<MaxEntities>;
 
 public:
     Components();
 
     void uninit_destroyed_entity(unsigned id);
-    [[nodiscard]] EntityComponents by_id(unsigned id);
+    [[nodiscard]] EntityComponents<MaxEntities> by_id(unsigned id);
     template <typename Comp>
-    [[maybe_unused]] Component<Comp>* reg();
+    [[maybe_unused]] Component<MaxEntities, Comp>* reg();
     template <typename Comp>
     [[nodiscard]] std::vector<Comp>& vec();
     template <typename Comp>
@@ -88,14 +91,15 @@ public:
     void move(float dt);
 };
 
+template <size_t MaxEntities>
 class EntityComponents
 {
-    Components* m_components;
+    Components<MaxEntities>* m_components;
     unsigned m_id;
 
-    EntityComponents(Components& components, unsigned id);
+    EntityComponents(Components<MaxEntities>& components, unsigned id);
 
-    friend class Components;
+    friend class Components<MaxEntities>;
 
 public:
     EntityComponents() = delete;
@@ -150,7 +154,7 @@ template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
 class World
 {
     std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
-    Sprites<SpriteEnum> m_sprites{ Width * Height };
+    Sprites<Width * Height, SpriteEnum> m_sprites;
 
     [[nodiscard]] TileEnum at(Coords coords) const;
     [[nodiscard]] TileEnum at(size_t id) const;
@@ -187,9 +191,9 @@ namespace seb_engine
 {
 namespace slog = seblib::log;
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-unsigned Entities<Entity>::spawn(const Entity type)
+unsigned Entities<MaxEntities, Entity>::spawn(const Entity type)
 {
     unsigned entity_id = 0;
     for (const auto [id, entity] : m_entities | std::views::enumerate)
@@ -206,7 +210,7 @@ unsigned Entities<Entity>::spawn(const Entity type)
     }
 
     slog::log(slog::TRC, "Spawning entity type {} with id {}", static_cast<int>(type), entity_id);
-    if (entity_id == MAX_ENTITIES)
+    if (entity_id == MaxEntities)
     {
         slog::log(slog::WRN, "Maximum entities reached");
     }
@@ -214,38 +218,38 @@ unsigned Entities<Entity>::spawn(const Entity type)
     return entity_id;
 }
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<Entity>::queue_destroy(const unsigned id)
+void Entities<MaxEntities, Entity>::queue_destroy(const unsigned id)
 {
     m_to_destroy.push_back(id);
 }
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<Entity> const& Entities<Entity>::entities() const
+std::vector<Entity> const& Entities<MaxEntities, Entity>::entities() const
 {
     return m_entities;
 }
 
 // not marked const to allow creating vector for key if it doesn't exist already
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<unsigned> const& Entities<Entity>::entity_ids(const Entity entity)
+std::vector<unsigned> const& Entities<MaxEntities, Entity>::entity_ids(const Entity entity)
 {
     return m_entity_ids[entity];
 }
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-std::vector<unsigned> const& Entities<Entity>::to_destroy() const
+std::vector<unsigned> const& Entities<MaxEntities, Entity>::to_destroy() const
 {
     return m_to_destroy;
 }
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<Entity>::destroy_entity(const unsigned id)
+void Entities<MaxEntities, Entity>::destroy_entity(const unsigned id)
 {
     auto& entity = m_entities[id];
     // possible for an entity to be queued for destruction multiple times
@@ -260,27 +264,28 @@ void Entities<Entity>::destroy_entity(const unsigned id)
     entity = static_cast<Entity>(-1);
 }
 
-template <typename Entity>
+template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-void Entities<Entity>::clear_to_destroy()
+void Entities<MaxEntities, Entity>::clear_to_destroy()
 {
     m_to_destroy.clear();
 }
 
-template <typename Comp>
-void Component<Comp>::reset(const unsigned id)
+template <size_t MaxEntities, typename Comp>
+void Component<MaxEntities, Comp>::reset(const unsigned id)
 {
     m_vec[id] = Comp{};
 }
 
-template <typename Comp>
-std::vector<Comp>& Component<Comp>::vec()
+template <size_t MaxEntities, typename Comp>
+std::vector<Comp>& Component<MaxEntities, Comp>::vec()
 {
     return m_vec;
 }
 
+template <size_t MaxEntities>
 template <typename Comp>
-Component<Comp>* Components::component()
+Component<MaxEntities, Comp>* Components<MaxEntities>::component()
 {
 #ifndef NDEBUG
     if (!m_components.contains(typeid(Comp).hash_code()))
@@ -289,33 +294,74 @@ Component<Comp>* Components::component()
     }
 #endif
 
-    return dynamic_cast<Component<Comp>*>(m_components[typeid(Comp).hash_code()].get());
+    return dynamic_cast<Component<MaxEntities, Comp>*>(m_components[typeid(Comp).hash_code()].get());
 }
 
-template <typename Comp>
-Component<Comp>* Components::reg()
+template <size_t MaxEntities>
+Components<MaxEntities>::Components()
 {
-    m_components.emplace(typeid(Comp).hash_code(), std::make_unique<Component<Comp>>());
+    reg<Pos>();
+    reg<Vel>();
+    reg<BBox>();
+}
+
+template <size_t MaxEntities>
+void Components<MaxEntities>::uninit_destroyed_entity(const unsigned id)
+{
+    for (auto& [_, component] : m_components)
+    {
+        component->reset(id);
+    }
+}
+
+template <size_t MaxEntities>
+EntityComponents<MaxEntities> Components<MaxEntities>::by_id(const unsigned id)
+{
+    return { *this, id };
+}
+
+template <size_t MaxEntities>
+template <typename Comp>
+Component<MaxEntities, Comp>* Components<MaxEntities>::reg()
+{
+    m_components.emplace(typeid(Comp).hash_code(), std::make_unique<Component<MaxEntities, Comp>>());
 
     return component<Comp>();
 }
 
+template <size_t MaxEntities>
 template <typename Comp>
-std::vector<Comp>& Components::vec()
+std::vector<Comp>& Components<MaxEntities>::vec()
 {
     return component<Comp>()->vec();
 }
 
+template <size_t MaxEntities>
 template <typename Comp>
-Comp& Components::get(const unsigned id)
+Comp& Components<MaxEntities>::get(const unsigned id)
 {
     return component<Comp>()->vec()[id];
 }
 
-template <typename Comp>
-Comp& EntityComponents::get()
+template <size_t MaxEntities>
+void Components<MaxEntities>::move(const float dt)
 {
-    return m_components->component<Comp>()->vec()[m_id];
+    auto& pos = vec<Pos>();
+    auto& vel = vec<Vel>();
+    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
+}
+
+template <size_t MaxEntities>
+EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities>& components, const unsigned id) :
+    m_components(&components), m_id(id)
+{
+}
+
+template <size_t MaxEntities>
+template <typename Comp>
+Comp& EntityComponents<MaxEntities>::get()
+{
+    return m_components->template component<Comp>()->vec()[m_id];
 }
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>

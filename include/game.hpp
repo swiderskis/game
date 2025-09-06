@@ -7,6 +7,7 @@
 #include "se-ui.hpp"
 #include "seb-engine.hpp"
 #include "seblib.hpp"
+#include "settings.hpp"
 #include "sprites.hpp"
 
 static constexpr auto WINDOW_TITLE = "Game Title";
@@ -43,13 +44,13 @@ struct Game
                              0.0,
                              CAMERA_ZOOM };
     raylib::Texture texture_sheet{ TEXTURE_SHEET };
-    seb_engine::Entities<Entity> entities;
-    seb_engine::Components components;
+    seb_engine::Entities<MAX_ENTITIES, Entity> entities;
+    seb_engine::Components<MAX_ENTITIES> components;
     Sprites sprites;
     seb_engine::World<Tile, SpriteTile, WORLD_WIDTH, WORLD_HEIGHT> world;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
-    unsigned player_id = 0;
+    unsigned player_id{ 0 };
     bool paused = false;
     bool close = false;
 
