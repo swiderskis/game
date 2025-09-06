@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 
 namespace seb_engine::ui
 {
@@ -21,23 +22,34 @@ struct PercentSize
     unsigned height{ 100 }; // NOLINT(*magic-numbers)
 };
 
+struct TextAbsSize
+{
+    unsigned size;
+
+    explicit TextAbsSize(unsigned size);
+};
+
+struct TextPctSize
+{
+    unsigned size;
+
+    explicit TextPctSize(unsigned size);
+
+    [[nodiscard]] auto abs() const -> unsigned;
+};
+
 struct Text
 {
 public:
     std::string text;
+    std::variant<TextAbsSize, TextPctSize> size{ TextAbsSize{ 0 } }; // NOLINT(*magic-numbers)
     rl::Color color;
 
-private:
-    int m_size{ 0 };
-    bool m_is_percent_size{ false }; // required for redrawing UIs when resizing window - if false,
-                                     // text size will remain the same when resizing
+    Text() = default;
 
-public:
     [[nodiscard]] auto width() const -> int;
     auto draw(rl::Vector2 pos) const -> void;
-    auto set_size(int size) -> void;
-    auto set_percent_size(unsigned size) -> void;
-    [[nodiscard]] auto size() const -> int;
+    [[nodiscard]] auto text_size() const -> unsigned;
 };
 
 class Element

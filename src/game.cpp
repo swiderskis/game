@@ -253,7 +253,7 @@ auto pause_screen(Game& game) -> sui::Screen
     resume.element->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
     resume.element->color = ::WHITE;
     resume.element->text.text = "Resume";
-    resume.element->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    resume.element->text.size = sui::TextPctSize{ 6 }; // NOLINT(*magic-numbers)
     resume.element->on_click = [&game]() { game.toggle_pause(); };
 
     auto exit{ screen.new_element<sui::Button>() };
@@ -261,7 +261,7 @@ auto pause_screen(Game& game) -> sui::Screen
     exit.element->set_size(sui::PercentSize{ .width = 20, .height = 10 }); // NOLINT(*magic-numbers)
     exit.element->color = ::WHITE;
     exit.element->text.text = "Exit";
-    exit.element->text.set_percent_size(6); // NOLINT(*magic-numbers)
+    exit.element->text.size = sui::TextPctSize{ 6 }; // NOLINT(*magic-numbers)
     exit.element->on_click = [&game]() { game.close = true; };
 
     return screen;
