@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <variant>
 
-enum class Entity : int8_t
+enum class Entity : uint8_t
 {
-    None = -1,
+    None = 0,
 
     Player,
     Projectile,
@@ -18,9 +18,9 @@ enum class Entity : int8_t
     DamageLine,
 };
 
-enum class Tile : int8_t
+enum class Tile : uint8_t
 {
-    None = -1,
+    None = 0,
 
     Brick,
 };

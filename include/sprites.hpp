@@ -12,51 +12,51 @@ inline constexpr float SPRITE_LEN{ 32.0 };
 
 inline constexpr seblib::SimpleVec2 SPRITE_SIZE{ SPRITE_LEN, SPRITE_LEN };
 
-enum class SpriteBase : int8_t
+enum class SpriteBase : uint8_t
 {
-    None = -1,
+    None = 0,
 
     PlayerIdle,
     Projectile,
     EnemyDuck,
 };
 
-enum class SpriteHead : int8_t
+enum class SpriteHead : uint8_t
 {
-    None = -1,
+    None = 0,
 
     PlayerIdle,
 };
 
-enum class SpriteArms : int8_t
+enum class SpriteArms : uint8_t
 {
-    None = -1,
+    None = 0,
 
     PlayerIdle,
     PlayerJump,
     PlayerAttack,
 };
 
-enum class SpriteLegs : int8_t
+enum class SpriteLegs : uint8_t
 {
-    None = -1,
+    None = 0,
 
     PlayerIdle,
     PlayerWalk,
     PlayerJump,
 };
 
-enum class SpriteExtra : int8_t
+enum class SpriteExtra : uint8_t
 {
-    None = -1,
+    None = 0,
 
     PlayerScarfWalk,
     PlayerScarfFall,
 };
 
-enum class SpriteTile : int8_t
+enum class SpriteTile : uint8_t
 {
-    None = -1,
+    None = 0,
 
     TileBrick,
 };

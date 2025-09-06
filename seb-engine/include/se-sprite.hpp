@@ -30,7 +30,7 @@ struct SpriteDetailsLookup
     static auto get(SpriteEnum) -> SpriteDetails;
 };
 
-// assumes SpriteEnum has a "no sprite" value of -1
+// assumes SpriteEnum has a "no sprite" value of 0
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 class SpritePart
@@ -51,7 +51,7 @@ public:
     auto draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped) -> void;
 
 private:
-    SpriteEnum m_sprite{ static_cast<SpriteEnum>(-1) };
+    SpriteEnum m_sprite{ static_cast<SpriteEnum>(0) };
     float m_frame_update_dt{ 0.0 };
     unsigned m_current_frame{ 0 };
     float m_frame_duration{ 0.0 };
@@ -215,7 +215,7 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::unset() -> void
 {
-    set(static_cast<SpriteEnum>(-1));
+    set(static_cast<SpriteEnum>(0));
 }
 
 template <typename SpriteEnum>
