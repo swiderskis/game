@@ -13,13 +13,6 @@
 #include <ranges>
 #include <type_traits>
 
-#ifndef NDEBUG
-#define SHOW_CBOXES
-#undef SHOW_CBOXES
-#define SHOW_HITBOXES
-#undef SHOW_HITBOXES
-#endif
-
 namespace rl = raylib;
 namespace sl = seblib;
 namespace sm = seblib::math;
@@ -61,20 +54,17 @@ auto draw_sprite_part(Game& game, size_t id) -> void;
 
 auto Game::poll_inputs() -> void
 {
-    inputs.left = rl::Keyboard::IsKeyDown(KEY_A);
-    inputs.right = rl::Keyboard::IsKeyDown(KEY_D);
-    inputs.up = rl::Keyboard::IsKeyDown(KEY_W);
-    inputs.down = rl::Keyboard::IsKeyDown(KEY_S);
-    inputs.click = rl::Mouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
-    inputs.spawn_enemy = rl::Keyboard::IsKeyPressed(KEY_P);
-    inputs.pause = rl::Keyboard::IsKeyPressed(KEY_ESCAPE);
+    inputs.left = rl::Keyboard::IsKeyDown(::KEY_A);
+    inputs.right = rl::Keyboard::IsKeyDown(::KEY_D);
+    inputs.up = rl::Keyboard::IsKeyDown(::KEY_W);
+    inputs.down = rl::Keyboard::IsKeyDown(::KEY_S);
+    inputs.click = rl::Mouse::IsButtonPressed(::MOUSE_LEFT_BUTTON);
+    inputs.spawn_enemy = rl::Keyboard::IsKeyPressed(::KEY_P);
+    inputs.pause = rl::Keyboard::IsKeyPressed(::KEY_ESCAPE);
 }
 
-auto Game::render() -> void
+auto Game::render_sprites() -> void
 {
-    const auto player_pos{ components.get<se::Pos>(player_id) };
-    camera.SetTarget(player_pos + (SPRITE_SIZE / 2));
-    camera.BeginMode();
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
@@ -83,9 +73,6 @@ auto Game::render() -> void
             auto comps{ components.by_id(id) };
             if (entity == Entity::DamageLine)
             {
-                const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val()) };
-                line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
-                continue;
             }
 
             const auto vel{ comps.get<se::Vel>() };
@@ -103,8 +90,11 @@ auto Game::render() -> void
             }
         }
     }
+}
 
 #ifdef SHOW_CBOXES
+auto Game::render_cboxes() -> void
+{
     world.draw_cboxes();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
@@ -129,9 +119,12 @@ auto Game::render() -> void
                 });
         }
     }
+}
 #endif
 
 #ifdef SHOW_HITBOXES
+auto Game::render_hitboxes() -> void
+{
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
         for (const auto id : entities.entity_ids(entity))
@@ -143,10 +136,8 @@ auto Game::render() -> void
                 [](const sm::Line bbox) { bbox.draw_line(::GREEN); });
         }
     }
-#endif
-
-    camera.EndMode();
 }
+#endif
 
 auto Game::set_player_vel() -> void
 {
@@ -347,6 +338,16 @@ auto Game::set_flipped() -> void
         {
             components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
         }
+    }
+}
+
+auto Game::render_damage_lines() -> void
+{
+    for (const auto id : entities.entity_ids(Entity::DamageLine))
+    {
+        auto comps{ components.by_id(id) };
+        const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val()) };
+        line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
     }
 }
 

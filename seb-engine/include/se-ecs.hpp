@@ -415,7 +415,7 @@ auto World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const -> void
     {
         if (tile != static_cast<TileEnum>(0))
         {
-            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox }.DrawLines(::RED);
+            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox_size }.DrawLines(::RED);
         }
     }
 }
