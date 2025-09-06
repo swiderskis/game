@@ -21,7 +21,7 @@ namespace rl = raylib;
 namespace sm = seblib::math;
 namespace sl = seblib;
 
-// assumes Entity has a "no entity" value of -1
+// assumes Entity has a "no entity" value of 0
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
 class Entities
@@ -36,7 +36,7 @@ public:
     auto clear_to_destroy() -> void;
 
 private:
-    std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(-1) };
+    std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(0) };
     std::unordered_map<Entity, std::vector<size_t>> m_entity_ids;
     std::vector<size_t> m_to_destroy;
 };
@@ -154,7 +154,7 @@ struct TileDetailsLookup
     static auto get(TileEnum) -> TileDetails;
 };
 
-// assumes TileEnum has a "no tile" value of -1
+// assumes TileEnum has a "no tile" value of 0
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
 class World
@@ -169,7 +169,7 @@ public:
     auto draw_cboxes() const -> void;
 
 private:
-    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(-1) };
+    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(0) };
     Sprites<Width * Height, SpriteEnum> m_sprites;
 
     [[nodiscard]] auto at(Coords coords) const -> TileEnum;
@@ -205,7 +205,7 @@ auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
     size_t entity_id{ 0 };
     for (const auto [id, entity] : m_entities | std::views::enumerate)
     {
-        if (entity != static_cast<Entity>(-1))
+        if (entity != static_cast<Entity>(0))
         {
             continue;
         }
@@ -260,7 +260,7 @@ auto Entities<MaxEntities, Entity>::destroy_entity(const size_t id) -> void
 {
     auto& entity{ m_entities[id] };
     // possible for an entity to be queued for destruction multiple times
-    if (entity == static_cast<Entity>(-1))
+    if (entity == static_cast<Entity>(0))
     {
         return;
     }
@@ -268,7 +268,7 @@ auto Entities<MaxEntities, Entity>::destroy_entity(const size_t id) -> void
     slog::log(slog::TRC, "Destroying entity type {} with id {}", static_cast<int>(entity), id);
     auto& entity_ids{ m_entity_ids[entity] };
     entity_ids.erase(std::ranges::find(entity_ids, id));
-    entity = static_cast<Entity>(-1);
+    entity = static_cast<Entity>(0);
 }
 
 template <size_t MaxEntities, typename Entity>
@@ -403,7 +403,7 @@ template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
 auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
 {
     return m_tiles | std::views::enumerate
-           | std::views::filter([](const auto x) { return std::get<1>(x) != static_cast<TileEnum>(-1); })
+           | std::views::filter([](const auto x) { return std::get<1>(x) != static_cast<TileEnum>(0); })
            | std::views::transform([this](const auto x) { return cbox(std::get<0>(x)); });
 }
 
@@ -413,7 +413,7 @@ auto World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const -> void
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
-        if (tile != static_cast<TileEnum>(-1))
+        if (tile != static_cast<TileEnum>(0))
         {
             rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox }.DrawLines(::RED);
         }
