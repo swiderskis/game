@@ -28,17 +28,13 @@ class Entities
 {
 public:
     [[nodiscard]] auto spawn(Entity type) -> size_t;
-    auto queue_destroy(size_t id) -> void;
     [[nodiscard]] auto entities() const -> std::vector<Entity> const&;
     [[nodiscard]] auto entity_ids(Entity entity) -> std::vector<size_t> const&;
-    [[nodiscard]] auto to_destroy() const -> std::vector<size_t> const&;
     auto destroy_entity(size_t id) -> void;
-    auto clear_to_destroy() -> void;
 
 private:
     std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(0) };
     std::unordered_map<Entity, std::vector<size_t>> m_entity_ids;
-    std::vector<size_t> m_to_destroy;
 };
 
 class IComp
@@ -227,13 +223,6 @@ auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::queue_destroy(const size_t id) -> void
-{
-    m_to_destroy.push_back(id);
-}
-
-template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
 auto Entities<MaxEntities, Entity>::entities() const -> std::vector<Entity> const&
 {
     return m_entities;
@@ -245,13 +234,6 @@ template <size_t MaxEntities, typename Entity>
 auto Entities<MaxEntities, Entity>::entity_ids(const Entity entity) -> std::vector<size_t> const&
 {
     return m_entity_ids[entity];
-}
-
-template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::to_destroy() const -> std::vector<size_t> const&
-{
-    return m_to_destroy;
 }
 
 template <size_t MaxEntities, typename Entity>
@@ -269,13 +251,6 @@ auto Entities<MaxEntities, Entity>::destroy_entity(const size_t id) -> void
     auto& entity_ids{ m_entity_ids[entity] };
     entity_ids.erase(std::ranges::find(entity_ids, id));
     entity = static_cast<Entity>(0);
-}
-
-template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::clear_to_destroy() -> void
-{
-    m_to_destroy.clear();
 }
 
 template <size_t MaxEntities, typename Comp>

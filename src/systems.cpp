@@ -170,12 +170,12 @@ auto Game::resolve_collisions() -> void
 
 auto Game::destroy_entities() -> void
 {
-    for (const auto id : entities.to_destroy())
+    for (const auto id : to_destroy)
     {
         destroy_entity(id);
     }
 
-    entities.clear_to_destroy();
+    to_destroy.clear();
 }
 
 auto Game::player_attack() -> void
@@ -212,7 +212,7 @@ auto Game::update_lifespans() -> void
         lifespan.value() -= dt();
         if (lifespan.value() < 0.0)
         {
-            entities.queue_destroy(id);
+            to_destroy.push_back(id);
         }
     }
 }
@@ -239,12 +239,12 @@ auto Game::damage_entities() -> void
                 enemy_current_health -= static_cast<int>(comps.get<Combat>().damage);
                 if (enemy_current_health <= 0)
                 {
-                    entities.queue_destroy(enemy_id);
+                    to_destroy.push_back(enemy_id);
                 }
 
                 if (entity == Entity::Projectile)
                 {
-                    entities.queue_destroy(id);
+                    to_destroy.push_back(id);
                     break;
                 }
 
@@ -368,7 +368,7 @@ auto resolve_tile_collisions(Game& game, const size_t id, const se::BBox prev_cb
 
         if (std::ranges::contains(DESTROY_ON_COLLISION, entity))
         {
-            game.entities.queue_destroy(id);
+            game.to_destroy.push_back(id);
             continue;
         }
 
