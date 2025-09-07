@@ -56,6 +56,7 @@ struct Game
     seb_engine::Components<MAX_ENTITIES> components;
     Sprites sprites;
     seb_engine::World<Tile, SpriteTile, WORLD_WIDTH, WORLD_HEIGHT> world;
+    std::vector<size_t> to_destroy;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
     size_t player_id{ 0 };
