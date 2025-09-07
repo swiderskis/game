@@ -19,9 +19,9 @@ class Entities
 {
 public:
     [[nodiscard]] auto spawn(Entity type) -> size_t;
-    [[nodiscard]] auto entities() const -> std::vector<Entity> const&;
-    [[nodiscard]] auto entity_ids(Entity entity) -> std::vector<size_t> const&;
-    auto destroy_entity(size_t id) -> void;
+    [[nodiscard]] auto vec() const -> std::vector<Entity> const&;
+    [[nodiscard]] auto ids(Entity entity) -> std::vector<size_t> const&;
+    auto destroy(size_t id) -> void;
 
 private:
     std::vector<Entity> m_entities{ MaxEntities, static_cast<Entity>(0) };
@@ -68,7 +68,7 @@ auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::entities() const -> std::vector<Entity> const&
+auto Entities<MaxEntities, Entity>::vec() const -> std::vector<Entity> const&
 {
     return m_entities;
 }
@@ -76,14 +76,14 @@ auto Entities<MaxEntities, Entity>::entities() const -> std::vector<Entity> cons
 // not marked const to allow creating vector for key if it doesn't exist already
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::entity_ids(const Entity entity) -> std::vector<size_t> const&
+auto Entities<MaxEntities, Entity>::ids(const Entity entity) -> std::vector<size_t> const&
 {
     return m_entity_ids[entity];
 }
 
 template <size_t MaxEntities, typename Entity>
     requires sl::Enumerable<Entity>
-auto Entities<MaxEntities, Entity>::destroy_entity(const size_t id) -> void
+auto Entities<MaxEntities, Entity>::destroy(const size_t id) -> void
 {
     auto& entity{ m_entities[id] };
     // possible for an entity to be queued for destruction multiple times

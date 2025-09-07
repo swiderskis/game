@@ -51,7 +51,7 @@ class Components
 public:
     Components();
 
-    auto uninit_destroyed_entity(size_t id) -> void;
+    auto uninit(size_t id) -> void;
     [[nodiscard]] auto by_id(size_t id) -> EntityComponents<MaxEntities>;
     template <typename Comp>
     [[maybe_unused]] auto reg() -> Component<MaxEntities, Comp>*;
@@ -126,7 +126,7 @@ Components<MaxEntities>::Components()
 }
 
 template <size_t MaxEntities>
-auto Components<MaxEntities>::uninit_destroyed_entity(const size_t id) -> void
+auto Components<MaxEntities>::uninit(const size_t id) -> void
 {
     for (auto& [_, component] : m_components)
     {

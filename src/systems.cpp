@@ -68,7 +68,7 @@ auto Game::render_sprites() -> void
     world.draw(texture_sheet, dt());
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const auto id : entities.entity_ids(entity))
+        for (const auto id : entities.ids(entity))
         {
             auto comps{ components.by_id(id) };
             if (entity == Entity::DamageLine)
@@ -152,7 +152,7 @@ auto Game::set_player_vel() -> void
 
 auto Game::resolve_collisions() -> void
 {
-    for (const auto [id, entity] : entities.entities() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
     {
         auto comps{ components.by_id(id) };
         auto& pos{ comps.get<se::Pos>() };
@@ -221,11 +221,11 @@ auto Game::damage_entities() -> void
 {
     for (const auto entity : DAMAGING_ENTITIES)
     {
-        for (const auto id : entities.entity_ids(entity))
+        for (const auto id : entities.ids(entity))
         {
             auto comps{ components.by_id(id) };
             const auto projectile_bbox{ comps.get<Combat>().hitbox };
-            for (const auto enemy_id : entities.entity_ids(Entity::Enemy))
+            for (const auto enemy_id : entities.ids(Entity::Enemy))
             {
                 auto& enemy_combat_comps{ components.by_id(enemy_id).get<Combat>() };
                 const auto enemy_bbox{ enemy_combat_comps.hitbox };
@@ -257,7 +257,7 @@ auto Game::damage_entities() -> void
 // child entities are assumed to have no velocity, this system will override it
 auto Game::sync_children() -> void
 {
-    for (const auto [id, entity] : entities.entities() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
     {
         auto comps{ components.by_id(id) };
         if (comps.get<Parent>().id == std::nullopt)
@@ -330,7 +330,7 @@ auto Game::ui_click_action() -> void
 
 auto Game::set_flipped() -> void
 {
-    for (const auto [id, entity] : entities.entities() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
     {
         auto comps{ components.by_id(id) };
         auto& vel{ comps.get<se::Vel>() };
@@ -343,7 +343,7 @@ auto Game::set_flipped() -> void
 
 auto Game::render_damage_lines() -> void
 {
-    for (const auto id : entities.entity_ids(Entity::DamageLine))
+    for (const auto id : entities.ids(Entity::DamageLine))
     {
         auto comps{ components.by_id(id) };
         const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val()) };
@@ -356,7 +356,7 @@ namespace
 auto resolve_tile_collisions(Game& game, const size_t id, const se::BBox prev_cbox) -> void
 {
     auto comps{ game.components.by_id(id) };
-    const auto entity{ game.entities.entities()[id] };
+    const auto entity{ game.entities.vec()[id] };
     auto& pos{ comps.get<se::Pos>() };
     auto& cbox{ comps.get<se::BBox>() };
     for (const auto tile_cbox : game.world.cboxes())

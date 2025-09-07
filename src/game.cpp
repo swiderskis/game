@@ -181,13 +181,13 @@ auto Game::get_mouse_pos() const -> rl::Vector2
 
 auto Game::destroy_entity(const size_t id) -> void
 {
-    if (entities.entities()[id] == Entity::None)
+    if (entities.vec()[id] == Entity::None)
     {
         return;
     }
 
-    entities.destroy_entity(id);
-    components.uninit_destroyed_entity(id);
+    entities.destroy(id);
+    components.uninit(id);
     sprites.unset(id);
     for (const auto [child_id, parent] : components.vec<Parent>() | std::views::enumerate)
     {
