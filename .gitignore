@@ -2,6 +2,7 @@
 *.dll
 *.so
 /.cache
+/*/.cache
 *.a
 *.d
 *.o

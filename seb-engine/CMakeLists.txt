@@ -5,7 +5,7 @@ project(seb-engine)
 add_library(
     seb-engine
     STATIC
-    src/se-ecs.cpp
+    src/se-bbox.cpp
     src/se-ui.cpp
     src/seb-engine.cpp
 )
