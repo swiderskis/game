@@ -1,4 +1,4 @@
-#include "se-ecs.hpp"
+#include "se-bbox.hpp"
 
 #include "seblib.hpp"
 #include "sl-log.hpp"
@@ -9,6 +9,7 @@
 namespace seb_engine
 {
 namespace sl = seblib;
+namespace slog = seblib::log;
 
 BBox::BBox(const BBoxVariant bbox) : BBox{ bbox, rl::Vector2{} }
 {

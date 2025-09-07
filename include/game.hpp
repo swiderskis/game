@@ -3,7 +3,9 @@
 
 #include "entities.hpp"
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "se-ecs.hpp"
+#include "se-components.hpp"
+#include "se-entities.hpp"
+#include "se-tiles.hpp"
 #include "se-ui.hpp"
 #include "seb-engine.hpp"
 #include "seblib.hpp"
