@@ -300,10 +300,10 @@ void spawn_melee(Game& game, const rl::Vector2 source_pos, const size_t parent_i
 void spawn_projectile(Game& game, const rl::Vector2 source_pos, const rl::Vector2 target_pos)
 {
     const auto diff{ target_pos - source_pos };
-    const auto angle{ atan2(diff.y, diff.x) };
+    const auto angle{ std::atan2(diff.y, diff.x) };
     const auto details{ entities::attack_details(Attack::Projectile) };
     const auto proj_details{ std::get<ProjectileDetails>(details.details) };
-    const auto vel{ rl::Vector2{ cos(angle), sin(angle) } * proj_details.speed };
+    const auto vel{ rl::Vector2{ std::cos(angle), std::sin(angle) } * proj_details.speed };
     const auto id{ game.entities.spawn(Entity::Projectile) };
     auto comps{ game.components.by_id(id) };
     comps.get<se::Pos>() = source_pos + (SPRITE_SIZE / 2) - rl::Vector2{ PROJECTILE_RADIUS, PROJECTILE_RADIUS };
@@ -336,19 +336,20 @@ void spawn_sector_lines(Game& game,
                         const size_t sector_id)
 {
     const auto diff{ target_pos - source_pos };
-    const auto angle{ atan2(diff.y, diff.x) };
+    const auto angle{ std::atan2(diff.y, diff.x) };
     const auto details{ entities::attack_details(Attack::Sector) };
     const auto sector_details{ std::get<SectorDetails>(details.details) };
     const auto initial_angle{ angle - (sector_details.angle / 2) };
     const auto angle_diff{ sector_details.angle / static_cast<float>(line_count - 1) };
     slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
-    const auto sector_offset{ (rl::Vector2{ cos(angle), sin(angle) } * sector_details.sector_offset)
+    const auto sector_offset{ (rl::Vector2{ std::cos(angle), std::sin(angle) } * sector_details.sector_offset)
                               + (SPRITE_SIZE / 2) };
     for (size_t i{ 0 }; i < line_count; i++)
     {
         const auto line_id{ game.entities.spawn(Entity::DamageLine) };
         const auto line_ang{ initial_angle + (angle_diff * static_cast<float>(i)) };
-        const auto offset{ sector_offset + rl::Vector2{ cos(line_ang), sin(line_ang) } * sector_details.line_offset };
+        const auto offset{ sector_offset
+                           + rl::Vector2{ std::cos(line_ang), std::sin(line_ang) } * sector_details.line_offset };
         slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
         auto comps{ game.components.by_id(line_id) };
         comps.get<se::Pos>() = source_pos;
