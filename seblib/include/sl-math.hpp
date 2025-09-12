@@ -29,7 +29,8 @@ struct Line
     Line(rl::Vector2 pos, float len, float angle);
 
     [[nodiscard]] auto len() const -> float;
-    auto draw_line(rl::Color color) const -> void;
+    auto draw(rl::Color color) const -> void;
+    [[nodiscard]] auto angle() const -> float;
 };
 
 constexpr auto degrees_to_radians(float ang) -> float;

@@ -2,6 +2,7 @@
 #define ENTITIES_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "se-bbox.hpp"
 
 #include <cstdint>
 #include <variant>
@@ -27,7 +28,7 @@ enum class Attack : uint8_t
 
 struct MeleeDetails
 {
-    raylib::Vector2 size;
+    seb_engine::BBoxRect size;
 };
 
 struct ProjectileDetails

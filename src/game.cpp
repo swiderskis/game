@@ -2,6 +2,7 @@
 
 #include "components.hpp"
 #include "entities.hpp"
+#include "se-bbox.hpp"
 #include "seblib.hpp"
 #include "sl-extern.hpp"
 #include "sl-log.hpp"
@@ -16,7 +17,6 @@
 namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
-namespace sm = seblib::math;
 namespace se = seb_engine;
 namespace sui = seb_engine::ui;
 
@@ -25,17 +25,20 @@ inline constexpr unsigned TARGET_FPS{ 60 };
 inline constexpr float LINE_ANGLE_SPACING{ 5.0 };
 inline constexpr float PROJECTILE_RADIUS{ 4.0 };
 
-inline constexpr sl::SimpleVec2 PLAYER_CBOX_SIZE{ 20.0, 29.0 };
 inline constexpr sl::SimpleVec2 PLAYER_CBOX_OFFSET{ 6.0, 3.0 };
-inline constexpr sl::SimpleVec2 ENEMY_CBOX_SIZE{ 30.0, 24.0 };
 inline constexpr sl::SimpleVec2 ENEMY_CBOX_OFFSET{ 1.0, 8.0 };
-inline constexpr sl::SimpleVec2 PLAYER_HITBOX_SIZE{ 12.0, 21.0 };
 inline constexpr sl::SimpleVec2 PLAYER_HITBOX_OFFSET{ 10.0, 7.0 };
-inline constexpr sl::SimpleVec2 ENEMY_HITBOX_SIZE{ 22.0, 16.0 };
 inline constexpr sl::SimpleVec2 ENEMY_HITBOX_OFFSET{ 5.0, 12.0 };
 
 inline constexpr int PLAYER_HEALTH{ 100 };
 inline constexpr int ENEMY_HEALTH{ 100 };
+
+inline constexpr se::BBoxRect PLAYER_CBOX_SIZE{ 20.0, 29.0 };
+inline constexpr se::BBoxRect ENEMY_CBOX_SIZE{ 30.0, 24.0 };
+inline constexpr se::BBoxRect PLAYER_HITBOX_SIZE{ 12.0, 21.0 };
+inline constexpr se::BBoxRect ENEMY_HITBOX_SIZE{ 22.0, 16.0 };
+
+inline constexpr se::BBoxCircle PROJECTILE_BBOX{ PROJECTILE_RADIUS };
 
 namespace
 {
@@ -52,6 +55,9 @@ Game::Game()
     window.SetTargetFPS(TARGET_FPS);
     window.SetExitKey(KEY_NULL);
 
+    components.reg<se::Pos>();
+    components.reg<se::Vel>();
+    components.reg<se::BBox>();
     components.reg<Flags>();
     components.reg<Combat>();
     components.reg<Parent>();
@@ -83,9 +89,8 @@ auto Game::run() -> void
     {
         // movement
         set_player_vel();
-        components.move(dt());
+        move();
         set_flipped();
-        resolve_collisions();
         sync_children();
 
         // combat
@@ -126,10 +131,10 @@ auto Game::spawn_player(const se::Coords coords) -> void
     player_id = id;
     auto comps{ components.by_id(id) };
     comps.get<se::Pos>() = coords;
-    comps.get<se::BBox>() = se::BBox{ rl::Rectangle{ coords, PLAYER_CBOX_SIZE }, PLAYER_CBOX_OFFSET };
+    comps.get<se::BBox>() = se::BBox{ PLAYER_CBOX_SIZE, PLAYER_CBOX_OFFSET };
     auto& combat{ comps.get<Combat>() };
     combat.health.set(PLAYER_HEALTH);
-    combat.hitbox = se::BBox{ rl::Rectangle{ coords, PLAYER_HITBOX_SIZE }, PLAYER_HITBOX_OFFSET };
+    combat.hitbox = se::BBox{ PLAYER_HITBOX_SIZE, PLAYER_HITBOX_OFFSET };
 }
 
 auto Game::spawn_enemy(const Enemy enemy, const se::Coords coords) -> void
@@ -146,10 +151,10 @@ auto Game::spawn_enemy(const Enemy enemy, const se::Coords coords) -> void
     slog::log(slog::TRC, "Spawning enemy with id {}", id);
     auto comps{ components.by_id(id) };
     comps.get<se::Pos>() = coords;
-    comps.get<se::BBox>() = se::BBox{ rl::Rectangle{ coords, ENEMY_CBOX_SIZE }, ENEMY_CBOX_OFFSET };
+    comps.get<se::BBox>() = se::BBox{ ENEMY_CBOX_SIZE, ENEMY_CBOX_OFFSET };
     auto& combat{ comps.get<Combat>() };
     combat.health.set(ENEMY_HEALTH);
-    combat.hitbox = se::BBox{ rl::Rectangle{ coords, ENEMY_HITBOX_SIZE }, ENEMY_HITBOX_OFFSET };
+    combat.hitbox = se::BBox{ ENEMY_HITBOX_SIZE, ENEMY_HITBOX_OFFSET };
     sprites.set(id, sprite_base);
 }
 
@@ -162,7 +167,7 @@ void Game::spawn_tile(const Tile tile, const se::Coords coords)
         sprite = SpriteTile::None;
         break;
     case Tile::Brick:
-        sprite = SpriteTile::TileBrick;
+        sprite = SpriteTile::Brick;
         break;
     }
 
@@ -287,7 +292,7 @@ void spawn_melee(Game& game, const rl::Vector2 source_pos, const size_t parent_i
     comps.get<se::Pos>() = source_pos;
     auto& combat{ comps.get<Combat>() };
     combat.lifespan = details.lifespan;
-    combat.hitbox = se::BBox{ rl::Rectangle{ source_pos, melee_details.size }, MELEE_OFFSET };
+    combat.hitbox = se::BBox{ melee_details.size, MELEE_OFFSET };
     combat.damage = details.damage;
     comps.get<Parent>().id = parent_id;
 }
@@ -303,11 +308,11 @@ void spawn_projectile(Game& game, const rl::Vector2 source_pos, const rl::Vector
     auto comps{ game.components.by_id(id) };
     comps.get<se::Pos>() = source_pos + (SPRITE_SIZE / 2) - rl::Vector2{ PROJECTILE_RADIUS, PROJECTILE_RADIUS };
     comps.get<se::Vel>() = vel;
-    comps.get<se::BBox>() = se::BBox{ sm::Circle{ source_pos, PROJECTILE_RADIUS } };
+    comps.get<se::BBox>() = se::BBox{ PROJECTILE_BBOX };
     game.sprites.set(id, SpriteBase::Projectile);
     auto& combat{ comps.get<Combat>() };
     combat.lifespan = details.lifespan;
-    combat.hitbox = se::BBox{ sm::Circle{ source_pos, PROJECTILE_RADIUS } };
+    combat.hitbox = se::BBox{ PROJECTILE_BBOX };
     combat.damage = details.damage;
 }
 
@@ -348,7 +353,7 @@ void spawn_sector_lines(Game& game,
         auto comps{ game.components.by_id(line_id) };
         comps.get<se::Pos>() = source_pos;
         auto& combat{ comps.get<Combat>() };
-        combat.hitbox = se::BBox{ sm::Line{ source_pos, sector_details.radius, line_ang }, offset };
+        combat.hitbox = se::BBox{ se::BBoxLine{ sector_details.radius, line_ang }, offset };
         combat.damage = details.damage;
         comps.get<Parent>().id = sector_id;
     }

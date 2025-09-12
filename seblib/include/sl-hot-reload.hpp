@@ -39,9 +39,9 @@ template <typename F>
 auto get_func_address(SLHR_MODULE lib, const char* func_name, const bool exit_on_fail) -> F
 {
 #if defined(_WIN32) || defined(__CYGWIN__)
-    SLHR_PROC func_address{ GetProcAddress(lib, func_name) };
+    SLHR_PROC func_address{ ::GetProcAddress(lib, func_name) };
 #else
-    SLHR_PROC func_address{ dlsym(lib, func_name) };
+    SLHR_PROC func_address{ ::dlsym(lib, func_name) };
 #endif
     if (func_address == nullptr)
     {

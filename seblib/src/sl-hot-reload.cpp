@@ -8,9 +8,9 @@ auto load_lib(const char* so_name, const bool exit_on_fail) -> SLHR_MODULE
 {
     slog::log(slog::TRC, "Loading library {}", so_name);
 #if defined(_WIN32) || defined(__CYGWIN__)
-    SLHR_MODULE lib{ LoadLibrary(so_name) };
+    SLHR_MODULE lib{ ::LoadLibrary(so_name) };
 #else
-    SLHR_MODULE lib{ dlopen(so_name, RTLD_LAZY) };
+    SLHR_MODULE lib{ ::dlopen(so_name, RTLD_LAZY) };
 #endif
     if (lib == nullptr)
     {
@@ -25,9 +25,9 @@ void free_lib(SLHR_MODULE lib)
     if (lib != nullptr)
     {
 #if defined(_WIN32) || defined(__CYGWIN__)
-        FreeLibrary(lib);
+        ::FreeLibrary(lib);
 #else
-        dlclose(lib);
+        ::dlclose(lib);
 #endif
     }
 }

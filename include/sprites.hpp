@@ -58,7 +58,7 @@ enum class SpriteTile : uint8_t
 {
     None = 0,
 
-    TileBrick,
+    Brick,
 };
 
 using Sprites = seb_engine::Sprites<MAX_ENTITIES, SpriteBase, SpriteHead, SpriteArms, SpriteLegs, SpriteExtra>;

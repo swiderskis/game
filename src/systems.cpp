@@ -1,6 +1,7 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "game.hpp"
+#include "se-bbox.hpp"
 #include "se-sprite.hpp"
 #include "seblib.hpp"
 #include "sl-log.hpp"
@@ -46,7 +47,7 @@ inline constexpr float DAMAGE_LINE_THICKNESS{ 1.33 };
 
 namespace
 {
-auto resolve_tile_collisions(Game& game, size_t id, se::BBox prev_cbox) -> void;
+auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
 template <typename SpriteEnum>
 auto draw_sprite_part(Game& game, size_t id) -> void;
@@ -98,10 +99,12 @@ auto Game::render_cboxes() -> void
     world.draw_cboxes();
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const auto id : entities.entity_ids(entity))
+        for (const auto id : entities.ids(entity))
         {
+            const auto pos{ components.get<se::Pos>(id) };
+            const auto cbox{ components.get<se::BBox>(id).val(pos) };
             sl::match(
-                components.get<se::BBox>(id).val(),
+                cbox,
                 [](const rl::Rectangle bbox)
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.x, bbox.y);
@@ -115,7 +118,7 @@ auto Game::render_cboxes() -> void
                 [](const sm::Line bbox)
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos1.x, bbox.pos2.y);
-                    bbox.draw_line(::RED);
+                    bbox.draw(::RED);
                 });
         }
     }
@@ -127,13 +130,15 @@ auto Game::render_hitboxes() -> void
 {
     for (const auto entity : ENTITY_RENDER_ORDER)
     {
-        for (const auto id : entities.entity_ids(entity))
+        for (const auto id : entities.ids(entity))
         {
+            const auto pos{ components.get<se::Pos>(id) };
+            const auto hitbox{ components.get<Combat>(id).hitbox.val(pos) };
             sl::match(
-                components.get<Combat>(id).hitbox.val(),
+                hitbox,
                 [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
                 [](const sm::Circle bbox) { bbox.draw_lines(::GREEN); },
-                [](const sm::Line bbox) { bbox.draw_line(::GREEN); });
+                [](const sm::Line bbox) { bbox.draw(::GREEN); });
         }
     }
 }
@@ -150,22 +155,13 @@ auto Game::set_player_vel() -> void
     player_vel.y += (inputs.down ? PLAYER_SPEED : 0.0F);
 }
 
-auto Game::resolve_collisions() -> void
+auto Game::move() -> void
 {
-    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
-    {
-        auto comps{ components.by_id(id) };
-        auto& pos{ comps.get<se::Pos>() };
-        auto& cbox{ comps.get<se::BBox>() };
-        const auto prev_cbox{ cbox };
-        cbox.sync(pos);
-        resolve_tile_collisions(*this, id, prev_cbox);
-        comps.get<Combat>().hitbox.sync(pos);
-        if (static_cast<size_t>(id) == player_id)
-        {
-            slog::log(slog::TRC, "Player pos ({}, {})", pos.x, pos.y);
-        }
-    }
+    auto& pos{ components.vec<se::Pos>() };
+    auto& vel{ components.vec<se::Vel>() };
+    std::ranges::transform(
+        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); });
+    resolve_tile_collisions(*this);
 }
 
 auto Game::destroy_entities() -> void
@@ -187,16 +183,14 @@ auto Game::player_attack() -> void
         attack_cooldown -= dt();
     }
 
-    if (!inputs.click || attack_cooldown > 0.0)
+    if (inputs.click && attack_cooldown <= 0.0)
     {
-        return;
+        const auto attack{ Attack::Sector };
+        const auto attack_details{ entities::attack_details(attack) };
+        sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
+        comps.get<Combat>().attack_cooldown = attack_details.cooldown;
+        spawn_attack(attack, player_id);
     }
-
-    const auto attack{ Attack::Sector };
-    const auto attack_details{ entities::attack_details(attack) };
-    sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
-    comps.get<Combat>().attack_cooldown = attack_details.cooldown;
-    spawn_attack(attack, player_id);
 }
 
 auto Game::update_lifespans() -> void
@@ -224,13 +218,15 @@ auto Game::damage_entities() -> void
         for (const auto id : entities.ids(entity))
         {
             auto comps{ components.by_id(id) };
-            const auto projectile_bbox{ comps.get<Combat>().hitbox };
+            const auto pos{ comps.get<se::Pos>() };
+            const auto projectile_bbox{ comps.get<Combat>().hitbox.val(pos) };
             for (const auto enemy_id : entities.ids(Entity::Enemy))
             {
                 auto& enemy_combat_comps{ components.by_id(enemy_id).get<Combat>() };
-                const auto enemy_bbox{ enemy_combat_comps.hitbox };
+                const auto enemy_pos{ components.by_id(enemy_id).get<se::Pos>() };
+                const auto enemy_bbox{ enemy_combat_comps.hitbox.val(enemy_pos) };
                 auto& invuln_time{ enemy_combat_comps.invuln_time };
-                if (invuln_time > 0.0 || !enemy_bbox.collides(projectile_bbox))
+                if (invuln_time > 0.0 || !se::bbox::collides(enemy_bbox, projectile_bbox))
                 {
                     continue;
                 }
@@ -270,23 +266,20 @@ auto Game::sync_children() -> void
         if (std::ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
         {
             const auto is_parent_flipped{ parent_comps.get<Flags>().is_enabled(Flags::FLIPPED) };
-            auto& flipped{ comps.get<Flags>() };
-            flipped.set(Flags::FLIPPED, is_parent_flipped);
+            auto& flags{ comps.get<Flags>() };
+            flags.set(Flags::FLIPPED, is_parent_flipped);
             if (entity == Entity::Melee)
             {
-                auto& pos{ comps.get<se::Pos>() };
                 auto& combat{ comps.get<Combat>() };
                 const auto details{ std::get<MeleeDetails>(entities::attack_details(Attack::Melee).details) };
-                combat.hitbox = se::BBox{ rl::Rectangle{ pos, details.size },
-                                          (flipped.is_enabled(Flags::FLIPPED) ? MELEE_OFFSET_FLIPPED : MELEE_OFFSET) };
+                combat.hitbox = se::BBox{ details.size,
+                                          (flags.is_enabled(Flags::FLIPPED) ? MELEE_OFFSET_FLIPPED : MELEE_OFFSET) };
             }
         }
 
         auto& pos{ comps.get<se::Pos>() };
         const auto parent_pos{ parent_comps.get<se::Pos>() };
         pos = parent_pos;
-        comps.get<se::BBox>().sync(pos);
-        comps.get<Combat>().hitbox.sync(pos);
         slog::log(slog::TRC, "Child pos: ({}, {})", pos.x, pos.y);
         slog::log(slog::TRC, "Parent pos: ({}, {})", parent_pos.x, parent_pos.y);
     }
@@ -346,62 +339,27 @@ auto Game::render_damage_lines() -> void
     for (const auto id : entities.ids(Entity::DamageLine))
     {
         auto comps{ components.by_id(id) };
-        const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val()) };
+        const auto pos{ comps.get<se::Pos>() };
+        const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val(pos)) };
         line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
     }
 }
 
 namespace
 {
-auto resolve_tile_collisions(Game& game, const size_t id, const se::BBox prev_cbox) -> void
+auto resolve_tile_collisions(Game& game) -> void
 {
-    auto comps{ game.components.by_id(id) };
-    const auto entity{ game.entities.vec()[id] };
-    auto& pos{ comps.get<se::Pos>() };
-    auto& cbox{ comps.get<se::BBox>() };
-    for (const auto tile_cbox : game.world.cboxes())
+    for (const auto [id, entity] : game.entities.vec() | std::views::enumerate)
     {
-        if (!cbox.collides(tile_cbox))
+        auto& pos{ game.components.get<se::Pos>(id) };
+        const auto vel{ game.components.get<se::Vel>(id) };
+        for (const auto tile_cbox : game.world.cboxes())
         {
-            continue;
-        }
-
-        if (std::ranges::contains(DESTROY_ON_COLLISION, entity))
-        {
-            game.to_destroy.push_back(id);
-            continue;
-        }
-
-        const auto tile_rcbox{ std::get<rl::Rectangle>(tile_cbox.val()) };
-        const auto x_adjust{ sl::match(
-            cbox.val(),
-            [tile_rcbox](const rl::Rectangle cbox)
-            { return tile_rcbox.x - cbox.x + (tile_rcbox.x > cbox.x ? -cbox.width : tile_rcbox.width); },
-            [tile_rcbox](const sm::Circle cbox)
-            { return tile_rcbox.x - cbox.pos.x + (cbox.pos.x > tile_rcbox.x ? cbox.radius : -cbox.radius); },
-            [tile_rcbox, prev_cbox](const auto) { return 0.0F; }) };
-        if (tile_cbox.y_overlaps(prev_cbox) && tile_cbox.x_overlaps(cbox))
-        {
-            pos.x += x_adjust;
-            cbox.sync(pos);
-        }
-
-        const auto y_adjust{ sl::match(
-            cbox.val(),
-            [tile_rcbox](const rl::Rectangle cbox)
-            { return tile_rcbox.y - cbox.y + (tile_rcbox.y > cbox.y ? -cbox.height : tile_rcbox.height); },
-            [tile_rcbox](const sm::Circle cbox)
-            { return tile_rcbox.y - cbox.pos.y + (cbox.pos.y > tile_rcbox.y ? cbox.radius : -cbox.radius); },
-            [tile_rcbox, prev_cbox](const auto) { return 0.0F; }) };
-        if (tile_cbox.x_overlaps(prev_cbox) && tile_cbox.y_overlaps(cbox))
-        {
-            pos.y += y_adjust;
-            cbox.sync(pos);
-        }
-
-        if (id == game.player_id)
-        {
-            slog::log(slog::TRC, "Player pos adjusted by ({}, {})", x_adjust, y_adjust);
+            const auto cbox{ game.components.get<se::BBox>(id).val(pos) };
+            if (se::bbox::collides(cbox, tile_cbox))
+            {
+                pos += se::bbox::resolve_collision(cbox, tile_cbox);
+            }
         }
     }
 }

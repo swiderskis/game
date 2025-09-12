@@ -7,7 +7,6 @@ add_library(
     STATIC
     src/se-bbox.cpp
     src/se-ui.cpp
-    src/seb-engine.cpp
 )
 
 if(NOT WIN32)
