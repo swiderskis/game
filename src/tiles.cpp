@@ -1,5 +1,6 @@
 #include "tiles.hpp"
 
+#include "se-bbox.hpp"
 #include "se-tiles.hpp"
 
 namespace se = seb_engine;
@@ -11,11 +12,11 @@ auto se::TileDetailsLookup<Tile>::get(const Tile tile) -> se::TileDetails
     { // NOLINTBEGIN(*magic-numbers)
     case Tile::None:
         return {
-            .cbox_size{ 0.0, 0.0 },
+            .cbox = { 0.0, 0.0 },
         };
     case Tile::Brick:
         return {
-            .cbox_size{ TILE_SIZE },
+            .cbox = se::BBoxRect{ TILE_SIZE },
         };
     } // NOLINTEND(*magic-numbers)
 

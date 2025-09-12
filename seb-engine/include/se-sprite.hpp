@@ -169,12 +169,12 @@ template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::check_update_frame(const float dt) -> void
 {
-    const auto details{ s_details.get(m_sprite) };
     if (m_frame_duration == 0.0)
     {
         return;
     }
 
+    const auto details{ s_details.get(m_sprite) };
     m_frame_update_dt -= dt;
     if (m_frame_update_dt <= 0.0)
     {

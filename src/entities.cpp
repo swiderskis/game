@@ -5,6 +5,7 @@
 #include <utility>
 
 namespace sm = seblib::math;
+namespace se = seb_engine;
 
 namespace entities
 {
@@ -14,7 +15,7 @@ auto attack_details(const Attack attack) -> AttackDetails
     { // NOLINTBEGIN(*magic-numbers)
     case Attack::Melee:
         return {
-            .details = MeleeDetails{ { 18.0, 7.0 } },
+            .details = MeleeDetails{ se::BBoxRect{ 18.0, 7.0 } },
             .lifespan = 0.3,
             .delay = 0.0,
             .cooldown = 0.5,

@@ -81,7 +81,7 @@ struct Game
     auto poll_inputs() -> void;
     auto render_sprites() -> void;
     auto set_player_vel() -> void;
-    auto resolve_collisions() -> void;
+    auto move() -> void;
     auto destroy_entities() -> void;
     auto player_attack() -> void;
     auto update_lifespans() -> void;

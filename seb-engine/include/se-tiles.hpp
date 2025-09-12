@@ -18,7 +18,7 @@ namespace sl = seblib;
 
 struct TileDetails
 {
-    rl::Vector2 cbox_size;
+    BBoxRect cbox;
 };
 
 // register tile details by specialising this template
@@ -53,7 +53,7 @@ private:
     [[nodiscard]] auto at_mut(size_t id) -> TileEnum&;
     [[nodiscard]] auto coords_from_id(size_t id) const -> Coords;
     [[nodiscard]] auto id_from_coords(Coords coords) const -> size_t;
-    [[nodiscard]] auto cbox(size_t id) const -> BBox;
+    [[nodiscard]] auto cbox(size_t id) const -> BBoxVariant;
 };
 } // namespace seb_engine
 
@@ -109,7 +109,7 @@ auto World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const -> void
     {
         if (tile != static_cast<TileEnum>(0))
         {
-            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox_size }.DrawLines(::RED);
+            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox.size }.DrawLines(::RED);
         }
     }
 }
@@ -164,9 +164,9 @@ auto World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) c
 
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const -> BBox
+auto World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const -> BBoxVariant
 {
-    return BBox{ rl::Rectangle{ coords_from_id(id), s_details.get(at(id)).cbox_size } };
+    return BBox{ s_details.get(at(id)).cbox }.val(coords_from_id(id));
 }
 } // namespace seb_engine
 

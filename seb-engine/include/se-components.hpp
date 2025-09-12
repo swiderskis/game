@@ -1,11 +1,9 @@
 #ifndef SE_COMPONENTS_HPP_
 #define SE_COMPONENTS_HPP_
 
-#include "se-bbox.hpp"
 #include "seblib.hpp"
 #include "sl-log.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <unordered_map>
@@ -49,8 +47,6 @@ template <size_t MaxEntities>
 class Components
 {
 public:
-    Components();
-
     auto uninit(size_t id) -> void;
     [[nodiscard]] auto by_id(size_t id) -> EntityComponents<MaxEntities>;
     template <typename Comp>
@@ -118,14 +114,6 @@ auto Component<MaxEntities, Comp>::vec() -> std::vector<Comp>&
 }
 
 template <size_t MaxEntities>
-Components<MaxEntities>::Components()
-{
-    reg<Pos>();
-    reg<Vel>();
-    reg<BBox>();
-}
-
-template <size_t MaxEntities>
 auto Components<MaxEntities>::uninit(const size_t id) -> void
 {
     for (auto& [_, component] : m_components)
@@ -161,14 +149,6 @@ template <typename Comp>
 auto Components<MaxEntities>::get(const size_t id) -> Comp&
 {
     return component<Comp>()->vec()[id];
-}
-
-template <size_t MaxEntities>
-auto Components<MaxEntities>::move(const float dt) -> void
-{
-    auto& pos = vec<Pos>();
-    auto& vel = vec<Vel>();
-    std::ranges::transform(pos, vel, pos.begin(), [dt](const auto pos, const auto vel) { return pos + (vel * dt); });
 }
 
 template <size_t MaxEntities>

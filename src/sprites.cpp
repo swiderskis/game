@@ -151,7 +151,7 @@ auto se::SpriteDetailsLookup<SpriteExtra>::get(SpriteExtra sprite) -> se::Sprite
     case SpriteExtra::PlayerScarfFall:
         return {
             .pos = { 128.0, 192.0 },
-            .size = SPRITE_SIZE,
+            .size = { SPRITE_SIZE },
             .frames = 4,
             .frame_duration = 0.1,
         };
@@ -170,7 +170,7 @@ auto se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite) -> se::SpriteDe
             .pos = { 0.0, 0.0 },
             .size = { 0.0, 0.0 },
         };
-    case SpriteTile::TileBrick:
+    case SpriteTile::Brick:
         return {
             .pos = { 0.0, 0.0 },
             .size = TILE_SIZE,

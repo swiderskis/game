@@ -6,10 +6,10 @@
 #define SLOG_LVL 2
 #endif
 
-namespace
-{
 using namespace seblib::log;
 
+namespace
+{
 // this will need to change if doing any multithreading
 Level log_level{ static_cast<Level>(SLOG_LVL) }; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace
