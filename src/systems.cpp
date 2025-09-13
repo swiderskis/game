@@ -72,10 +72,6 @@ auto Game::render_sprites() -> void
         for (const auto id : entities.ids(entity))
         {
             auto comps{ components.by_id(id) };
-            if (entity == Entity::DamageLine)
-            {
-            }
-
             const auto vel{ comps.get<se::Vel>() };
             const auto pos{ comps.get<se::Pos>() };
             sprites::lookup_set_movement_sprites(sprites, id, entity, vel);
@@ -119,7 +115,8 @@ auto Game::render_cboxes() -> void
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos1.x, bbox.pos2.y);
                     bbox.draw(::RED);
-                });
+                }
+            );
         }
     }
 }
@@ -138,7 +135,8 @@ auto Game::render_hitboxes() -> void
                 hitbox,
                 [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
                 [](const sm::Circle bbox) { bbox.draw_lines(::GREEN); },
-                [](const sm::Line bbox) { bbox.draw(::GREEN); });
+                [](const sm::Line bbox) { bbox.draw(::GREEN); }
+            );
         }
     }
 }
@@ -160,7 +158,8 @@ auto Game::move() -> void
     auto& pos{ components.vec<se::Pos>() };
     auto& vel{ components.vec<se::Vel>() };
     std::ranges::transform(
-        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); });
+        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); }
+    );
     resolve_tile_collisions(*this);
 }
 

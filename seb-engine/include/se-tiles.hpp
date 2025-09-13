@@ -67,9 +67,9 @@ namespace seb_engine
 {
 template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
     requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::spawn(const Coords coords,
-                                                       const TileEnum tile,
-                                                       const SpriteEnum sprite) -> void
+auto World<TileEnum, SpriteEnum, Width, Height>::spawn(
+    const Coords coords, const TileEnum tile, const SpriteEnum sprite
+) -> void
 {
     at_mut(coords) = tile;
     m_sprites.set(id_from_coords(coords), sprite);

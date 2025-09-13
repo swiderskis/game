@@ -40,7 +40,8 @@ auto Text::draw(const rl::Vector2 pos) const -> void
 auto Text::text_size() const -> unsigned
 {
     return sl::match(
-        size, [](const TextAbsSize size) { return size.size; }, [](const TextPctSize size) { return size.abs(); });
+        size, [](const TextAbsSize size) { return size.size; }, [](const TextPctSize size) { return size.abs(); }
+    );
 }
 
 auto Element::set_pos(const PercentSize pos) -> void
