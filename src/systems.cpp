@@ -3,7 +3,6 @@
 #include "game.hpp"
 #include "se-bbox.hpp"
 #include "se-sprite.hpp"
-#include "seblib.hpp"
 #include "sl-log.hpp"
 #include "sprites.hpp"
 
@@ -15,7 +14,6 @@
 #include <type_traits>
 
 namespace rl = raylib;
-namespace sl = seblib;
 namespace sm = seblib::math;
 namespace slog = seblib::log;
 namespace se = seb_engine;
@@ -38,7 +36,7 @@ static constexpr std::initializer_list NON_FLIPPABLE{
     Entity::Projectile,
 };
 
-inline constexpr sl::SimpleVec2 HEALTH_BAR_SIZE{ 32.0, 4.0 };
+inline constexpr sm::Vec2 HEALTH_BAR_SIZE{ 32.0, 4.0 };
 
 inline constexpr float PLAYER_SPEED{ 100.0 };
 inline constexpr float HEALTH_BAR_Y_OFFSET{ 8.0 };
@@ -341,7 +339,7 @@ auto Game::render_damage_lines() -> void
         auto comps{ components.by_id(id) };
         const auto pos{ comps.get<se::Pos>() };
         const auto line{ std::get<sm::Line>(comps.get<Combat>().hitbox.val(pos)) };
-        line.pos1.DrawLine(line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
+        ::DrawLineEx(line.pos1, line.pos2, DAMAGE_LINE_THICKNESS, ::LIGHTGRAY);
     }
 }
 

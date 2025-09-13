@@ -3,7 +3,6 @@
 #include "components.hpp"
 #include "entities.hpp"
 #include "se-bbox.hpp"
-#include "seblib.hpp"
 #include "sl-extern.hpp"
 #include "sl-log.hpp"
 #include "sl-math.hpp"
@@ -17,6 +16,7 @@
 namespace rl = raylib;
 namespace sl = seblib;
 namespace slog = seblib::log;
+namespace sm = seblib::math;
 namespace se = seb_engine;
 namespace sui = seb_engine::ui;
 
@@ -25,10 +25,10 @@ inline constexpr unsigned TARGET_FPS{ 60 };
 inline constexpr float LINE_ANGLE_SPACING{ 5.0 };
 inline constexpr float PROJECTILE_RADIUS{ 4.0 };
 
-inline constexpr sl::SimpleVec2 PLAYER_CBOX_OFFSET{ 6.0, 3.0 };
-inline constexpr sl::SimpleVec2 ENEMY_CBOX_OFFSET{ 1.0, 8.0 };
-inline constexpr sl::SimpleVec2 PLAYER_HITBOX_OFFSET{ 10.0, 7.0 };
-inline constexpr sl::SimpleVec2 ENEMY_HITBOX_OFFSET{ 5.0, 12.0 };
+inline constexpr sm::Vec2 PLAYER_CBOX_OFFSET{ 6.0, 3.0 };
+inline constexpr sm::Vec2 ENEMY_CBOX_OFFSET{ 1.0, 8.0 };
+inline constexpr sm::Vec2 PLAYER_HITBOX_OFFSET{ 10.0, 7.0 };
+inline constexpr sm::Vec2 ENEMY_HITBOX_OFFSET{ 5.0, 12.0 };
 
 inline constexpr int PLAYER_HEALTH{ 100 };
 inline constexpr int ENEMY_HEALTH{ 100 };
@@ -345,14 +345,14 @@ void spawn_sector_lines(
     const auto initial_angle{ angle - (sector_details.angle / 2) };
     const auto angle_diff{ sector_details.angle / static_cast<float>(line_count - 1) };
     slog::log(slog::TRC, "Angle between damage lines: {}", sl::math::radians_to_degrees(angle_diff));
-    const auto sector_offset{ (rl::Vector2{ std::cos(angle), std::sin(angle) } * sector_details.sector_offset)
+    const auto sector_offset{ (sm::Vec2{ std::cos(angle), std::sin(angle) } * sector_details.sector_offset)
                               + (SPRITE_SIZE / 2) };
     for (size_t i{ 0 }; i < line_count; i++)
     {
         const auto line_id{ game.entities.spawn(Entity::DamageLine) };
         const auto line_ang{ initial_angle + (angle_diff * static_cast<float>(i)) };
         const auto offset{ sector_offset
-                           + rl::Vector2{ std::cos(line_ang), std::sin(line_ang) } * sector_details.line_offset };
+                           + sm::Vec2{ std::cos(line_ang), std::sin(line_ang) } * sector_details.line_offset };
         slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
         auto comps{ game.components.by_id(line_id) };
         comps.get<se::Pos>() = source_pos;

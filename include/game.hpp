@@ -8,8 +8,8 @@
 #include "se-tiles.hpp"
 #include "se-ui.hpp"
 #include "seb-engine.hpp"
-#include "seblib.hpp"
 #include "settings.hpp"
+#include "sl-math.hpp"
 #include "sprites.hpp"
 #include "tiles.hpp"
 
@@ -32,8 +32,8 @@ inline constexpr float CAMERA_ZOOM{ 2.0 };
 inline constexpr size_t WORLD_WIDTH{ 32 };
 inline constexpr size_t WORLD_HEIGHT{ 16 };
 
-inline constexpr seblib::SimpleVec2 MELEE_OFFSET{ 32.0, 16.0 };
-inline constexpr seblib::SimpleVec2 MELEE_OFFSET_FLIPPED{ -17.0, 16.0 };
+inline constexpr seblib::math::Vec2 MELEE_OFFSET{ 32.0, 16.0 };
+inline constexpr seblib::math::Vec2 MELEE_OFFSET_FLIPPED{ -17.0, 16.0 };
 
 struct Inputs
 {

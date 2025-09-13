@@ -1,8 +1,6 @@
 #ifndef SE_BBOX_HPP_
 #define SE_BBOX_HPP_
 
-#include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seblib.hpp"
 #include "sl-math.hpp"
 
 #include <cstdint>
@@ -11,15 +9,14 @@
 namespace seb_engine
 {
 namespace rl = raylib;
-namespace sl = seblib;
 namespace sm = seblib::math;
 
 struct BBoxRect
 {
-    sl::SimpleVec2 size;
+    sm::Vec2 size;
 
     BBoxRect() = default;
-    explicit constexpr BBoxRect(sl::SimpleVec2 size);
+    explicit constexpr BBoxRect(sm::Vec2 size);
     constexpr BBoxRect(float width, float height);
 };
 
@@ -46,9 +43,9 @@ class BBox
 public:
     BBox() = default;
     explicit BBox(BBoxDetails bbox);
-    BBox(BBoxDetails bbox, rl::Vector2 offset);
+    BBox(BBoxDetails bbox, sm::Vec2 offset);
 
-    [[nodiscard]] auto val(rl::Vector2 pos) const -> BBoxVariant;
+    [[nodiscard]] auto val(sm::Vec2 pos) const -> BBoxVariant;
     [[nodiscard]] auto details() const -> BBoxDetails;
 
     enum Variant : uint8_t
@@ -60,13 +57,13 @@ public:
 
 private:
     BBoxDetails m_bbox;
-    rl::Vector2 m_offset;
+    sm::Vec2 m_offset;
 };
 
 namespace bbox
 {
 auto collides(BBoxVariant bbox1, BBoxVariant bbox2) -> bool;
-auto resolve_collision(BBoxVariant bbox1, BBoxVariant bbox2) -> rl::Vector2;
+auto resolve_collision(BBoxVariant bbox1, BBoxVariant bbox2) -> sm::Vec2;
 } // namespace bbox
 } // namespace seb_engine
 
@@ -78,7 +75,7 @@ auto resolve_collision(BBoxVariant bbox1, BBoxVariant bbox2) -> rl::Vector2;
 
 namespace seb_engine
 {
-constexpr BBoxRect::BBoxRect(const sl::SimpleVec2 size)
+constexpr BBoxRect::BBoxRect(const sm::Vec2 size)
     : size{ size }
 {
 }
