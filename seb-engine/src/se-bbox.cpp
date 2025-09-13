@@ -29,11 +29,14 @@ auto resolve_collision(sm::Line bbox1, sm::Line bbox2) -> rl::Vector2;
 
 namespace seb_engine
 {
-BBox::BBox(const BBoxDetails bbox) : BBox{ bbox, rl::Vector2{} }
+BBox::BBox(const BBoxDetails bbox)
+    : BBox{ bbox, rl::Vector2{} }
 {
 }
 
-BBox::BBox(const BBoxDetails bbox, const rl::Vector2 offset) : m_bbox{ bbox }, m_offset{ offset }
+BBox::BBox(const BBoxDetails bbox, const rl::Vector2 offset)
+    : m_bbox{ bbox }
+    , m_offset{ offset }
 {
 }
 

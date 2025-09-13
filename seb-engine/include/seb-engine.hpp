@@ -33,7 +33,9 @@ struct Coords
 
 namespace seb_engine
 {
-constexpr Coords::Coords(size_t x, size_t y) : x{ x }, y{ y }
+constexpr Coords::Coords(const size_t x, const size_t y)
+    : x{ x }
+    , y{ y }
 {
 }
 
