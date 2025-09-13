@@ -50,6 +50,7 @@ namespace
 auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
 template <typename SpriteEnum>
+    requires IsEntitySpriteEnum<SpriteEnum>
 auto draw_sprite_part(Game& game, size_t id) -> void;
 } // namespace
 
@@ -373,6 +374,7 @@ auto draw_sprite(Game& game, const size_t id) -> void
 }
 
 template <typename SpriteEnum>
+    requires IsEntitySpriteEnum<SpriteEnum>
 auto draw_sprite_part(Game& game, const size_t id) -> void
 {
     const auto pos{ game.components.get<se::Pos>(id) };
