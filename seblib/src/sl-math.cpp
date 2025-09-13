@@ -2,7 +2,9 @@
 
 namespace seblib::math
 {
-Circle::Circle(const rl::Vector2 pos, const float radius) : pos{ pos.x + radius, pos.y + radius }, radius{ radius }
+Circle::Circle(const rl::Vector2 pos, const float radius)
+    : pos{ pos.x + radius, pos.y + radius }
+    , radius{ radius }
 {
 }
 
@@ -11,12 +13,15 @@ auto Circle::draw_lines(const rl::Color color) const -> void
     ::DrawCircleLines(static_cast<int>(pos.x), static_cast<int>(pos.y), radius, color);
 }
 
-Line::Line(const rl::Vector2 pos1, const rl::Vector2 pos2) : pos1{ pos1 }, pos2{ pos2 }
+Line::Line(const rl::Vector2 pos1, const rl::Vector2 pos2)
+    : pos1{ pos1 }
+    , pos2{ pos2 }
 {
 }
 
-Line::Line(const rl::Vector2 pos, const float len, const float angle) :
-    pos1{ pos }, pos2{ pos1 + rl::Vector2{ cos(angle), sin(angle) } * len }
+Line::Line(const rl::Vector2 pos, const float len, const float angle)
+    : pos1{ pos }
+    , pos2{ pos1 + rl::Vector2{ cos(angle), sin(angle) } * len }
 {
 }
 

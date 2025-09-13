@@ -59,7 +59,9 @@ auto match(Var&& variant, Funcs&&... funcs);
 namespace seblib
 {
 template <typename P>
-constexpr Point<P>::Point(const float x, const float y) : x(x), y(y)
+constexpr Point<P>::Point(const float x, const float y)
+    : x{ x }
+    , y{ y }
 {
 }
 

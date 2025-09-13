@@ -132,7 +132,8 @@ namespace slog = seblib::log;
 
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
-SpritePart<SpriteEnum>::SpritePart(const SpriteEnum sprite) : m_sprite(sprite)
+SpritePart<SpriteEnum>::SpritePart(const SpriteEnum sprite)
+    : m_sprite{ sprite }
 {
 }
 
@@ -357,7 +358,9 @@ auto Sprites<MaxEntities, SpriteEnums...>::part(const unsigned id) const -> Spri
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 EntitySprites<MaxEntities, SpriteEnums...>::EntitySprites(Sprites<MaxEntities, SpriteEnums...>* const sprites,
-                                                          const unsigned id) : m_sprites(sprites), m_id(id)
+                                                          const unsigned id)
+    : m_sprites{ sprites }
+    , m_id{ id }
 {
 }
 

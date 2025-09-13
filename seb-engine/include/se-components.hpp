@@ -173,8 +173,9 @@ auto EntityComponents<MaxEntities>::get() -> Comp&
 }
 
 template <size_t MaxEntities>
-EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities>& components, const size_t id) :
-    m_components(&components), m_id(id)
+EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities>& components, const size_t id)
+    : m_components{ &components }
+    , m_id{ id }
 {
 }
 } // namespace seb_engine
