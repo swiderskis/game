@@ -1,8 +1,8 @@
 #ifndef SE_COMPONENTS_HPP_
 #define SE_COMPONENTS_HPP_
 
-#include "seblib.hpp"
 #include "sl-log.hpp"
+#include "sl-math.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -11,7 +11,7 @@
 
 namespace seb_engine
 {
-namespace sl = seblib;
+namespace sm = seblib::math;
 
 class IComp
 {
@@ -85,10 +85,10 @@ private:
 };
 
 struct Position;
-using Pos = sl::Point<seb_engine::Position>;
+using Pos = sm::Point<seb_engine::Position>;
 
 struct Velocity;
-using Vel = sl::Point<seb_engine::Velocity>;
+using Vel = sm::Point<seb_engine::Velocity>;
 } // namespace seb_engine
 
 /****************************

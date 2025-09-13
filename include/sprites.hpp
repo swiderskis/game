@@ -3,15 +3,15 @@
 
 #include "entities.hpp"
 #include "se-sprite.hpp"
-#include "seblib.hpp"
 #include "settings.hpp"
+#include "sl-math.hpp"
 
 #include <cstdint>
 #include <type_traits>
 
 inline constexpr float SPRITE_LEN{ 32.0 };
 
-inline constexpr seblib::SimpleVec2 SPRITE_SIZE{ SPRITE_LEN, SPRITE_LEN };
+inline constexpr seblib::math::Vec2 SPRITE_SIZE{ SPRITE_LEN, SPRITE_LEN };
 
 enum class SpriteBase : uint8_t
 {

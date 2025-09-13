@@ -1,9 +1,9 @@
 #ifndef SE_SPRITE_HPP_
 #define SE_SPRITE_HPP_
 
-#include "raylib-cpp.hpp" // IWYU pragma: keep
 #include "seblib.hpp"
 #include "sl-log.hpp"
+#include "sl-math.hpp"
 
 #include <ranges>
 #include <tuple>
@@ -12,11 +12,12 @@ namespace seb_engine
 {
 namespace rl = raylib;
 namespace sl = seblib;
+namespace sm = seblib::math;
 
 struct SpriteDetails
 {
-    rl::Vector2 pos;
-    rl::Vector2 size;
+    sm::Vec2 pos;
+    sm::Vec2 size;
     unsigned frames{ 1 };
     float frame_duration{ 0.0 };
     bool allow_movement_override{ true };
@@ -48,7 +49,7 @@ public:
     [[nodiscard]] auto current_frame() const -> unsigned;
     auto movement_set(SpriteEnum sprite) -> void;
     auto unset() -> void;
-    auto draw(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped) -> void;
+    auto draw(rl::Texture const& texture_sheet, sm::Vec2 pos, float dt, bool flipped) -> void;
 
 private:
     SpriteEnum m_sprite{ static_cast<SpriteEnum>(0) };
@@ -70,10 +71,10 @@ class Sprites
 public:
     Sprites() = default;
 
-    auto draw_all(rl::Texture const& texture_sheet, rl::Vector2 pos, float dt, bool flipped) -> void;
-    auto draw(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped) -> void;
+    auto draw_all(rl::Texture const& texture_sheet, sm::Vec2 pos, float dt, bool flipped) -> void;
+    auto draw(rl::Texture const& texture_sheet, sm::Vec2 pos, unsigned id, float dt, bool flipped) -> void;
     template <typename SpriteEnum>
-    auto draw_part(rl::Texture const& texture_sheet, rl::Vector2 pos, unsigned id, float dt, bool flipped) -> void;
+    auto draw_part(rl::Texture const& texture_sheet, sm::Vec2 pos, unsigned id, float dt, bool flipped) -> void;
     template <typename SpriteEnum>
     auto set(unsigned id, SpriteEnum sprite) -> void;
     template <typename SpriteEnum>
@@ -222,7 +223,7 @@ auto SpritePart<SpriteEnum>::unset() -> void
 template <typename SpriteEnum>
     requires sl::Enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::draw(
-    rl::Texture const& texture_sheet, const rl::Vector2 pos, const float dt, const bool flipped
+    rl::Texture const& texture_sheet, const sm::Vec2 pos, const float dt, const bool flipped
 ) -> void
 {
     texture_sheet.Draw(rect(flipped), pos);
@@ -234,8 +235,8 @@ template <typename SpriteEnum>
 auto SpritePart<SpriteEnum>::rect(const bool flipped) const -> rl::Rectangle
 {
     const auto details{ s_details.get(m_sprite) };
-    const auto pos{ rl::Vector2(details.size.x * m_current_frame, 0.0) + details.pos };
-    const auto size{ rl::Vector2((flipped ? -1.0F : 1.0F), 1.0) * details.size };
+    const auto pos{ sm::Vec2{ details.size.x * m_current_frame, 0.0 } + details.pos };
+    const auto size{ sm::Vec2{ (flipped ? -1.0F : 1.0F), 1.0 } * details.size };
 
     return { pos, size };
 }
@@ -243,7 +244,7 @@ auto SpritePart<SpriteEnum>::rect(const bool flipped) const -> rl::Rectangle
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::draw_all(
-    rl::Texture const& texture_sheet, const rl::Vector2 pos, const float dt, const bool flipped
+    rl::Texture const& texture_sheet, const sm::Vec2 pos, const float dt, const bool flipped
 ) -> void
 {
     for (const auto [id, sprite] : m_sprites | std::views::enumerate)
@@ -255,7 +256,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::draw_all(
 template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::draw(
-    rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped
+    rl::Texture const& texture_sheet, const sm::Vec2 pos, const unsigned id, const float dt, const bool flipped
 ) -> void
 {
     (draw_part<SpriteEnums>(texture_sheet, pos, id, dt, flipped), ...);
@@ -265,7 +266,7 @@ template <size_t MaxEntities, typename... SpriteEnums>
     requires(sl::Enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::draw_part(
-    rl::Texture const& texture_sheet, const rl::Vector2 pos, const unsigned id, const float dt, const bool flipped
+    rl::Texture const& texture_sheet, const sm::Vec2 pos, const unsigned id, const float dt, const bool flipped
 ) -> void
 {
     part_mut<SpriteEnum>(id).draw(texture_sheet, pos, dt, flipped);

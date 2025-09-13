@@ -11,36 +11,37 @@
 using namespace seb_engine::bbox;
 
 namespace rl = raylib;
+namespace sl = seblib;
 namespace slog = seblib::log;
 namespace sm = seblib::math;
 
 namespace
 {
-auto resolve_collision(rl::Rectangle bbox1, rl::Rectangle bbox2) -> rl::Vector2;
-auto resolve_collision(rl::Rectangle bbox1, sm::Circle bbox2) -> rl::Vector2;
-auto resolve_collision(rl::Rectangle bbox1, sm::Line bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Circle bbox1, rl::Rectangle bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Circle bbox1, sm::Circle bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Circle bbox1, sm::Line bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Line bbox1, rl::Rectangle bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Line bbox1, sm::Circle bbox2) -> rl::Vector2;
-auto resolve_collision(sm::Line bbox1, sm::Line bbox2) -> rl::Vector2;
+auto resolve_collision(rl::Rectangle bbox1, rl::Rectangle bbox2) -> sm::Vec2;
+auto resolve_collision(rl::Rectangle bbox1, sm::Circle bbox2) -> sm::Vec2;
+auto resolve_collision(rl::Rectangle bbox1, sm::Line bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Circle bbox1, rl::Rectangle bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Circle bbox1, sm::Circle bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Circle bbox1, sm::Line bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Line bbox1, rl::Rectangle bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Line bbox1, sm::Circle bbox2) -> sm::Vec2;
+auto resolve_collision(sm::Line bbox1, sm::Line bbox2) -> sm::Vec2;
 } // namespace
 
 namespace seb_engine
 {
 BBox::BBox(const BBoxDetails bbox)
-    : BBox{ bbox, rl::Vector2{} }
+    : BBox{ bbox, sm::Vec2{} }
 {
 }
 
-BBox::BBox(const BBoxDetails bbox, const rl::Vector2 offset)
+BBox::BBox(const BBoxDetails bbox, const sm::Vec2 offset)
     : m_bbox{ bbox }
     , m_offset{ offset }
 {
 }
 
-auto BBox::val(rl::Vector2 pos) const -> BBoxVariant
+auto BBox::val(sm::Vec2 pos) const -> BBoxVariant
 {
     return sl::match(
         m_bbox,
@@ -67,7 +68,7 @@ auto collides(const BBoxVariant bbox1, const BBoxVariant bbox2) -> bool
 }
 
 // currently assumes bbox2 is unmoving and unmovable, return value only resolves bbox1 pos
-auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> rl::Vector2
+auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> sm::Vec2
 {
     return sl::match(
         bbox1,
@@ -80,31 +81,29 @@ auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> rl::
 
 namespace
 {
-auto resolve_collision(const rl::Rectangle bbox1, const rl::Rectangle bbox2) -> rl::Vector2
+auto resolve_collision(const rl::Rectangle bbox1, const rl::Rectangle bbox2) -> sm::Vec2
 {
     const auto x_overlap{ (bbox1.x > bbox2.x ? bbox2.x + bbox2.width - bbox1.x : bbox2.x - (bbox1.x + bbox1.width)) };
     const auto y_overlap{ (bbox1.y > bbox2.y ? bbox2.y + bbox2.height - bbox1.y : bbox2.y - (bbox1.y + bbox1.height)) };
 
-    return (
-        std::fabs(y_overlap) > std::fabs(x_overlap) ? rl::Vector2{ x_overlap, 0.0 } : rl::Vector2{ 0.0, y_overlap }
-    );
+    return (std::fabs(y_overlap) > std::fabs(x_overlap) ? sm::Vec2{ x_overlap, 0.0 } : sm::Vec2{ 0.0, y_overlap });
 }
 
-auto resolve_collision(const rl::Rectangle bbox1, const sm::Circle bbox2) -> rl::Vector2
+auto resolve_collision(const rl::Rectangle bbox1, const sm::Circle bbox2) -> sm::Vec2
 {
-    const rl::Vector2 corner{ (bbox2.pos.x > bbox1.x ? bbox1.x + bbox1.width : bbox1.x),
-                              (bbox2.pos.y > bbox1.y ? bbox1.y + bbox1.height : bbox1.y) };
+    const sm::Vec2 corner{ (bbox2.pos.x > bbox1.x ? bbox1.x + bbox1.width : bbox1.x),
+                           (bbox2.pos.y > bbox1.y ? bbox1.y + bbox1.height : bbox1.y) };
     const auto y_adjust_only{ bbox2.pos.x > bbox1.x && bbox2.pos.x < bbox1.x + bbox1.width };
     const auto x_adjust_only{ bbox2.pos.y > bbox1.y && bbox2.pos.y < bbox1.y + bbox1.height };
-    const rl::Vector2 diff{ (y_adjust_only ? 0.0F : bbox2.pos.x - corner.x),
-                            (x_adjust_only ? 0.0F : bbox2.pos.y - corner.y) };
+    const sm::Vec2 diff{ (y_adjust_only ? 0.0F : bbox2.pos.x - corner.x),
+                         (x_adjust_only ? 0.0F : bbox2.pos.y - corner.y) };
     const auto angle{ std::atan2(diff.y, diff.x) };
     slog::log(slog::TRC, "Angle {}", sm::radians_to_degrees(angle));
 
-    return { diff - rl::Vector2{ cos(angle), sin(angle) } * bbox2.radius };
+    return { diff - sm::Vec2{ cos(angle), sin(angle) } * bbox2.radius };
 }
 
-auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> rl::Vector2
+auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> sm::Vec2
 {
     const auto pos1{ bbox2.pos1 };
     const auto pos2{ bbox2.pos2 };
@@ -124,70 +123,68 @@ auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> rl::V
                           : pos2.y - (pos2.y > pos1.y ? bbox1.y : bbox1.y + bbox1.height))
         };
 
-        return (
-            std::fabs(x_adjust) > std::fabs(y_adjust) ? rl::Vector2{ 0.0, y_adjust } : rl::Vector2{ x_adjust, 0.0 }
-        );
+        return (std::fabs(x_adjust) > std::fabs(y_adjust) ? sm::Vec2{ 0.0, y_adjust } : sm::Vec2{ x_adjust, 0.0 });
     }
 
     const auto upward_line{ (pos2.x > pos1.x && pos1.y > pos2.y) || (pos1.x > pos2.x && pos2.y > pos1.y) };
-    const rl::Vector2 corner1{ bbox1.x, (upward_line ? bbox1.y : bbox1.y + bbox1.height) };
-    const rl::Vector2 corner2{ bbox1.x + bbox1.width, (upward_line ? bbox1.y + bbox1.height : bbox1.y) };
+    const sm::Vec2 corner1{ bbox1.x, (upward_line ? bbox1.y : bbox1.y + bbox1.height) };
+    const sm::Vec2 corner2{ bbox1.x + bbox1.width, (upward_line ? bbox1.y + bbox1.height : bbox1.y) };
     const auto diff{ pos1 - pos2 };
-    const auto closest_point1{ diff * ::Vector2DotProduct(corner1 - pos1, diff) / diff.LengthSqr() };
-    const auto closest_point2{ diff * ::Vector2DotProduct(corner2 - pos1, diff) / diff.LengthSqr() };
+    const auto closest_point1{ diff * ::Vector2DotProduct(corner1 - pos1, diff) / diff.sqr_len() };
+    const auto closest_point2{ diff * ::Vector2DotProduct(corner2 - pos1, diff) / diff.sqr_len() };
     const auto adjust1{ pos1 + closest_point1 - corner1 };
     const auto adjust2{ pos1 + closest_point2 - corner2 };
 
-    return (adjust1.Length() > adjust2.Length() ? adjust2 : adjust1);
+    return (adjust1.len() > adjust2.len() ? adjust2 : adjust1);
 }
 
-auto resolve_collision(const sm::Circle bbox1, const rl::Rectangle bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Circle bbox1, const rl::Rectangle bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Circle bbox1, const sm::Circle bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Circle bbox1, const sm::Circle bbox2) -> sm::Vec2
 {
     const auto distance{ bbox1.pos - bbox2.pos };
-    const auto overlap{ bbox1.radius + bbox2.radius - distance.Length() };
+    const auto overlap{ bbox1.radius + bbox2.radius - distance.len() };
 
-    return distance * overlap / distance.Length();
+    return distance * overlap / distance.len();
 }
 
-auto resolve_collision(const sm::Circle bbox1, const sm::Line bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Circle bbox1, const sm::Line bbox2) -> sm::Vec2
 {
     const auto pos1{ bbox2.pos1 };
     const auto pos2{ bbox2.pos2 };
     const auto diff{ pos2 - pos1 };
     const auto closest_line_point{
-        diff * std::clamp(::Vector2DotProduct(bbox1.pos - pos1, diff) / diff.LengthSqr(), 0.0F, 1.0F)
+        diff * std::clamp(::Vector2DotProduct(bbox1.pos - pos1, diff) / diff.sqr_len(), 0.0F, 1.0F)
     };
     const auto point_to_line{ pos1 + closest_line_point - bbox1.pos };
 
-    return -point_to_line * ((bbox1.radius - point_to_line.Length()) / point_to_line.Length());
+    return -point_to_line * ((bbox1.radius - point_to_line.len()) / point_to_line.len());
 }
 
-auto resolve_collision(const sm::Line bbox1, const rl::Rectangle bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Line bbox1, const rl::Rectangle bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Line bbox1, const sm::Circle bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Line bbox1, const sm::Circle bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Line bbox1, const sm::Line bbox2) -> rl::Vector2
+auto resolve_collision(const sm::Line bbox1, const sm::Line bbox2) -> sm::Vec2
 {
     rl::Vector2 collision_point;
     ::CheckCollisionLines(bbox1.pos1, bbox1.pos2, bbox2.pos1, bbox2.pos2, &collision_point);
-    const auto mid_adjust1{ collision_point - bbox1.pos1 };
-    const auto mid_adjust2{ collision_point - bbox1.pos2 };
+    const auto mid_adjust1{ -bbox1.pos1 + collision_point };
+    const auto mid_adjust2{ -bbox1.pos2 + collision_point };
     const auto end_adjust1{ bbox2.pos1 - collision_point };
     const auto end_adjust2{ bbox2.pos2 - collision_point };
-    const auto mid_adjust{ mid_adjust1.Length() > mid_adjust2.Length() ? mid_adjust2 : mid_adjust1 };
-    const auto end_adjust{ end_adjust1.Length() > end_adjust2.Length() ? end_adjust2 : end_adjust1 };
+    const auto mid_adjust{ mid_adjust1.len() > mid_adjust2.len() ? mid_adjust2 : mid_adjust1 };
+    const auto end_adjust{ end_adjust1.len() > end_adjust2.len() ? end_adjust2 : end_adjust1 };
 
-    return (mid_adjust.Length() > end_adjust.Length() ? end_adjust : mid_adjust);
+    return (mid_adjust.len() > end_adjust.len() ? end_adjust : mid_adjust);
 }
 } // namespace

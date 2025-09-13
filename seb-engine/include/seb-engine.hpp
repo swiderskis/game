@@ -2,14 +2,14 @@
 #define SEB_ENGINE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
-#include "seblib.hpp"
+#include "sl-math.hpp"
 
 #include <cstddef>
 
 namespace seb_engine
 {
 namespace rl = raylib;
-namespace sl = seblib;
+namespace sm = seblib::math;
 
 inline constexpr float COORD_SIZE{ 16.0 };
 
@@ -20,8 +20,8 @@ struct Coords
 
     constexpr Coords(size_t x, size_t y);
 
-    constexpr operator rl::Vector2() const;    // NOLINT(hicpp-explicit-conversions)
-    constexpr operator sl::SimpleVec2() const; // NOLINT(hicpp-explicit-conversions)
+    constexpr operator rl::Vector2() const; // NOLINT(hicpp-explicit-conversions)
+    constexpr operator sm::Vec2() const;    // NOLINT(hicpp-explicit-conversions)
 };
 } // namespace seb_engine
 
@@ -44,7 +44,7 @@ constexpr Coords::operator rl::Vector2() const
     return { static_cast<float>(x) * COORD_SIZE, -static_cast<float>(y) * COORD_SIZE };
 }
 
-constexpr Coords::operator sl::SimpleVec2() const
+constexpr Coords::operator sm::Vec2() const
 {
     return { static_cast<float>(x) * COORD_SIZE, -static_cast<float>(y) * COORD_SIZE };
 }
