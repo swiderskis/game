@@ -47,7 +47,8 @@ auto spawn_melee(Game& game, rl::Vector2 source_pos, size_t parent_id) -> void;
 auto spawn_projectile(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos) -> void;
 auto spawn_sector(Game& game, rl::Vector2 source_pos, rl::Vector2 target_pos, size_t parent_id) -> void;
 auto spawn_sector_lines(
-    Game& game, unsigned line_count, rl::Vector2 source_pos, rl::Vector2 target_pos, size_t sector_id) -> void;
+    Game& game, unsigned line_count, rl::Vector2 source_pos, rl::Vector2 target_pos, size_t sector_id
+) -> void;
 } // namespace
 
 Game::Game()
@@ -329,11 +330,13 @@ void spawn_sector(Game& game, const rl::Vector2 source_pos, const rl::Vector2 ta
     spawn_sector_lines(game, line_count, source_pos, target_pos, sector_id);
 }
 
-void spawn_sector_lines(Game& game,
-                        const unsigned line_count,
-                        const rl::Vector2 source_pos,
-                        const rl::Vector2 target_pos,
-                        const size_t sector_id)
+void spawn_sector_lines(
+    Game& game,
+    const unsigned line_count,
+    const rl::Vector2 source_pos,
+    const rl::Vector2 target_pos,
+    const size_t sector_id
+)
 {
     const auto diff{ target_pos - source_pos };
     const auto angle{ std::atan2(diff.y, diff.x) };

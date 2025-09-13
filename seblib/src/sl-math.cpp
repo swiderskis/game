@@ -36,7 +36,8 @@ auto Line::len() const -> float
 auto Line::draw(const rl::Color color) const -> void
 {
     ::DrawLine(
-        static_cast<int>(pos1.x), static_cast<int>(pos1.y), static_cast<int>(pos2.x), static_cast<int>(pos2.y), color);
+        static_cast<int>(pos1.x), static_cast<int>(pos1.y), static_cast<int>(pos2.x), static_cast<int>(pos2.y), color
+    );
 }
 
 auto Line::angle() const -> float

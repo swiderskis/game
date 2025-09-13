@@ -46,7 +46,8 @@ auto BBox::val(rl::Vector2 pos) const -> BBoxVariant
         m_bbox,
         [pos, this](const BBoxRect bbox) -> BBoxVariant { return rl::Rectangle{ pos + m_offset, bbox.size }; },
         [pos, this](const BBoxCircle bbox) -> BBoxVariant { return sm::Circle{ pos + m_offset, bbox.radius }; },
-        [pos, this](const BBoxLine bbox) -> BBoxVariant { return sm::Line{ pos + m_offset, bbox.len, bbox.angle }; });
+        [pos, this](const BBoxLine bbox) -> BBoxVariant { return sm::Line{ pos + m_offset, bbox.len, bbox.angle }; }
+    );
 }
 
 auto BBox::details() const -> BBoxDetails
@@ -61,7 +62,8 @@ auto collides(const BBoxVariant bbox1, const BBoxVariant bbox2) -> bool
     return sl::match(
         bbox1,
         [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return sm::check_collision(bbox1, bbox2); }); });
+        { return sl::match(bbox2, [bbox1](const auto bbox2) { return sm::check_collision(bbox1, bbox2); }); }
+    );
 }
 
 // currently assumes bbox2 is unmoving and unmovable, return value only resolves bbox1 pos
@@ -70,7 +72,8 @@ auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> rl::
     return sl::match(
         bbox1,
         [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return ::resolve_collision(bbox1, bbox2); }); });
+        { return sl::match(bbox2, [bbox1](const auto bbox2) { return ::resolve_collision(bbox1, bbox2); }); }
+    );
 }
 } // namespace bbox
 } // namespace seb_engine
@@ -82,8 +85,9 @@ auto resolve_collision(const rl::Rectangle bbox1, const rl::Rectangle bbox2) -> 
     const auto x_overlap{ (bbox1.x > bbox2.x ? bbox2.x + bbox2.width - bbox1.x : bbox2.x - (bbox1.x + bbox1.width)) };
     const auto y_overlap{ (bbox1.y > bbox2.y ? bbox2.y + bbox2.height - bbox1.y : bbox2.y - (bbox1.y + bbox1.height)) };
 
-    return (std::fabs(y_overlap) > std::fabs(x_overlap) ? rl::Vector2{ x_overlap, 0.0 }
-                                                        : rl::Vector2{ 0.0, y_overlap });
+    return (
+        std::fabs(y_overlap) > std::fabs(x_overlap) ? rl::Vector2{ x_overlap, 0.0 } : rl::Vector2{ 0.0, y_overlap }
+    );
 }
 
 auto resolve_collision(const rl::Rectangle bbox1, const sm::Circle bbox2) -> rl::Vector2
@@ -111,13 +115,18 @@ auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> rl::V
     // collision resolution with one of line ends
     if (pos1_in_rect ^ pos2_in_rect)
     {
-        const auto x_adjust{ (pos1_in_rect ? pos1.x - (pos1.x > pos2.x ? bbox1.x : bbox1.x + bbox1.width)
-                                           : pos2.x - (pos2.x > pos1.x ? bbox1.x : bbox1.x + bbox1.width)) };
-        const auto y_adjust{ (pos1_in_rect ? pos1.y - (pos1.y > pos2.y ? bbox1.y : bbox1.y + bbox1.height)
-                                           : pos2.y - (pos2.y > pos1.y ? bbox1.y : bbox1.y + bbox1.height)) };
+        const auto x_adjust{
+            (pos1_in_rect ? pos1.x - (pos1.x > pos2.x ? bbox1.x : bbox1.x + bbox1.width)
+                          : pos2.x - (pos2.x > pos1.x ? bbox1.x : bbox1.x + bbox1.width))
+        };
+        const auto y_adjust{
+            (pos1_in_rect ? pos1.y - (pos1.y > pos2.y ? bbox1.y : bbox1.y + bbox1.height)
+                          : pos2.y - (pos2.y > pos1.y ? bbox1.y : bbox1.y + bbox1.height))
+        };
 
-        return (std::fabs(x_adjust) > std::fabs(y_adjust) ? rl::Vector2{ 0.0, y_adjust }
-                                                          : rl::Vector2{ x_adjust, 0.0 });
+        return (
+            std::fabs(x_adjust) > std::fabs(y_adjust) ? rl::Vector2{ 0.0, y_adjust } : rl::Vector2{ x_adjust, 0.0 }
+        );
     }
 
     const auto upward_line{ (pos2.x > pos1.x && pos1.y > pos2.y) || (pos1.x > pos2.x && pos2.y > pos1.y) };

@@ -22,10 +22,12 @@ enum Level : int8_t
 template <typename... Args>
 struct log // NOLINT(readability-identifier-naming)
 {
-    explicit log(Level lvl,
-                 std::format_string<Args...> fmt,
-                 Args&&... args,
-                 std::source_location loc = std::source_location::current());
+    explicit log(
+        Level lvl,
+        std::format_string<Args...> fmt,
+        Args&&... args,
+        std::source_location loc = std::source_location::current()
+    );
 };
 
 template <typename... Args>
@@ -47,10 +49,9 @@ namespace fs = std::filesystem;
 inline constexpr unsigned FILENAME_WIDTH{ 16 };
 
 template <typename... Args>
-log<Args...>::log(const Level lvl,
-                  const std::format_string<Args...> fmt,
-                  Args&&... args,
-                  const std::source_location loc)
+log<Args...>::log(
+    const Level lvl, const std::format_string<Args...> fmt, Args&&... args, const std::source_location loc
+)
 {
     if (level() < lvl)
     {
