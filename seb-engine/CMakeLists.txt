@@ -15,7 +15,7 @@ if(NOT WIN32)
     target_compile_options(seb-engine PRIVATE -Werror)
     target_compile_options(seb-engine PRIVATE -Wpedantic)
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(seb-engine PRIVATE -O2)
+        target_compile_options(seb-engine PRIVATE -O1)
     endif()
 endif()
 
