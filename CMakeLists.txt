@@ -25,7 +25,7 @@ if(NOT WIN32)
     target_compile_options(game PRIVATE -Werror)
     target_compile_options(game PRIVATE -Wpedantic)
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(game PRIVATE -O2)
+        target_compile_options(game PRIVATE -O1)
     endif()
 endif()
 
