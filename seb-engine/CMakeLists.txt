@@ -31,3 +31,7 @@ target_include_directories(
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_definitions(SLOG_LVL=1)
 endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_libraries(seb-engine PRIVATE seblib)
+endif()
