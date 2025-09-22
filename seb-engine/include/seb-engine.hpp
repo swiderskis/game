@@ -11,8 +11,7 @@ namespace seb_engine
 namespace rl = raylib;
 namespace sm = seblib::math;
 
-inline constexpr float COORD_SIZE{ 16.0 };
-
+template <float CoordSize>
 struct Coords
 {
     size_t x{ 0 };
@@ -20,8 +19,12 @@ struct Coords
 
     constexpr Coords(size_t x, size_t y);
 
-    constexpr operator rl::Vector2() const; // NOLINT(hicpp-explicit-conversions)
-    constexpr operator sm::Vec2() const;    // NOLINT(hicpp-explicit-conversions)
+    operator rl::Vector2() const;        // NOLINT(hicpp-explicit-conversions)
+    constexpr operator sm::Vec2() const; // NOLINT(hicpp-explicit-conversions)
+    [[nodiscard]] auto operator+(Coords coords) const -> Coords;
+    [[nodiscard]] auto operator-(Coords coords) const -> Coords;
+    [[maybe_unused]] auto operator+=(Coords coords) -> Coords&;
+    [[maybe_unused]] auto operator-=(Coords coords) -> Coords&;
 };
 } // namespace seb_engine
 
@@ -33,20 +36,53 @@ struct Coords
 
 namespace seb_engine
 {
-constexpr Coords::Coords(const size_t x, const size_t y)
+template <float CoordSize>
+constexpr Coords<CoordSize>::Coords(const size_t x, const size_t y)
     : x{ x }
     , y{ y }
 {
 }
 
-constexpr Coords::operator rl::Vector2() const
+template <float CoordSize>
+Coords<CoordSize>::operator rl::Vector2() const
 {
-    return { static_cast<float>(x) * COORD_SIZE, -static_cast<float>(y) * COORD_SIZE };
+    return { static_cast<float>(x) * CoordSize, -static_cast<float>(y) * CoordSize };
 }
 
-constexpr Coords::operator sm::Vec2() const
+template <float CoordSize>
+constexpr Coords<CoordSize>::operator sm::Vec2() const
 {
-    return { static_cast<float>(x) * COORD_SIZE, -static_cast<float>(y) * COORD_SIZE };
+    return { static_cast<float>(x) * CoordSize, -static_cast<float>(y) * CoordSize };
+}
+
+template <float CoordSize>
+auto Coords<CoordSize>::operator+(Coords coords) const -> Coords
+{
+    return { x + coords.x, y + coords.y };
+}
+
+template <float CoordSize>
+auto Coords<CoordSize>::operator-(Coords coords) const -> Coords
+{
+    return { x - coords.x, y - coords.y };
+}
+
+template <float CoordSize>
+auto Coords<CoordSize>::operator+=(Coords coords) -> Coords&
+{
+    x += coords.x;
+    y += coords.y;
+
+    return *this;
+}
+
+template <float CoordSize>
+auto Coords<CoordSize>::operator-=(Coords coords) -> Coords&
+{
+    x -= coords.x;
+    y -= coords.y;
+
+    return *this;
 }
 } // namespace seb_engine
 

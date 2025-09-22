@@ -54,7 +54,7 @@ auto spawn_sector_lines(
 Game::Game()
 {
     window.SetTargetFPS(TARGET_FPS);
-    window.SetExitKey(KEY_NULL);
+    window.SetExitKey(::KEY_NULL);
 
     components.reg<se::Pos>();
     components.reg<se::Vel>();
@@ -65,19 +65,27 @@ Game::Game()
 
     for (size_t i{ 0 }; i < 10; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, se::Coords{ 0, i });
+        spawn_tile(Tile::Brick, Coords{ 0, i });
     }
 
     for (size_t i{ 0 }; i < 20; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, se::Coords{ i, 0 });
+        spawn_tile(Tile::Brick, Coords{ i, 0 });
     }
 
-    spawn_tile(Tile::Brick, se::Coords{ 2, 7 }); // NOLINT
-    spawn_tile(Tile::Brick, se::Coords{ 1, 6 }); // NOLINT
+    for (size_t i{ 0 }; i < 4; i++) // NOLINT
+    {
+        spawn_tile(Tile::Brick, Coords{ i, 2 });
+        spawn_tile(Tile::Brick, Coords{ i, 3 });
+    }
 
-    spawn_player(se::Coords{ 0, 2 });
-    spawn_enemy(Enemy::Duck, se::Coords{ 6, 6 }); // NOLINT
+    spawn_tile(Tile::Brick, Coords{ 2, 7 }); // NOLINT
+    spawn_tile(Tile::Brick, Coords{ 1, 6 }); // NOLINT
+    spawn_tile(Tile::Brick, Coords{ 2, 4 }); // NOLINT
+    world.calculate_cboxes();
+
+    spawn_player(Coords{ 5, 2 });             // NOLINT
+    spawn_enemy(Enemy::Duck, Coords{ 6, 6 }); // NOLINT
 }
 
 auto Game::run() -> void
@@ -122,11 +130,11 @@ auto Game::run() -> void
 
     if (inputs.spawn_enemy)
     {
-        spawn_enemy(Enemy::Duck, se::Coords{ 6, 6 }); // NOLINT
+        spawn_enemy(Enemy::Duck, Coords{ 6, 6 }); // NOLINT
     }
 }
 
-auto Game::spawn_player(const se::Coords coords) -> void
+auto Game::spawn_player(const Coords coords) -> void
 {
     const auto id{ entities.spawn(Entity::Player) };
     player_id = id;
@@ -138,7 +146,7 @@ auto Game::spawn_player(const se::Coords coords) -> void
     combat.hitbox = se::BBox{ PLAYER_HITBOX_SIZE, PLAYER_HITBOX_OFFSET };
 }
 
-auto Game::spawn_enemy(const Enemy enemy, const se::Coords coords) -> void
+auto Game::spawn_enemy(const Enemy enemy, const Coords coords) -> void
 {
     auto sprite_base{ SpriteBase::None };
     switch (enemy)
@@ -159,7 +167,7 @@ auto Game::spawn_enemy(const Enemy enemy, const se::Coords coords) -> void
     sprites.set(id, sprite_base);
 }
 
-void Game::spawn_tile(const Tile tile, const se::Coords coords)
+void Game::spawn_tile(const Tile tile, const Coords coords)
 {
     auto sprite{ SpriteTile::None };
     switch (tile)
