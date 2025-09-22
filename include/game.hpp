@@ -20,6 +20,8 @@
 #undef SHOW_HITBOXES
 #endif
 
+using Coords = seb_engine::Coords<TILE_LEN>;
+
 static constexpr auto WINDOW_TITLE{ "Game Title" };
 #ifndef TEXTURES
 static constexpr auto TEXTURE_SHEET{ "assets/texture-sheet.png" };
@@ -57,7 +59,7 @@ struct Game
     seb_engine::Entities<MAX_ENTITIES, Entity> entities;
     seb_engine::Components<MAX_ENTITIES> components;
     Sprites sprites;
-    seb_engine::World<Tile, SpriteTile, WORLD_WIDTH, WORLD_HEIGHT> world;
+    seb_engine::World<Tile, SpriteTile, WORLD_WIDTH, WORLD_HEIGHT, TILE_LEN> world;
     std::vector<size_t> to_destroy;
     Inputs inputs;
     std::optional<seb_engine::ui::Screen> screen;
@@ -68,9 +70,9 @@ struct Game
     Game();
 
     auto run() -> void;
-    auto spawn_player(seb_engine::Coords coords) -> void;
-    auto spawn_enemy(Enemy enemy, seb_engine::Coords coords) -> void;
-    auto spawn_tile(Tile tile, seb_engine::Coords coords) -> void;
+    auto spawn_player(Coords coords) -> void;
+    auto spawn_enemy(Enemy enemy, Coords coords) -> void;
+    auto spawn_tile(Tile tile, Coords coords) -> void;
     [[nodiscard]] auto dt() const -> float;
     [[nodiscard]] auto get_mouse_pos() const -> raylib::Vector2;
     auto destroy_entity(size_t id) -> void;

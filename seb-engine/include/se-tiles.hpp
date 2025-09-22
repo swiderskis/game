@@ -5,7 +5,9 @@
 #include "se-sprite.hpp"
 #include "seb-engine.hpp"
 #include "seblib.hpp"
+#include "sl-log.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <ranges>
@@ -16,9 +18,16 @@ namespace seb_engine
 namespace rl = raylib;
 namespace sl = seblib;
 
+enum class TileType : uint8_t
+{
+    Empty = 0,
+
+    Block,
+};
+
 struct TileDetails
 {
-    BBoxRect cbox;
+    TileType type;
 };
 
 // register tile details by specialising this template
@@ -30,30 +39,34 @@ struct TileDetailsLookup
 };
 
 // assumes TileEnum has a "no tile" value of 0
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
 class World
 {
 public:
-    static TileDetailsLookup<TileEnum> s_details;
+    static TileDetailsLookup<Tile> s_details;
 
-    auto spawn(Coords coords, TileEnum tile, SpriteEnum sprite) -> void;
+    auto spawn(Coords<TileSize> coords, Tile tile, Sprite sprite) -> void;
     auto draw(rl::Texture const& texture_sheet, float dt) -> void;
-    [[nodiscard]] auto tiles() const -> std::vector<TileEnum> const&;
-    [[nodiscard]] auto cboxes() const;
+    [[nodiscard]] auto tiles() const -> std::vector<Tile> const&;
+    [[nodiscard]] auto cboxes() const -> std::vector<rl::Rectangle> const&;
     auto draw_cboxes() const -> void;
+    auto calculate_cboxes() -> void;
 
 private:
-    std::vector<TileEnum> m_tiles{ Width * Height, static_cast<TileEnum>(0) };
-    Sprites<Width * Height, SpriteEnum> m_sprites;
+    std::vector<Tile> m_tiles{ Width * Height, static_cast<Tile>(0) };
+    std::vector<rl::Rectangle> m_cboxes;
+    Sprites<Width * Height, Sprite> m_sprites;
 
-    [[nodiscard]] auto at(Coords coords) const -> TileEnum;
-    [[nodiscard]] auto at(size_t id) const -> TileEnum;
-    [[nodiscard]] auto at_mut(Coords coords) -> TileEnum&;
-    [[nodiscard]] auto at_mut(size_t id) -> TileEnum&;
-    [[nodiscard]] auto coords_from_id(size_t id) const -> Coords;
-    [[nodiscard]] auto id_from_coords(Coords coords) const -> size_t;
+    [[nodiscard]] auto at(Coords<TileSize> coords) const -> Tile;
+    [[nodiscard]] auto at(size_t id) const -> Tile;
+    [[nodiscard]] auto at_mut(Coords<TileSize> coords) -> Tile&;
+    [[nodiscard]] auto at_mut(size_t id) -> Tile&;
+    [[nodiscard]] auto coords_from_id(size_t id) const -> Coords<TileSize>;
+    [[nodiscard]] auto id_from_coords(Coords<TileSize> coords) const -> size_t;
     [[nodiscard]] auto cbox(size_t id) const -> BBoxVariant;
+    [[nodiscard]] auto row(size_t y, size_t min_x, size_t max_x) const;
+    [[nodiscard]] auto col(size_t x, size_t min_y, size_t max_y) const;
 };
 } // namespace seb_engine
 
@@ -65,19 +78,19 @@ private:
 
 namespace seb_engine
 {
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::spawn(
-    const Coords coords, const TileEnum tile, const SpriteEnum sprite
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::spawn(
+    const Coords<TileSize> coords, const Tile tile, const Sprite sprite
 ) -> void
 {
     at_mut(coords) = tile;
     m_sprites.set(id_from_coords(coords), sprite);
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture_sheet, const float dt) -> void
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::draw(rl::Texture const& texture_sheet, const float dt) -> void
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
     {
@@ -85,38 +98,95 @@ auto World<TileEnum, SpriteEnum, Width, Height>::draw(rl::Texture const& texture
     }
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::tiles() const -> std::vector<TileEnum> const&
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::tiles() const -> std::vector<Tile> const&
 {
     return m_tiles;
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::cboxes() const
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::cboxes() const -> std::vector<rl::Rectangle> const&
 {
-    return m_tiles | std::views::enumerate
-           | std::views::filter([](const auto x) { return std::get<1>(x) != static_cast<TileEnum>(0); })
-           | std::views::transform([this](const auto x) { return cbox(std::get<0>(x)); });
+    return m_cboxes;
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::draw_cboxes() const -> void
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::draw_cboxes() const -> void
 {
-    for (const auto [id, tile] : m_tiles | std::views::enumerate)
+    for (const auto cbox : m_cboxes)
     {
-        if (tile != static_cast<TileEnum>(0))
-        {
-            rl::Rectangle{ coords_from_id(id), s_details.get(tile).cbox.size }.DrawLines(::RED);
-        }
+        cbox.DrawLines(::RED);
     }
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const -> TileEnum
+// TODO account for different tile sizes, current logic assumes full tiles
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
+{
+    m_cboxes.clear();
+    const auto non_empty{ [](const auto tile) { return std::get<1>(tile) != static_cast<Tile>(0); } };
+    for (const auto [id, tile] : tiles() | std::views::enumerate | std::views::filter(non_empty))
+    {
+        const auto coords{ coords_from_id(id) };
+        rl::Rectangle tile_cbox{ coords, rl::Vector2{ TileSize, TileSize } };
+        const auto collisions{ m_cboxes
+                               | std::views::transform([tile_cbox](const auto existing_cbox)
+                                                       { return bbox::collides(tile_cbox, existing_cbox); }) };
+        if (std::ranges::any_of(collisions, [](const auto collides) { return collides; }))
+        {
+            slog::log(slog::TRC, "Skipping tile at ({}, {})", coords.x, coords.y);
+            continue;
+        }
+
+        auto check_right{ true };
+        auto check_top{ true };
+        auto coords_max{ coords + Coords<TileSize>{ 1, 1 } };
+        while (check_right || check_top)
+        {
+            const auto top_right_not_empty{ check_right && check_top && at(coords_max) != static_cast<Tile>(0) };
+            const auto top_not_empty{
+                check_top && std::ranges::all_of(row(coords_max.y, coords.x, coords_max.x - 1), non_empty)
+            };
+            const auto right_not_empty{
+                check_right && std::ranges::all_of(col(coords_max.x, coords.y, coords_max.y - 1), non_empty)
+            };
+            if (top_right_not_empty && top_not_empty && right_not_empty)
+            {
+                coords_max += { 1, 1 };
+                tile_cbox.y -= TileSize;
+                tile_cbox.width += TileSize;
+                tile_cbox.height += TileSize;
+            }
+            else if (top_not_empty)
+            {
+                coords_max += { 0, 1 };
+                check_right = false;
+                tile_cbox.y -= TileSize;
+                tile_cbox.height += TileSize;
+            }
+            else if (right_not_empty)
+            {
+                coords_max += { 1, 0 };
+                check_top = false;
+                tile_cbox.width += TileSize;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        m_cboxes.emplace_back(tile_cbox);
+    }
+}
+
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::at(const Coords<TileSize> coords) const -> Tile
 {
     assert(coords.x <= Width);
     assert(coords.y <= Height);
@@ -124,16 +194,16 @@ auto World<TileEnum, SpriteEnum, Width, Height>::at(const Coords coords) const -
     return m_tiles[coords.y + (Height * coords.x)];
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::at(const size_t id) const -> TileEnum
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::at(const size_t id) const -> Tile
 {
     return at(coords_from_id(id));
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords) -> TileEnum&
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const Coords<TileSize> coords) -> Tile&
 {
     assert(coords.x <= Width);
     assert(coords.y <= Height);
@@ -141,32 +211,62 @@ auto World<TileEnum, SpriteEnum, Width, Height>::at_mut(const Coords coords) -> 
     return m_tiles[coords.y + (Height * coords.x)];
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::at_mut(const size_t id) -> TileEnum&
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const size_t id) -> Tile&
 {
     return at_mut(coords_from_id(id));
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::coords_from_id(size_t id) const -> Coords
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::coords_from_id(const size_t id) const -> Coords<TileSize>
 {
-    return Coords{ id / Height, id % Height };
+    return Coords<TileSize>{ id / Height, id % Height };
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::id_from_coords(Coords coords) const -> size_t
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::id_from_coords(const Coords<TileSize> coords) const -> size_t
 {
     return (coords.x * Height) + coords.y;
 }
 
-template <typename TileEnum, typename SpriteEnum, size_t Width, size_t Height>
-    requires sl::Enumerable<TileEnum> && sl::Enumerable<SpriteEnum>
-auto World<TileEnum, SpriteEnum, Width, Height>::cbox(const size_t id) const -> BBoxVariant
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::cbox(const size_t id) const -> BBoxVariant
 {
     return BBox{ s_details.get(at(id)).cbox }.val(coords_from_id(id));
+}
+
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const size_t min_x, const size_t max_x) const
+{
+    return m_tiles | std::views::enumerate
+           | std::views::filter(
+               [this, y, min_x, max_x](const auto tile)
+               {
+                   const auto coords{ coords_from_id(std::get<0>(tile)) };
+
+                   return coords.y == y && coords.x >= min_x && coords.x <= max_x;
+               }
+           );
+}
+
+template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
+    requires sl::Enumerable<Tile> && sl::Enumerable<Sprite>
+auto World<Tile, Sprite, Width, Height, TileSize>::col(const size_t x, const size_t min_y, const size_t max_y) const
+{
+    return m_tiles | std::views::enumerate
+           | std::views::filter(
+               [this, x, min_y, max_y](const auto tile)
+               {
+                   const auto coords{ coords_from_id(std::get<0>(tile)) };
+
+                   return coords.x == x && coords.y >= min_y && coords.y <= max_y;
+               }
+           );
 }
 } // namespace seb_engine
 
