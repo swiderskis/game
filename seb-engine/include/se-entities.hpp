@@ -14,7 +14,7 @@ namespace sl = seblib;
 
 // assumes Entity has a "no entity" value of 0
 template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
+    requires sl::enumerable<Entity>
 class Entities
 {
 public:
@@ -40,7 +40,7 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
+    requires sl::enumerable<Entity>
 auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
 {
     size_t entity_id{ 0 };
@@ -67,7 +67,7 @@ auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
 }
 
 template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
+    requires sl::enumerable<Entity>
 auto Entities<MaxEntities, Entity>::vec() const -> std::vector<Entity> const&
 {
     return m_entities;
@@ -75,14 +75,14 @@ auto Entities<MaxEntities, Entity>::vec() const -> std::vector<Entity> const&
 
 // not marked const to allow creating vector for key if it doesn't exist already
 template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
+    requires sl::enumerable<Entity>
 auto Entities<MaxEntities, Entity>::ids(const Entity entity) -> std::vector<size_t> const&
 {
     return m_entity_ids[entity];
 }
 
 template <size_t MaxEntities, typename Entity>
-    requires sl::Enumerable<Entity>
+    requires sl::enumerable<Entity>
 auto Entities<MaxEntities, Entity>::destroy(const size_t id) -> void
 {
     auto& entity{ m_entities[id] };

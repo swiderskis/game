@@ -25,7 +25,7 @@ struct SpriteDetails
 
 // register sprite details by specialising this template
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 struct SpriteDetailsLookup
 {
     static auto get(SpriteEnum) -> SpriteDetails;
@@ -33,7 +33,7 @@ struct SpriteDetailsLookup
 
 // assumes SpriteEnum has a "no sprite" value of 0
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 class SpritePart
 {
 public:
@@ -61,11 +61,11 @@ private:
 };
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 class EntitySprites;
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 class Sprites
 {
 public:
@@ -100,7 +100,7 @@ private:
 };
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 class EntitySprites
 {
 public:
@@ -132,14 +132,14 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 SpritePart<SpriteEnum>::SpritePart(const SpriteEnum sprite)
     : m_sprite{ sprite }
 {
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite) -> void
 {
     if (m_sprite == sprite)
@@ -155,7 +155,7 @@ auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite) -> void
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite, const float frame_duration) -> void
 {
     if (m_sprite != sprite)
@@ -168,7 +168,7 @@ auto SpritePart<SpriteEnum>::set(const SpriteEnum sprite, const float frame_dura
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::check_update_frame(const float dt) -> void
 {
     if (m_frame_duration == 0.0)
@@ -190,21 +190,21 @@ auto SpritePart<SpriteEnum>::check_update_frame(const float dt) -> void
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::sprite() const -> SpriteEnum
 {
     return m_sprite;
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::current_frame() const -> unsigned
 {
     return m_current_frame;
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite) -> void
 {
     if (s_details.get(m_sprite).allow_movement_override)
@@ -214,14 +214,14 @@ auto SpritePart<SpriteEnum>::movement_set(const SpriteEnum sprite) -> void
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::unset() -> void
 {
     set(static_cast<SpriteEnum>(0));
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::draw(
     rl::Texture const& texture_sheet, const sm::Vec2 pos, const float dt, const bool flipped
 ) -> void
@@ -231,7 +231,7 @@ auto SpritePart<SpriteEnum>::draw(
 }
 
 template <typename SpriteEnum>
-    requires sl::Enumerable<SpriteEnum>
+    requires sl::enumerable<SpriteEnum>
 auto SpritePart<SpriteEnum>::rect(const bool flipped) const -> rl::Rectangle
 {
     const auto details{ s_details.get(m_sprite) };
@@ -242,7 +242,7 @@ auto SpritePart<SpriteEnum>::rect(const bool flipped) const -> rl::Rectangle
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::draw_all(
     rl::Texture const& texture_sheet, const sm::Vec2 pos, const float dt, const bool flipped
 ) -> void
@@ -254,7 +254,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::draw_all(
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::draw(
     rl::Texture const& texture_sheet, const sm::Vec2 pos, const unsigned id, const float dt, const bool flipped
 ) -> void
@@ -263,7 +263,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::draw(
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::draw_part(
     rl::Texture const& texture_sheet, const sm::Vec2 pos, const unsigned id, const float dt, const bool flipped
@@ -273,7 +273,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::draw_part(
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite) -> void
 {
@@ -281,7 +281,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEn
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEnum sprite, const float duration) -> void
 {
@@ -289,7 +289,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::set(const unsigned id, const SpriteEn
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::movement_set(const unsigned id, const SpriteEnum sprite) -> void
 {
@@ -297,14 +297,14 @@ auto Sprites<MaxEntities, SpriteEnums...>::movement_set(const unsigned id, const
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::by_id(const unsigned id) -> EntitySprites<MaxEntities, SpriteEnums...>
 {
     return { this, id };
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::sprite(const unsigned id) const -> SpriteEnum
 {
@@ -312,7 +312,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::sprite(const unsigned id) const -> Sp
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::current_frame(const unsigned id) const -> unsigned
 {
@@ -320,7 +320,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::current_frame(const unsigned id) cons
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 auto Sprites<MaxEntities, SpriteEnums...>::unset(const unsigned id) -> void
 {
     slog::log(slog::TRC, "Unsetting sprite parts for entity id {}", id);
@@ -328,7 +328,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::unset(const unsigned id) -> void
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::details(unsigned id) const -> SpriteDetails
 {
@@ -339,7 +339,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::details(unsigned id) const -> SpriteD
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::part_mut(const unsigned id) -> SpritePart<SpriteEnum>&
 {
@@ -347,7 +347,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::part_mut(const unsigned id) -> Sprite
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto Sprites<MaxEntities, SpriteEnums...>::part(const unsigned id) const -> SpritePart<SpriteEnum> const&
 {
@@ -355,7 +355,7 @@ auto Sprites<MaxEntities, SpriteEnums...>::part(const unsigned id) const -> Spri
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 EntitySprites<MaxEntities, SpriteEnums...>::EntitySprites(
     Sprites<MaxEntities, SpriteEnums...>* const sprites, const unsigned id
 )
@@ -365,7 +365,7 @@ EntitySprites<MaxEntities, SpriteEnums...>::EntitySprites(
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto EntitySprites<MaxEntities, SpriteEnums...>::set(const SpriteEnum sprite)
     -> EntitySprites<MaxEntities, SpriteEnums...>&
@@ -376,7 +376,7 @@ auto EntitySprites<MaxEntities, SpriteEnums...>::set(const SpriteEnum sprite)
 }
 
 template <size_t MaxEntities, typename... SpriteEnums>
-    requires(sl::Enumerable<SpriteEnums>, ...)
+    requires(sl::enumerable<SpriteEnums>, ...)
 template <typename SpriteEnum>
 auto EntitySprites<MaxEntities, SpriteEnums...>::movement_set(const SpriteEnum sprite)
     -> EntitySprites<MaxEntities, SpriteEnums...>&
