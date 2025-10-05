@@ -7,7 +7,6 @@
 #include "sl-math.hpp"
 
 #include <cstdint>
-#include <type_traits>
 
 inline constexpr float SPRITE_LEN{ 32.0 };
 
