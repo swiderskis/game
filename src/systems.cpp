@@ -45,10 +45,15 @@ inline constexpr float DAMAGE_LINE_THICKNESS{ 1.33 };
 
 namespace
 {
+template <typename S>
+concept is_entity_sprite_enum
+    = std::is_same_v<S, SpriteBase> || std::is_same_v<S, SpriteHead> || std::is_same_v<S, SpriteArms>
+      || std::is_same_v<S, SpriteLegs> || std::is_same_v<S, SpriteExtra>;
+
 auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
-template <typename SpriteEnum>
-    requires IsEntitySpriteEnum<SpriteEnum>
+template <typename Sprite>
+    requires is_entity_sprite_enum<Sprite>
 auto draw_sprite_part(Game& game, size_t id) -> void;
 } // namespace
 
@@ -371,27 +376,27 @@ auto draw_sprite(Game& game, const size_t id) -> void
     draw_sprite_part<SpriteExtra>(game, id);
 }
 
-template <typename SpriteEnum>
-    requires IsEntitySpriteEnum<SpriteEnum>
+template <typename Sprite>
+    requires is_entity_sprite_enum<Sprite>
 auto draw_sprite_part(Game& game, const size_t id) -> void
 {
     const auto pos{ game.components.get<se::Pos>(id) };
     const auto flags{ game.components.get<Flags>(id) };
     auto& sprites{ game.sprites };
     const auto flipped{ flags.is_enabled(Flags::FLIPPED) };
-    if constexpr (std::is_same_v<SpriteEnum, SpriteLegs>)
+    if constexpr (std::is_same_v<Sprite, SpriteLegs>)
     {
-        sprites.draw_part<SpriteEnum>(game.texture_sheet, pos, id, game.dt(), flipped);
+        sprites.draw_part<Sprite>(game.texture_sheet, pos, id, game.dt(), flipped);
     }
     else
     {
-        const auto sprite_size{ game.sprites.details<SpriteEnum>(id).size };
+        const auto sprite_size{ game.sprites.details<Sprite>(id).size };
         const auto x_offset{ (flipped ? sprites::flipped_x_offset(sprite_size) : 0.0F) };
         const auto legs{ sprites.sprite<SpriteLegs>(id) };
         const auto legs_frame{ sprites.current_frame<SpriteLegs>(id) };
         const auto y_offset{ (legs_frame % 2 == 0 ? 0.0F : sprites::alternate_frame_y_offset(legs)) };
         const rl::Vector2 offset{ x_offset, y_offset };
-        sprites.draw_part<SpriteEnum>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
+        sprites.draw_part<Sprite>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
     }
 }
 } // namespace
