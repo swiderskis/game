@@ -64,11 +64,6 @@ enum class SpriteTile : uint8_t
 
 using Sprites = seb_engine::Sprites<MAX_ENTITIES, SpriteBase, SpriteHead, SpriteArms, SpriteLegs, SpriteExtra>;
 
-template <typename S>
-concept IsEntitySpriteEnum
-    = std::is_same_v<S, SpriteBase> || std::is_same_v<S, SpriteHead> || std::is_same_v<S, SpriteArms>
-      || std::is_same_v<S, SpriteLegs> || std::is_same_v<S, SpriteExtra>;
-
 namespace sprites
 {
 auto lookup_set_movement_sprites(Sprites& sprites, size_t id, Entity entity, raylib::Vector2 vel) -> void;
