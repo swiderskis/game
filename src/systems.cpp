@@ -46,14 +46,13 @@ inline constexpr float DAMAGE_LINE_THICKNESS{ 1.33 };
 namespace
 {
 template <typename S>
-concept is_entity_sprite_enum
+concept EntitySpritePart
     = std::is_same_v<S, SpriteBase> || std::is_same_v<S, SpriteHead> || std::is_same_v<S, SpriteArms>
       || std::is_same_v<S, SpriteLegs> || std::is_same_v<S, SpriteExtra>;
 
 auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
-template <typename Sprite>
-    requires is_entity_sprite_enum<Sprite>
+template <EntitySpritePart Sprite>
 auto draw_sprite_part(Game& game, size_t id) -> void;
 } // namespace
 
@@ -376,8 +375,7 @@ auto draw_sprite(Game& game, const size_t id) -> void
     draw_sprite_part<SpriteExtra>(game, id);
 }
 
-template <typename Sprite>
-    requires is_entity_sprite_enum<Sprite>
+template <EntitySpritePart Sprite>
 auto draw_sprite_part(Game& game, const size_t id) -> void
 {
     const auto pos{ game.components.get<se::Pos>(id) };

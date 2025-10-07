@@ -31,16 +31,14 @@ struct TileDetails
 };
 
 // register tile details by specialising this template
-template <typename TileEnum>
-    requires sl::enumerable<TileEnum>
+template <sl::Enumerable Tile>
 struct TileDetailsLookup
 {
-    static auto get(TileEnum) -> TileDetails;
+    static auto get(Tile) -> TileDetails;
 };
 
-// assumes TileEnum has a "no tile" value of 0
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+// assumes Tile has a "no tile" value of 0
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 class World
 {
 public:
@@ -78,8 +76,7 @@ private:
 
 namespace seb_engine
 {
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::spawn(
     const Coords<TileSize> coords, const Tile tile, const Sprite sprite
 ) -> void
@@ -88,8 +85,7 @@ auto World<Tile, Sprite, Width, Height, TileSize>::spawn(
     m_sprites.set(id_from_coords(coords), sprite);
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::draw(rl::Texture const& texture_sheet, const float dt) -> void
 {
     for (const auto [id, tile] : m_tiles | std::views::enumerate)
@@ -98,22 +94,19 @@ auto World<Tile, Sprite, Width, Height, TileSize>::draw(rl::Texture const& textu
     }
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::tiles() const -> std::vector<Tile> const&
 {
     return m_tiles;
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::cboxes() const -> std::vector<rl::Rectangle> const&
 {
     return m_cboxes;
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::draw_cboxes() const -> void
 {
     for (const auto cbox : m_cboxes)
@@ -123,8 +116,7 @@ auto World<Tile, Sprite, Width, Height, TileSize>::draw_cboxes() const -> void
 }
 
 // TODO account for different tile sizes, current logic assumes full tiles
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
 {
     m_cboxes.clear();
@@ -184,8 +176,7 @@ auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
     }
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::at(const Coords<TileSize> coords) const -> Tile
 {
     assert(coords.x <= Width);
@@ -194,15 +185,13 @@ auto World<Tile, Sprite, Width, Height, TileSize>::at(const Coords<TileSize> coo
     return m_tiles[coords.y + (Height * coords.x)];
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::at(const size_t id) const -> Tile
 {
     return at(coords_from_id(id));
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const Coords<TileSize> coords) -> Tile&
 {
     assert(coords.x <= Width);
@@ -211,36 +200,31 @@ auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const Coords<TileSize>
     return m_tiles[coords.y + (Height * coords.x)];
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const size_t id) -> Tile&
 {
     return at_mut(coords_from_id(id));
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::coords_from_id(const size_t id) const -> Coords<TileSize>
 {
     return Coords<TileSize>{ id / Height, id % Height };
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::id_from_coords(const Coords<TileSize> coords) const -> size_t
 {
     return (coords.x * Height) + coords.y;
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::cbox(const size_t id) const -> BBoxVariant
 {
     return BBox{ s_details.get(at(id)).cbox }.val(coords_from_id(id));
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const size_t min_x, const size_t max_x) const
 {
     return m_tiles | std::views::enumerate
@@ -254,8 +238,7 @@ auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const siz
            );
 }
 
-template <typename Tile, typename Sprite, size_t Width, size_t Height, float TileSize>
-    requires sl::enumerable<Tile> && sl::enumerable<Sprite>
+template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::col(const size_t x, const size_t min_y, const size_t max_y) const
 {
     return m_tiles | std::views::enumerate
