@@ -1,6 +1,0 @@
--isystem../raylib/src
--iquote../include
--iquote../raylib-cpp/include
--iquote../seb-engine/include
--iquote../seblib/include
--std=c++23
