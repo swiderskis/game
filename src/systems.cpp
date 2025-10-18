@@ -19,9 +19,6 @@ namespace sm = seblib::math;
 namespace slog = seblib::log;
 namespace se = seb_engine;
 
-static constexpr std::initializer_list DESTROY_ON_COLLISION{
-    Entity::Projectile,
-};
 static constexpr std::initializer_list DAMAGING_ENTITIES{
     Entity::Projectile,
     Entity::Melee,
@@ -172,7 +169,6 @@ auto Game::resolve_tile_collisions() -> void
     for (const auto [id, entity] : entities.vec() | std::views::enumerate)
     {
         auto& pos{ components.get<se::Pos>(id) };
-        const auto vel{ components.get<se::Vel>(id) };
         for (const auto tile_cbox : world.cboxes())
         {
             const auto cbox{ components.get<se::BBox>(id).val(pos) };
