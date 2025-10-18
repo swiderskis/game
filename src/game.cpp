@@ -279,7 +279,7 @@ auto pause_screen(Game& game) -> sui::Screen
     resume.element->color = ::WHITE;
     resume.element->text.text = "Resume";
     resume.element->text.size = sui::TextPctSize{ 6 }; // NOLINT(*magic-numbers)
-    resume.element->on_click = [&game]() { game.toggle_pause(); };
+    resume.element->on_click = [&game]() -> void { game.toggle_pause(); };
 
     auto exit{ screen.new_element<sui::Button>() };
     exit.element->set_pos(sui::PercentSize{ 50, 60 });  // NOLINT(*magic-numbers)
@@ -287,7 +287,7 @@ auto pause_screen(Game& game) -> sui::Screen
     exit.element->color = ::WHITE;
     exit.element->text.text = "Exit";
     exit.element->text.size = sui::TextPctSize{ 6 }; // NOLINT(*magic-numbers)
-    exit.element->on_click = [&game]() { game.close = true; };
+    exit.element->on_click = [&game]() -> void { game.close = true; };
 
     return screen;
 }
@@ -359,8 +359,9 @@ void spawn_sector_lines(
     {
         const auto line_id{ game.entities.spawn(Entity::DamageLine) };
         const auto line_ang{ initial_angle + (angle_diff * static_cast<float>(i)) };
-        const auto offset{ sector_offset
-                           + sm::Vec2{ std::cos(line_ang), std::sin(line_ang) } * sector_details.line_offset };
+        const auto offset{
+            sector_offset + sm::Vec2{ std::cos(line_ang), std::sin(line_ang) } * sector_details.line_offset
+        };
         slog::log(slog::TRC, "Offsetting damage line by ({}, {})", offset.x, offset.y);
         auto comps{ game.components.by_id(line_id) };
         comps.get<se::Pos>() = source_pos;

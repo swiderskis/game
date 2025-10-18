@@ -64,9 +64,12 @@ auto check_collision(const rl::Rectangle rectangle, const Line line) -> bool
     const Line rect_line3{ rect_pos + Vec2{ rectangle.width, 0.0 }, rect_pos + rect_size };
     const Line rect_line4{ rect_pos + Vec2{ 0.0, rectangle.height }, rect_pos + rect_size };
 
-    return rectangle.CheckCollision(line.pos1) || rectangle.CheckCollision(line.pos2)
-           || check_collision(rect_line1, line) || check_collision(rect_line2, line)
-           || check_collision(rect_line3, line) || check_collision(rect_line4, line);
+    return rectangle.CheckCollision(line.pos1)
+        || rectangle.CheckCollision(line.pos2)
+        || check_collision(rect_line1, line)
+        || check_collision(rect_line2, line)
+        || check_collision(rect_line3, line)
+        || check_collision(rect_line4, line);
 }
 
 auto check_collision(const Circle circle, const rl::Rectangle rectangle) -> bool

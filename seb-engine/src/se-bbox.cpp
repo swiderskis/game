@@ -62,8 +62,8 @@ auto collides(const BBoxVariant bbox1, const BBoxVariant bbox2) -> bool
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return sm::check_collision(bbox1, bbox2); }); }
+        [bbox2](const auto bbox1) -> bool
+        { return sl::match(bbox2, [bbox1](const auto bbox2) -> bool { return sm::check_collision(bbox1, bbox2); }); }
     );
 }
 
@@ -72,8 +72,12 @@ auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> sm::
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return ::resolve_collision(bbox1, bbox2); }); }
+        [bbox2](const auto bbox1) -> sm::Vec2
+        {
+            return sl::match(
+                bbox2, [bbox1](const auto bbox2) -> sm::Vec2 { return ::resolve_collision(bbox1, bbox2); }
+            );
+        }
     );
 }
 } // namespace bbox
@@ -107,10 +111,12 @@ auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> sm::V
 {
     const auto pos1{ bbox2.pos1 };
     const auto pos2{ bbox2.pos2 };
-    const auto pos1_in_rect{ pos1.x >= bbox1.x && pos1.x <= bbox1.x + bbox1.width && pos1.y >= bbox1.y
-                             && pos1.y <= bbox1.y + bbox1.height };
-    const auto pos2_in_rect{ pos2.x >= bbox1.x && pos2.x <= bbox1.x + bbox1.width && pos2.y >= bbox1.y
-                             && pos2.y <= bbox1.y + bbox1.height };
+    const auto pos1_in_rect{
+        pos1.x >= bbox1.x && pos1.x <= bbox1.x + bbox1.width && pos1.y >= bbox1.y && pos1.y <= bbox1.y + bbox1.height
+    };
+    const auto pos2_in_rect{
+        pos2.x >= bbox1.x && pos2.x <= bbox1.x + bbox1.width && pos2.y >= bbox1.y && pos2.y <= bbox1.y + bbox1.height
+    };
     // collision resolution with one of line ends
     if (pos1_in_rect ^ pos2_in_rect)
     {

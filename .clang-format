@@ -7,7 +7,7 @@ AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
 AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Right
-AlignOperands: Align
+AlignOperands: DontAlign
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
@@ -25,13 +25,14 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
+BreakAfterJavaFieldAnnotations: false
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Allman
 BreakBeforeInheritanceComma: false
-BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
+BreakBinaryOperations: OnePerLine
 BreakConstructorInitializers: BeforeComma
-BreakAfterJavaFieldAnnotations: false
+BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 ColumnLimit: 120
 CommentPragmas: "^ IWYU pragma:"

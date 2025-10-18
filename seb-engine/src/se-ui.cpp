@@ -40,14 +40,16 @@ auto Text::draw(const rl::Vector2 pos) const -> void
 auto Text::text_size() const -> unsigned
 {
     return sl::match(
-        size, [](const TextAbsSize size) { return size.size; }, [](const TextPctSize size) { return size.abs(); }
+        size,
+        [](const TextAbsSize size) -> unsigned { return size.size; },
+        [](const TextPctSize size) -> unsigned { return size.abs(); }
     );
 }
 
 auto Element::set_pos(const PercentSize pos) -> void
 {
-    rect.x = static_cast<float>(pos.width * WINDOW_WIDTH / 100.0) - rect.width / 2;
-    rect.y = static_cast<float>(pos.height * WINDOW_HEIGHT / 100.0) - rect.height / 2;
+    rect.x = static_cast<float>(pos.width * WINDOW_WIDTH / 100.0) - (rect.width / 2);
+    rect.y = static_cast<float>(pos.height * WINDOW_HEIGHT / 100.0) - (rect.height / 2);
 }
 
 auto Element::set_size(const PercentSize size) -> void

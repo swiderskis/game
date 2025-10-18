@@ -120,15 +120,17 @@ template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Heigh
 auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
 {
     m_cboxes.clear();
-    const auto non_empty{ [](const auto tile) { return std::get<1>(tile) != static_cast<Tile>(0); } };
+    const auto non_empty{ [](const auto tile) -> bool { return std::get<1>(tile) != static_cast<Tile>(0); } };
     for (const auto [id, tile] : tiles() | std::views::enumerate | std::views::filter(non_empty))
     {
         const auto coords{ coords_from_id(id) };
         rl::Rectangle tile_cbox{ coords, rl::Vector2{ TileSize, TileSize } };
         const auto collisions{ m_cboxes
-                               | std::views::transform([tile_cbox](const auto existing_cbox)
-                                                       { return bbox::collides(tile_cbox, existing_cbox); }) };
-        if (std::ranges::any_of(collisions, [](const auto collides) { return collides; }))
+                               | std::views::transform(
+                                   [tile_cbox](const auto existing_cbox) -> bool
+                                   { return bbox::collides(tile_cbox, existing_cbox); }
+                               ) };
+        if (std::ranges::any_of(collisions, [](const auto collides) -> bool { return collides; }))
         {
             slog::log(slog::TRC, "Skipping tile at ({}, {})", coords.x, coords.y);
             continue;
@@ -227,29 +229,31 @@ auto World<Tile, Sprite, Width, Height, TileSize>::cbox(const size_t id) const -
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const size_t min_x, const size_t max_x) const
 {
-    return m_tiles | std::views::enumerate
-           | std::views::filter(
-               [this, y, min_x, max_x](const auto tile)
+    return m_tiles
+        | std::views::enumerate
+        | std::views::filter(
+               [this, y, min_x, max_x](const auto tile) -> auto
                {
                    const auto coords{ coords_from_id(std::get<0>(tile)) };
 
                    return coords.y == y && coords.x >= min_x && coords.x <= max_x;
                }
-           );
+        );
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, float TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::col(const size_t x, const size_t min_y, const size_t max_y) const
 {
-    return m_tiles | std::views::enumerate
-           | std::views::filter(
-               [this, x, min_y, max_y](const auto tile)
+    return m_tiles
+        | std::views::enumerate
+        | std::views::filter(
+               [this, x, min_y, max_y](const auto tile) -> auto
                {
                    const auto coords{ coords_from_id(std::get<0>(tile)) };
 
                    return coords.x == x && coords.y >= min_y && coords.y <= max_y;
                }
-           );
+        );
 }
 } // namespace seb_engine
 

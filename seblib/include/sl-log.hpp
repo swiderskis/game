@@ -79,8 +79,14 @@ log<Args...>::log(
     }
 
     const auto filename{ fs::path(loc.file_name()).filename().string() };
-    std::clog << "[" << level_text << "] " << std::format("{:>{}}", filename, FILENAME_WIDTH)
-              << std::format(" {:>5}: ", loc.line()) << std::format(fmt, std::forward<Args>(args)...) << "\n";
+    std::clog
+        << "["
+        << level_text
+        << "] "
+        << std::format("{:>{}}", filename, FILENAME_WIDTH)
+        << std::format(" {:>5}: ", loc.line())
+        << std::format(fmt, std::forward<Args>(args)...)
+        << "\n";
 
     if (lvl == FTL)
     {

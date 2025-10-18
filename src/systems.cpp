@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <initializer_list>
 #include <optional>
 #include <ranges>
@@ -46,9 +47,11 @@ inline constexpr float DAMAGE_LINE_THICKNESS{ 1.33 };
 namespace
 {
 template <typename S>
-concept EntitySpritePart
-    = std::is_same_v<S, SpriteBase> || std::is_same_v<S, SpriteHead> || std::is_same_v<S, SpriteArms>
-      || std::is_same_v<S, SpriteLegs> || std::is_same_v<S, SpriteExtra>;
+concept EntitySpritePart = std::same_as<S, SpriteBase>
+    || std::same_as<S, SpriteHead>
+    || std::same_as<S, SpriteArms>
+    || std::same_as<S, SpriteLegs>
+    || std::same_as<S, SpriteExtra>;
 
 auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
@@ -104,17 +107,17 @@ auto Game::render_cboxes() -> void
             const auto cbox{ components.get<se::BBox>(id).val(pos) };
             seblib::match(
                 cbox,
-                [](const rl::Rectangle bbox)
+                [](const rl::Rectangle bbox) -> void
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.x, bbox.y);
                     bbox.DrawLines(::RED);
                 },
-                [](const sm::Circle bbox)
+                [](const sm::Circle bbox) -> void
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos.x, bbox.pos.y);
                     bbox.draw_lines(::RED);
                 },
-                [](const sm::Line bbox)
+                [](const sm::Line bbox) -> void
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos1.x, bbox.pos2.y);
                     bbox.draw(::RED);
@@ -136,9 +139,9 @@ auto Game::render_hitboxes() -> void
             const auto hitbox{ components.get<Combat>(id).hitbox.val(pos) };
             seblib::match(
                 hitbox,
-                [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
-                [](const sm::Circle bbox) { bbox.draw_lines(::GREEN); },
-                [](const sm::Line bbox) { bbox.draw(::GREEN); }
+                [](const rl::Rectangle bbox) -> void { bbox.DrawLines(::GREEN); },
+                [](const sm::Circle bbox) -> void { bbox.draw_lines(::GREEN); },
+                [](const sm::Line bbox) -> void { bbox.draw(::GREEN); }
             );
         }
     }
@@ -161,7 +164,7 @@ auto Game::move() -> void
     auto& pos{ components.vec<se::Pos>() };
     auto& vel{ components.vec<se::Vel>() };
     std::ranges::transform(
-        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); }
+        pos, vel, pos.begin(), [this](const auto pos, const auto vel) -> se::Pos { return pos + (vel * dt()); }
     );
     resolve_tile_collisions(*this);
 }
