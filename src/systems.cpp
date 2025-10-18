@@ -53,7 +53,6 @@ concept EntitySpritePart = std::same_as<S, SpriteBase>
     || std::same_as<S, SpriteLegs>
     || std::same_as<S, SpriteExtra>;
 
-auto resolve_tile_collisions(Game& game) -> void;
 auto draw_sprite(Game& game, size_t id) -> void;
 template <EntitySpritePart Sprite>
 auto draw_sprite_part(Game& game, size_t id) -> void;
@@ -166,7 +165,23 @@ auto Game::move() -> void
     std::ranges::transform(
         pos, vel, pos.begin(), [this](const auto pos, const auto vel) -> se::Pos { return pos + (vel * dt()); }
     );
-    resolve_tile_collisions(*this);
+}
+
+auto Game::resolve_tile_collisions() -> void
+{
+    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
+    {
+        auto& pos{ components.get<se::Pos>(id) };
+        const auto vel{ components.get<se::Vel>(id) };
+        for (const auto tile_cbox : world.cboxes())
+        {
+            const auto cbox{ components.get<se::BBox>(id).val(pos) };
+            if (se::bbox::collides(cbox, tile_cbox))
+            {
+                pos += se::bbox::resolve_collision(cbox, tile_cbox);
+            }
+        }
+    }
 }
 
 auto Game::destroy_entities() -> void
@@ -352,23 +367,6 @@ auto Game::render_damage_lines() -> void
 
 namespace
 {
-auto resolve_tile_collisions(Game& game) -> void
-{
-    for (const auto [id, entity] : game.entities.vec() | std::views::enumerate)
-    {
-        auto& pos{ game.components.get<se::Pos>(id) };
-        const auto vel{ game.components.get<se::Vel>(id) };
-        for (const auto tile_cbox : game.world.cboxes())
-        {
-            const auto cbox{ game.components.get<se::BBox>(id).val(pos) };
-            if (se::bbox::collides(cbox, tile_cbox))
-            {
-                pos += se::bbox::resolve_collision(cbox, tile_cbox);
-            }
-        }
-    }
-}
-
 auto draw_sprite(Game& game, const size_t id) -> void
 {
     draw_sprite_part<SpriteBase>(game, id);

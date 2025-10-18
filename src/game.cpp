@@ -99,6 +99,7 @@ auto Game::run() -> void
         // movement
         set_player_vel();
         move();
+        resolve_tile_collisions();
         set_flipped();
         sync_children();
 
