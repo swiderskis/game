@@ -31,7 +31,6 @@ std::string so_temp_name{ SO_TEMP_NAME + std::to_string(rand()) };
 
 auto hot_reload::reload_lib() -> GameFuncs
 {
-    slog::log(slog::INF, "Library file name: {}", SO_NAME);
     slhr::free_lib(lib);
     std::error_code ec;
     slog::log(slog::INF, "Removing {}", so_temp_name);
@@ -42,14 +41,15 @@ auto hot_reload::reload_lib() -> GameFuncs
     }
 
     so_temp_name = SO_TEMP_NAME + std::to_string(rand()); // NOLINT(cert-msc30-c, cert-msc50-cpp, concurrency-mt-unsafe)
+    slog::log(slog::INF, "Copying {} to {}", SO_NAME, so_temp_name);
     fs::copy(SO_NAME, so_temp_name, fs::copy_options::overwrite_existing, ec);
     if (ec.value() != 0)
     {
-        slog::log(slog::FTL, "Failed to copy shared library file");
+        slog::log(slog::FTL, "Failed to copy shared library {}", so_temp_name);
     }
 
     lib = slhr::load_lib(so_temp_name.c_str(), true);
-    slog::log(slog::INF, "Loaded library successfully");
+    slog::log(slog::INF, "Loaded library {} successfully", so_temp_name);
 
     return {
         .run = slhr::get_func_address<RunFunc>(lib, "run", true),

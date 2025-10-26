@@ -1,6 +1,6 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+cmake_minimum_required(VERSION 3.13)
 
-project(seblib)
+project(seblib LANGUAGES CXX)
 
 add_library(
     seblib
@@ -30,4 +30,7 @@ target_include_directories(
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_definitions(SLOG_LVL=1)
+    if(WIN32)
+        add_compile_definitions(NDEBUG)
+    endif()
 endif()
