@@ -62,8 +62,8 @@ auto collides(const BBoxVariant bbox1, const BBoxVariant bbox2) -> bool
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1) -> bool
-        { return sl::match(bbox2, [bbox1](const auto bbox2) -> bool { return sm::check_collision(bbox1, bbox2); }); }
+        [bbox2](const auto bbox1)
+        { return sl::match(bbox2, [bbox1](const auto bbox2) { return sm::check_collision(bbox1, bbox2); }); }
     );
 }
 
@@ -72,12 +72,8 @@ auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> sm::
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1) -> sm::Vec2
-        {
-            return sl::match(
-                bbox2, [bbox1](const auto bbox2) -> sm::Vec2 { return ::resolve_collision(bbox1, bbox2); }
-            );
-        }
+        [bbox2](const auto bbox1)
+        { return sl::match(bbox2, [bbox1](const auto bbox2) { return ::resolve_collision(bbox1, bbox2); }); }
     );
 }
 } // namespace bbox

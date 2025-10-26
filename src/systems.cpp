@@ -105,17 +105,17 @@ auto Game::render_cboxes() -> void
             const auto cbox{ components.get<se::BBox>(id).val(pos) };
             seblib::match(
                 cbox,
-                [](const rl::Rectangle bbox) -> void
+                [](const rl::Rectangle bbox)
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.x, bbox.y);
                     bbox.DrawLines(::RED);
                 },
-                [](const sm::Circle bbox) -> void
+                [](const sm::Circle bbox)
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos.x, bbox.pos.y);
                     bbox.draw_lines(::RED);
                 },
-                [](const sm::Line bbox) -> void
+                [](const sm::Line bbox)
                 {
                     slog::log(slog::TRC, "CBox pos ({}, {})", bbox.pos1.x, bbox.pos2.y);
                     bbox.draw(::RED);
@@ -137,9 +137,9 @@ auto Game::render_hitboxes() -> void
             const auto hitbox{ components.get<Combat>(id).hitbox.val(pos) };
             seblib::match(
                 hitbox,
-                [](const rl::Rectangle bbox) -> void { bbox.DrawLines(::GREEN); },
-                [](const sm::Circle bbox) -> void { bbox.draw_lines(::GREEN); },
-                [](const sm::Line bbox) -> void { bbox.draw(::GREEN); }
+                [](const rl::Rectangle bbox) { bbox.DrawLines(::GREEN); },
+                [](const sm::Circle bbox) { bbox.draw_lines(::GREEN); },
+                [](const sm::Line bbox) { bbox.draw(::GREEN); }
             );
         }
     }
@@ -162,7 +162,7 @@ auto Game::move() -> void
     auto& pos{ components.vec<se::Pos>() };
     auto& vel{ components.vec<se::Vel>() };
     std::ranges::transform(
-        pos, vel, pos.begin(), [this](const auto pos, const auto vel) -> se::Pos { return pos + (vel * dt()); }
+        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); }
     );
 }
 
