@@ -89,6 +89,15 @@ auto check_collision(Line line, Circle circle) -> bool;
 auto check_collision(Line line1, Line line2) -> bool;
 } // namespace seblib::math
 
+template <typename P>
+struct std::formatter<seblib::math::Point<P>> // NOLINT(cert-dcl58-cpp)
+{
+    std::formatter<std::string> formatter;
+
+    constexpr auto parse(std::format_parse_context& ctx);
+    auto format(seblib::math::Point<P> const& coords, std::format_context& ctx) const;
+};
+
 /****************************
  *                          *
  * TEMPLATE IMPLEMENTATIONS *
@@ -314,5 +323,21 @@ constexpr auto radians_to_degrees(const float ang) -> float
     return static_cast<float>(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
 }
 } // namespace seblib::math
+
+template <typename P>
+constexpr auto std::formatter<seblib::math::Point<P>>::parse(std::format_parse_context& ctx)
+{
+    return formatter.parse(ctx);
+}
+
+template <typename P>
+auto std::formatter<seblib::math::Point<P>>::format(
+    seblib::math::Point<P> const& coords, std::format_context& ctx
+) const
+{
+    const std::string output{ std::format("({}, {})", coords.x, coords.y) };
+
+    return formatter.format(output, ctx);
+}
 
 #endif

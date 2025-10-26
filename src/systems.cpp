@@ -221,12 +221,15 @@ auto Game::player_action() -> void
         return;
     }
 
-    const auto player_pos{ components.get<se::Pos>(player_id) };
-    const auto player_cbox{ components.get<se::BBox>(player_id).val(player_pos) };
-    const auto new_tile_cbox{ world.new_tile_cbox(Tile::Brick, coords.value()) };
-    if (inputs.right_click && !se::bbox::collides(player_cbox, new_tile_cbox))
+    if (inputs.right_click && coords.has_value())
     {
-        world.place_tile(Tile::Brick, coords.value());
+        const auto player_pos{ components.get<se::Pos>(player_id) };
+        const auto player_cbox{ components.get<se::BBox>(player_id).val(player_pos) };
+        const auto new_tile_cbox{ world.new_tile_cbox(Tile::Brick, coords.value()) };
+        if (!se::bbox::collides(player_cbox, new_tile_cbox))
+        {
+            world.place_tile(Tile::Brick, coords.value());
+        }
     }
 }
 

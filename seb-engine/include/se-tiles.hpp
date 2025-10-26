@@ -101,6 +101,11 @@ auto World<Tile, Sprite, Width, Height, TileSize>::place_tile(const Tile tile, c
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::replace_tile(const Tile tile, const Coords<TileSize> coords) -> void
 {
+    if (coords.x > Width || coords.y > Height)
+    {
+        return;
+    }
+
     const auto sprite{ s_details.get(tile).sprite };
     at_mut(coords) = tile;
     m_sprites.set(id_from_coords(coords), sprite);

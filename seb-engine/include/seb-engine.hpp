@@ -2,10 +2,12 @@
 #define SEB_ENGINE_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "sl-log.hpp"
 #include "sl-math.hpp"
 
 #include <cstddef>
 #include <format>
+#include <optional>
 
 namespace seb_engine
 {
@@ -48,6 +50,8 @@ struct std::formatter<seb_engine::Coords<CoordSize>> // NOLINT(cert-dcl58-cpp)
 
 namespace seb_engine
 {
+namespace slog = seblib::log;
+
 template <unsigned CoordSize>
 constexpr Coords<CoordSize>::Coords(const size_t x, const size_t y)
     : x{ x }
@@ -58,8 +62,16 @@ constexpr Coords<CoordSize>::Coords(const size_t x, const size_t y)
 template <unsigned CoordSize>
 auto Coords<CoordSize>::from_vec2(const sm::Vec2 pos) -> std::optional<Coords<CoordSize>>
 {
-    return Coords<CoordSize>{ (static_cast<unsigned>(pos.x + CoordSize) / CoordSize),
-                              static_cast<unsigned>(-pos.y) / CoordSize };
+    if (pos.x + CoordSize < 0.0 || -pos.y < 0.0)
+    {
+        return std::nullopt;
+    }
+
+    const Coords<CoordSize> coords{ (static_cast<unsigned>(pos.x + CoordSize) / CoordSize),
+                                    static_cast<unsigned>(-pos.y) / CoordSize };
+    slog::log(slog::TRC, "Coords {} from Vec2 {}", coords, pos);
+
+    return coords;
 }
 
 template <unsigned CoordSize>
@@ -120,4 +132,5 @@ auto std::formatter<seb_engine::Coords<CoordSize>>::format(
 
     return formatter.format(output, ctx);
 }
+
 #endif
