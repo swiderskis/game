@@ -53,6 +53,7 @@ concept EntitySpritePart = std::same_as<S, SpriteBase>
 auto draw_sprite(Game& game, size_t id) -> void;
 template <EntitySpritePart Sprite>
 auto draw_sprite_part(Game& game, size_t id) -> void;
+auto mouse_screen_pos() -> seblib::math::Vec2;
 } // namespace
 
 auto Game::poll_inputs() -> void
@@ -61,7 +62,8 @@ auto Game::poll_inputs() -> void
     inputs.right = rl::Keyboard::IsKeyDown(::KEY_D);
     inputs.up = rl::Keyboard::IsKeyDown(::KEY_W);
     inputs.down = rl::Keyboard::IsKeyDown(::KEY_S);
-    inputs.click = rl::Mouse::IsButtonPressed(::MOUSE_LEFT_BUTTON);
+    inputs.left_click = rl::Mouse::IsButtonPressed(::MOUSE_LEFT_BUTTON);
+    inputs.right_click = rl::Mouse::IsButtonPressed(::MOUSE_RIGHT_BUTTON);
     inputs.spawn_enemy = rl::Keyboard::IsKeyPressed(::KEY_P);
     inputs.pause = rl::Keyboard::IsKeyPressed(::KEY_ESCAPE);
 }
@@ -190,7 +192,7 @@ auto Game::destroy_entities() -> void
     to_destroy.clear();
 }
 
-auto Game::player_attack() -> void
+auto Game::player_action() -> void
 {
     auto comps{ components.by_id(player_id) };
     auto& attack_cooldown{ comps.get<Combat>().attack_cooldown };
@@ -199,13 +201,32 @@ auto Game::player_attack() -> void
         attack_cooldown -= dt();
     }
 
-    if (inputs.click && attack_cooldown <= 0.0)
+    const auto coords{ Coords::from_vec2(mouse_world_pos()) };
+    if (inputs.left_click)
     {
-        const auto attack{ Attack::Sector };
-        const auto attack_details{ entities::attack_details(attack) };
-        sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
-        comps.get<Combat>().attack_cooldown = attack_details.cooldown;
-        spawn_attack(attack, player_id);
+        if (coords.has_value() && world.at(coords.value()) != Tile::None)
+        {
+            world.remove_tile(coords.value());
+        }
+        else if (attack_cooldown <= 0.0)
+        {
+            const auto attack{ Attack::Sector };
+            const auto attack_details{ entities::attack_details(attack) };
+            sprites.set(player_id, SpriteArms::PlayerAttack, attack_details.lifespan);
+            comps.get<Combat>().attack_cooldown = attack_details.cooldown;
+            spawn_attack(attack, player_id);
+        }
+
+        // prevent destroying tile and other action in the same tick
+        return;
+    }
+
+    const auto player_pos{ components.get<se::Pos>(player_id) };
+    const auto player_cbox{ components.get<se::BBox>(player_id).val(player_pos) };
+    const auto new_tile_cbox{ world.new_tile_cbox(Tile::Brick, coords.value()) };
+    if (inputs.right_click && !se::bbox::collides(player_cbox, new_tile_cbox))
+    {
+        world.place_tile(Tile::Brick, coords.value());
     }
 }
 
@@ -329,11 +350,16 @@ auto Game::check_pause_game() -> void
     }
 }
 
-auto Game::ui_click_action() -> void
+auto Game::ui_interaction() -> void
 {
-    if (inputs.click && screen != std::nullopt)
+    if (inputs.left_click && screen != std::nullopt)
     {
-        screen->click_action(rl::Mouse::GetPosition());
+        const auto action_performed{ screen->click_action(mouse_screen_pos()) };
+        if (action_performed)
+        {
+            // prevent in-game action if UI element clicked
+            inputs.left_click = false;
+        }
     }
 }
 
@@ -393,5 +419,12 @@ auto draw_sprite_part(Game& game, const size_t id) -> void
         const rl::Vector2 offset{ x_offset, y_offset };
         sprites.draw_part<Sprite>(game.texture_sheet, pos + offset, id, game.dt(), flipped);
     }
+}
+
+auto mouse_screen_pos() -> seblib::math::Vec2
+{
+    const auto mouse_pos{ rl::Mouse::GetPosition() };
+
+    return { mouse_pos.x, mouse_pos.y };
 }
 } // namespace

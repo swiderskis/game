@@ -65,24 +65,23 @@ Game::Game()
 
     for (size_t i{ 0 }; i < 10; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, Coords{ 0, i });
+        world.place_tile(Tile::Brick, Coords{ 0, i });
     }
 
     for (size_t i{ 0 }; i < 20; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, Coords{ i, 0 });
+        world.place_tile(Tile::Brick, Coords{ i, 0 });
     }
 
     for (size_t i{ 0 }; i < 4; i++) // NOLINT
     {
-        spawn_tile(Tile::Brick, Coords{ i, 2 });
-        spawn_tile(Tile::Brick, Coords{ i, 3 });
+        world.place_tile(Tile::Brick, Coords{ i, 2 });
+        world.place_tile(Tile::Brick, Coords{ i, 3 });
     }
 
-    spawn_tile(Tile::Brick, Coords{ 2, 7 }); // NOLINT
-    spawn_tile(Tile::Brick, Coords{ 1, 6 }); // NOLINT
-    spawn_tile(Tile::Brick, Coords{ 2, 4 }); // NOLINT
-    world.calculate_cboxes();
+    world.place_tile(Tile::Brick, Coords{ 2, 7 }); // NOLINT
+    world.place_tile(Tile::Brick, Coords{ 1, 6 }); // NOLINT
+    world.place_tile(Tile::Brick, Coords{ 2, 4 }); // NOLINT
 
     spawn_player(Coords{ 5, 2 });             // NOLINT
     spawn_enemy(Enemy::Duck, Coords{ 6, 6 }); // NOLINT
@@ -93,7 +92,7 @@ auto Game::run() -> void
     // input
     poll_inputs();
     check_pause_game();
-    ui_click_action();
+    ui_interaction();
     if (!paused)
     {
         // movement
@@ -104,7 +103,7 @@ auto Game::run() -> void
         sync_children();
 
         // combat
-        player_attack();
+        player_action();
         update_invuln_times();
         damage_entities();
         update_lifespans();
@@ -168,30 +167,16 @@ auto Game::spawn_enemy(const Enemy enemy, const Coords coords) -> void
     sprites.set(id, sprite_base);
 }
 
-void Game::spawn_tile(const Tile tile, const Coords coords)
-{
-    auto sprite{ SpriteTile::None };
-    switch (tile)
-    {
-    case Tile::None:
-        sprite = SpriteTile::None;
-        break;
-    case Tile::Brick:
-        sprite = SpriteTile::Brick;
-        break;
-    }
-
-    world.spawn(coords, tile, sprite);
-}
-
 auto Game::dt() const -> float
 {
     return window.GetFrameTime();
 }
 
-auto Game::get_mouse_pos() const -> rl::Vector2
+auto Game::mouse_world_pos() const -> sm::Vec2
 {
-    return camera.GetScreenToWorld(rl::Mouse::GetPosition()) - SPRITE_SIZE / 2;
+    const auto pos{ camera.GetScreenToWorld(rl::Mouse::GetPosition()) - SPRITE_SIZE / 2 };
+
+    return { pos.x, pos.y };
 }
 
 auto Game::destroy_entity(const size_t id) -> void
@@ -217,7 +202,7 @@ auto Game::spawn_attack(const Attack attack, const size_t parent_id) -> void
 {
     const auto source_pos{ components.get<se::Pos>(parent_id) };
     slog::log(slog::TRC, "Attack source pos ({}, {})", source_pos.x, source_pos.y);
-    const auto target_pos{ (parent_id == player_id ? get_mouse_pos() : components.get<se::Pos>(player_id)) };
+    const auto target_pos{ (parent_id == player_id ? mouse_world_pos() : components.get<se::Pos>(player_id)) };
     slog::log(slog::TRC, "Attack target pos ({}, {})", target_pos.x, target_pos.y);
     switch (attack)
     {

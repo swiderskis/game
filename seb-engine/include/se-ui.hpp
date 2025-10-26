@@ -2,6 +2,7 @@
 #define SE_UI_HPP_
 
 #include "raylib-cpp.hpp" // IWYU pragma: keep
+#include "sl-math.hpp"
 
 #include <functional>
 #include <memory>
@@ -15,6 +16,7 @@ inline constexpr unsigned WINDOW_WIDTH{ 800 };
 inline constexpr unsigned WINDOW_HEIGHT{ 450 };
 
 namespace rl = raylib;
+namespace sm = seblib::math;
 
 struct PercentSize
 {
@@ -101,7 +103,7 @@ public:
     template <typename Elem>
     [[maybe_unused]] auto new_element() -> ElementWithId<Elem>;
     [[nodiscard]] auto elements() -> std::vector<std::unique_ptr<Element>>&;
-    auto click_action(rl::Vector2 mouse_pos) -> void;
+    auto click_action(sm::Vec2 mouse_pos) -> bool;
     auto render() -> void;
 
 private:

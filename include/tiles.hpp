@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-inline constexpr float TILE_LEN{ 16.0 };
+inline constexpr unsigned TILE_LEN{ 16 };
 
 inline constexpr seblib::math::Vec2 TILE_SIZE{ TILE_LEN, TILE_LEN };
 

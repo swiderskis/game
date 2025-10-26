@@ -2,10 +2,16 @@
 
 #include "seblib.hpp"
 
+#include <algorithm>
+#include <ranges>
+
 namespace sl = seblib;
 
 namespace seb_engine::ui
 {
+namespace ranges = std::ranges;
+namespace views = std::views;
+
 PercentSize::PercentSize(const unsigned width, const unsigned height)
     : width{ width }
     , height{ height }
@@ -80,26 +86,21 @@ auto Screen::elements() -> std::vector<std::unique_ptr<Element>>&
     return m_elements;
 }
 
-auto Screen::click_action(const rl::Vector2 mouse_pos) -> void
+auto Screen::click_action(const sm::Vec2 mouse_pos) -> bool
 {
-    Element* clicked_element{ nullptr };
-    for (auto& element : m_elements)
+    auto clicked_elements{ m_elements
+                           | views::transform([](const auto& element) { return element.get(); })
+                           | views::filter([mouse_pos](const auto* element)
+                                           { return element->mouse_overlaps(mouse_pos); }) };
+    const auto clicked{ ranges::max_element(clicked_elements, {}, &Element::layer) };
+    if (clicked == ranges::end(clicked_elements))
     {
-        if (!element->mouse_overlaps(mouse_pos))
-        {
-            continue;
-        }
-
-        if (clicked_element == nullptr || element->layer >= clicked_element->layer)
-        {
-            clicked_element = element.get();
-        }
+        return false;
     }
 
-    if (clicked_element != nullptr)
-    {
-        clicked_element->on_click();
-    }
+    (*clicked)->on_click();
+
+    return true;
 }
 
 auto Screen::render() -> void
