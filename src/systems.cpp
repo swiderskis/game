@@ -14,6 +14,8 @@
 #include <ranges>
 #include <type_traits>
 
+namespace ranges = std::ranges;
+namespace views = std::views;
 namespace rl = raylib;
 namespace sm = seblib::math;
 namespace slog = seblib::log;
@@ -161,14 +163,12 @@ auto Game::move() -> void
 {
     auto& pos{ components.vec<se::Pos>() };
     auto& vel{ components.vec<se::Vel>() };
-    std::ranges::transform(
-        pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); }
-    );
+    ranges::transform(pos, vel, pos.begin(), [this](const auto pos, const auto vel) { return pos + (vel * dt()); });
 }
 
 auto Game::resolve_tile_collisions() -> void
 {
-    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | views::enumerate)
     {
         auto& pos{ components.get<se::Pos>(id) };
         for (const auto tile_cbox : world.cboxes())
@@ -232,7 +232,7 @@ auto Game::player_action() -> void
 
 auto Game::update_lifespans() -> void
 {
-    for (const auto& [id, combat] : components.vec<Combat>() | std::views::enumerate)
+    for (const auto& [id, combat] : components.vec<Combat>() | views::enumerate)
     {
         auto& lifespan{ combat.lifespan };
         if (lifespan == std::nullopt)
@@ -290,7 +290,7 @@ auto Game::damage_entities() -> void
 // child entities are assumed to have no velocity, this system will override it
 auto Game::sync_children() -> void
 {
-    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | views::enumerate)
     {
         auto comps{ components.by_id(id) };
         if (comps.get<Parent>().id == std::nullopt)
@@ -300,7 +300,7 @@ auto Game::sync_children() -> void
 
         const auto parent_id{ comps.get<Parent>().id.value() };
         auto parent_comps{ components.by_id(parent_id) };
-        if (std::ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
+        if (ranges::contains(FLIP_ON_SYNC_WITH_PARENT, entity))
         {
             const auto is_parent_flipped{ parent_comps.get<Flags>().is_enabled(Flags::FLIPPED) };
             auto& flags{ comps.get<Flags>() };
@@ -324,7 +324,7 @@ auto Game::sync_children() -> void
 
 auto Game::update_invuln_times() -> void
 {
-    for (const auto& [id, combat] : components.vec<Combat>() | std::views::enumerate)
+    for (const auto& [id, combat] : components.vec<Combat>() | views::enumerate)
     {
         auto& invuln_time{ combat.invuln_time };
         if (invuln_time > 0.0)
@@ -365,11 +365,11 @@ auto Game::ui_interaction() -> void
 
 auto Game::set_flipped() -> void
 {
-    for (const auto [id, entity] : entities.vec() | std::views::enumerate)
+    for (const auto [id, entity] : entities.vec() | views::enumerate)
     {
         auto comps{ components.by_id(id) };
         auto& vel{ comps.get<se::Vel>() };
-        if (vel.x != 0.0 && !std::ranges::contains(NON_FLIPPABLE, entity))
+        if (vel.x != 0.0 && !ranges::contains(NON_FLIPPABLE, entity))
         {
             components.get<Flags>(id).set(Flags::FLIPPED, vel.x < 0.0);
         }
