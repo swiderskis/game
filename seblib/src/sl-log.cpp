@@ -21,7 +21,7 @@ auto level() -> int
     return log_level;
 }
 
-auto set_level(const Level level) -> void
+auto set_level(Level const level) -> void
 {
     log_level = level;
 }

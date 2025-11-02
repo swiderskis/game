@@ -16,14 +16,14 @@ namespace sm = seblib::math;
 class IComp
 {
 public:
-    IComp(const IComp&) = default;
-    IComp(IComp&&) = default;
+    IComp(IComp const &) = default;
+    IComp(IComp &&) = default;
     virtual ~IComp() = default;
 
     virtual auto reset(size_t id) -> void = 0;
 
-    auto operator=(const IComp&) -> IComp& = default;
-    auto operator=(IComp&&) -> IComp& = default;
+    auto operator=(IComp const &) -> IComp & = default;
+    auto operator=(IComp &&) -> IComp & = default;
 
 protected:
     IComp() = default;
@@ -34,7 +34,7 @@ class Component : public IComp
 {
 public:
     auto reset(size_t id) -> void override;
-    auto vec() -> std::vector<Comp>&;
+    auto vec() -> std::vector<Comp> &;
 
 private:
     std::vector<Comp> m_vec{ MaxEntities, Comp{} };
@@ -50,11 +50,11 @@ public:
     auto uninit(size_t id) -> void;
     [[nodiscard]] auto by_id(size_t id) -> EntityComponents<MaxEntities>;
     template <typename Comp>
-    [[maybe_unused]] auto reg() -> Component<MaxEntities, Comp>*;
+    [[maybe_unused]] auto reg() -> Component<MaxEntities, Comp> *;
     template <typename Comp>
-    [[nodiscard]] auto vec() -> std::vector<Comp>&;
+    [[nodiscard]] auto vec() -> std::vector<Comp> &;
     template <typename Comp>
-    [[nodiscard]] auto get(size_t id) -> Comp&;
+    [[nodiscard]] auto get(size_t id) -> Comp &;
     auto move(float dt) -> void;
 
     friend class EntityComponents<MaxEntities>;
@@ -63,7 +63,7 @@ private:
     std::unordered_map<size_t, std::unique_ptr<IComp>> m_components;
 
     template <typename Comp>
-    auto component() -> Component<MaxEntities, Comp>*;
+    auto component() -> Component<MaxEntities, Comp> *;
 };
 
 template <size_t MaxEntities>
@@ -73,15 +73,15 @@ public:
     EntityComponents() = delete;
 
     template <typename Comp>
-    [[nodiscard]] auto get() -> Comp&;
+    [[nodiscard]] auto get() -> Comp &;
 
     friend class Components<MaxEntities>;
 
 private:
-    Components<MaxEntities>* m_components;
+    Components<MaxEntities> * m_components;
     size_t m_id;
 
-    EntityComponents(Components<MaxEntities>& components, size_t id);
+    EntityComponents(Components<MaxEntities> & components, size_t id);
 };
 
 struct Position;
@@ -102,35 +102,35 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <size_t MaxEntities, typename Comp>
-auto Component<MaxEntities, Comp>::reset(const size_t id) -> void
+auto Component<MaxEntities, Comp>::reset(size_t const id) -> void
 {
     m_vec[id] = Comp{};
 }
 
 template <size_t MaxEntities, typename Comp>
-auto Component<MaxEntities, Comp>::vec() -> std::vector<Comp>&
+auto Component<MaxEntities, Comp>::vec() -> std::vector<Comp> &
 {
     return m_vec;
 }
 
 template <size_t MaxEntities>
-auto Components<MaxEntities>::uninit(const size_t id) -> void
+auto Components<MaxEntities>::uninit(size_t const id) -> void
 {
-    for (auto& [_, component] : m_components)
+    for (auto & [_, component] : m_components)
     {
         component->reset(id);
     }
 }
 
 template <size_t MaxEntities>
-auto Components<MaxEntities>::by_id(const size_t id) -> EntityComponents<MaxEntities>
+auto Components<MaxEntities>::by_id(size_t const id) -> EntityComponents<MaxEntities>
 {
     return { *this, id };
 }
 
 template <size_t MaxEntities>
 template <typename Comp>
-auto Components<MaxEntities>::reg() -> Component<MaxEntities, Comp>*
+auto Components<MaxEntities>::reg() -> Component<MaxEntities, Comp> *
 {
     m_components.emplace(typeid(Comp).hash_code(), std::make_unique<Component<MaxEntities, Comp>>());
 
@@ -139,21 +139,21 @@ auto Components<MaxEntities>::reg() -> Component<MaxEntities, Comp>*
 
 template <size_t MaxEntities>
 template <typename Comp>
-auto Components<MaxEntities>::vec() -> std::vector<Comp>&
+auto Components<MaxEntities>::vec() -> std::vector<Comp> &
 {
     return component<Comp>()->vec();
 }
 
 template <size_t MaxEntities>
 template <typename Comp>
-auto Components<MaxEntities>::get(const size_t id) -> Comp&
+auto Components<MaxEntities>::get(size_t const id) -> Comp &
 {
     return component<Comp>()->vec()[id];
 }
 
 template <size_t MaxEntities>
 template <typename Comp>
-auto Components<MaxEntities>::component() -> Component<MaxEntities, Comp>*
+auto Components<MaxEntities>::component() -> Component<MaxEntities, Comp> *
 {
 #ifndef NDEBUG
     if (!m_components.contains(typeid(Comp).hash_code()))
@@ -162,18 +162,18 @@ auto Components<MaxEntities>::component() -> Component<MaxEntities, Comp>*
     }
 #endif
 
-    return dynamic_cast<Component<MaxEntities, Comp>*>(m_components[typeid(Comp).hash_code()].get());
+    return dynamic_cast<Component<MaxEntities, Comp> *>(m_components[typeid(Comp).hash_code()].get());
 }
 
 template <size_t MaxEntities>
 template <typename Comp>
-auto EntityComponents<MaxEntities>::get() -> Comp&
+auto EntityComponents<MaxEntities>::get() -> Comp &
 {
     return m_components->template component<Comp>()->vec()[m_id];
 }
 
 template <size_t MaxEntities>
-EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities>& components, const size_t id)
+EntityComponents<MaxEntities>::EntityComponents(Components<MaxEntities> & components, size_t const id)
     : m_components{ &components }
     , m_id{ id }
 {

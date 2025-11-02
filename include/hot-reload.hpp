@@ -4,9 +4,9 @@
 #ifndef NDEBUG
 class Game;
 
-using RunFunc = void (*)(Game*);
+using RunFunc = void (*)(Game *);
 using CheckReloadLibFunc = bool (*)();
-using ReloadTextureSheetFunc = void (*)(Game*);
+using ReloadTextureSheetFunc = void (*)(Game *);
 
 struct GameFuncs
 {

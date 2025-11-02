@@ -18,8 +18,8 @@ class Entities
 {
 public:
     [[nodiscard]] auto spawn(Entity type) -> size_t;
-    [[nodiscard]] auto vec() const -> std::vector<Entity> const&;
-    [[nodiscard]] auto ids(Entity entity) -> std::vector<size_t> const&;
+    [[nodiscard]] auto vec() const -> std::vector<Entity> const &;
+    [[nodiscard]] auto ids(Entity entity) -> std::vector<size_t> const &;
     auto destroy(size_t id) -> void;
 
 private:
@@ -39,10 +39,10 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <size_t MaxEntities, sl::Enumerable Entity>
-auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
+auto Entities<MaxEntities, Entity>::spawn(Entity const type) -> size_t
 {
     size_t entity_id{ 0 };
-    for (const auto [id, entity] : m_entities | std::views::enumerate)
+    for (auto const [id, entity] : m_entities | std::views::enumerate)
     {
         if (entity != static_cast<Entity>(0))
         {
@@ -65,22 +65,22 @@ auto Entities<MaxEntities, Entity>::spawn(const Entity type) -> size_t
 }
 
 template <size_t MaxEntities, sl::Enumerable Entity>
-auto Entities<MaxEntities, Entity>::vec() const -> std::vector<Entity> const&
+auto Entities<MaxEntities, Entity>::vec() const -> std::vector<Entity> const &
 {
     return m_entities;
 }
 
 // not marked const to allow creating vector for key if it doesn't exist already
 template <size_t MaxEntities, sl::Enumerable Entity>
-auto Entities<MaxEntities, Entity>::ids(const Entity entity) -> std::vector<size_t> const&
+auto Entities<MaxEntities, Entity>::ids(Entity const entity) -> std::vector<size_t> const &
 {
     return m_entity_ids[entity];
 }
 
 template <size_t MaxEntities, sl::Enumerable Entity>
-auto Entities<MaxEntities, Entity>::destroy(const size_t id) -> void
+auto Entities<MaxEntities, Entity>::destroy(size_t const id) -> void
 {
-    auto& entity{ m_entities[id] };
+    auto & entity{ m_entities[id] };
     // possible for an entity to be queued for destruction multiple times
     if (entity == static_cast<Entity>(0))
     {
@@ -88,7 +88,7 @@ auto Entities<MaxEntities, Entity>::destroy(const size_t id) -> void
     }
 
     slog::log(slog::TRC, "Destroying entity type {} with id {}", static_cast<int>(entity), id);
-    auto& entity_ids{ m_entity_ids[entity] };
+    auto & entity_ids{ m_entity_ids[entity] };
     entity_ids.erase(std::ranges::find(entity_ids, id));
     entity = static_cast<Entity>(0);
 }

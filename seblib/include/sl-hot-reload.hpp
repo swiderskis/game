@@ -12,16 +12,16 @@
 #else
 #include <dlfcn.h>
 
-#define SLHR_MODULE void*
-#define SLHR_PROC void*
+#define SLHR_MODULE void *
+#define SLHR_PROC void *
 #define SLHR_SO_SUFFIX ".so"
 #endif
 
 namespace seblib::hot_reload
 {
-auto load_lib(const char* so_name, bool exit_on_fail) -> SLHR_MODULE;
+auto load_lib(char const * so_name, bool exit_on_fail) -> SLHR_MODULE;
 template <typename F>
-auto get_func_address(SLHR_MODULE lib, const char* func_name, bool exit_on_fail) -> F;
+auto get_func_address(SLHR_MODULE lib, char const * func_name, bool exit_on_fail) -> F;
 auto free_lib(SLHR_MODULE lib) -> void;
 } // namespace seblib::hot_reload
 
@@ -36,7 +36,7 @@ namespace seblib::hot_reload
 namespace slog = seblib::log;
 
 template <typename F>
-auto get_func_address(SLHR_MODULE lib, const char* func_name, const bool exit_on_fail) -> F
+auto get_func_address(SLHR_MODULE lib, char const * func_name, bool const exit_on_fail) -> F
 {
 #if defined(_WIN32) || defined(__CYGWIN__)
     SLHR_PROC func_address{ ::GetProcAddress(lib, func_name) };

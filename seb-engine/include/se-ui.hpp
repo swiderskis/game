@@ -64,14 +64,14 @@ public:
     std::optional<unsigned> parent;
     unsigned layer{ 0 };
 
-    Element(const Element&) = default;
-    Element(Element&&) = default;
+    Element(Element const &) = default;
+    Element(Element &&) = default;
     virtual ~Element() = default;
 
     virtual auto render() -> void = 0;
 
-    auto operator=(const Element&) -> Element& = default;
-    auto operator=(Element&&) -> Element& = default;
+    auto operator=(Element const &) -> Element & = default;
+    auto operator=(Element &&) -> Element & = default;
     auto set_pos(PercentSize pos) -> void;
     auto set_size(PercentSize size) -> void;
     [[nodiscard]] auto mouse_overlaps(rl::Vector2 mouse_pos) const -> bool;
@@ -94,7 +94,7 @@ template <typename Elem>
 struct ElementWithId
 {
     size_t id{ 0 };
-    Elem* element{ nullptr };
+    Elem * element{ nullptr };
 };
 
 class Screen
@@ -102,7 +102,7 @@ class Screen
 public:
     template <typename Elem>
     [[maybe_unused]] auto new_element() -> ElementWithId<Elem>;
-    [[nodiscard]] auto elements() -> std::vector<std::unique_ptr<Element>>&;
+    [[nodiscard]] auto elements() -> std::vector<std::unique_ptr<Element>> &;
     auto click_action(sm::Vec2 mouse_pos) -> bool;
     auto render() -> void;
 
@@ -124,7 +124,7 @@ auto Screen::new_element() -> ElementWithId<Elem>
 {
     return {
         .id = m_elements.size(),
-        .element = dynamic_cast<Elem*>(m_elements.emplace_back(std::make_unique<Elem>()).get()),
+        .element = dynamic_cast<Elem *>(m_elements.emplace_back(std::make_unique<Elem>()).get()),
     };
 }
 } // namespace seb_engine::ui

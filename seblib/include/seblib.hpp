@@ -21,7 +21,7 @@ concept Enumerable = std::is_enum_v<Enum> || std::is_scoped_enum_v<Enum>;
 
 // taken from https://www.reddit.com/r/cpp/comments/16lq63k/2_lines_of_code_and_3_c17_features_the_overload
 template <typename Var, typename... Funcs>
-auto match(Var&& variant, Funcs&&... funcs);
+auto match(Var && variant, Funcs &&... funcs);
 } // namespace seblib
 
 /****************************
@@ -33,7 +33,7 @@ auto match(Var&& variant, Funcs&&... funcs);
 namespace seblib
 {
 template <typename Var, typename... Funcs>
-auto match(Var&& variant, Funcs&&... funcs)
+auto match(Var && variant, Funcs &&... funcs)
 {
     return std::visit(Overload{ std::forward<Funcs>(funcs)... }, std::forward<Var>(variant));
 }

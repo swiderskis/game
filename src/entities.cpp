@@ -9,7 +9,7 @@ namespace se = seb_engine;
 
 namespace entities
 {
-auto attack_details(const Attack attack) -> AttackDetails
+auto attack_details(Attack const attack) -> AttackDetails
 {
     switch (attack)
     { // NOLINTBEGIN(*magic-numbers)

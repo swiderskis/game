@@ -11,8 +11,8 @@ namespace se = seb_engine;
 
 namespace
 {
-auto lookup_set_walk_sprites(Sprites& sprites, size_t id, Entity entity) -> void;
-auto lookup_set_idle_sprites(Sprites& sprites, size_t id, Entity entity) -> void;
+auto lookup_set_walk_sprites(Sprites & sprites, size_t id, Entity entity) -> void;
+auto lookup_set_idle_sprites(Sprites & sprites, size_t id, Entity entity) -> void;
 } // namespace
 
 template <>
@@ -182,13 +182,13 @@ auto se::SpriteDetailsLookup<SpriteTile>::get(SpriteTile sprite) -> se::SpriteDe
 
 namespace sprites
 {
-auto lookup_set_movement_sprites(Sprites& sprites, const size_t id, const Entity entity, const rl::Vector2 vel) -> void
+auto lookup_set_movement_sprites(Sprites & sprites, size_t const id, Entity const entity, rl::Vector2 const vel) -> void
 {
     vel != rl::Vector2(0.0, 0.0) ? lookup_set_walk_sprites(sprites, id, entity)
                                  : lookup_set_idle_sprites(sprites, id, entity);
 }
 
-auto alternate_frame_y_offset(const SpriteLegs legs) -> float
+auto alternate_frame_y_offset(SpriteLegs const legs) -> float
 {
     switch (legs)
     { // NOLINTBEGIN(*magic-numbers)
@@ -203,7 +203,7 @@ auto alternate_frame_y_offset(const SpriteLegs legs) -> float
     std::unreachable();
 }
 
-auto flipped_x_offset(const rl::Vector2 sprite_size) -> float
+auto flipped_x_offset(rl::Vector2 const sprite_size) -> float
 {
     return SPRITE_LEN - sprite_size.x;
 }
@@ -211,7 +211,7 @@ auto flipped_x_offset(const rl::Vector2 sprite_size) -> float
 
 namespace
 {
-auto lookup_set_walk_sprites(Sprites& sprites, const size_t id, const Entity entity) -> void
+auto lookup_set_walk_sprites(Sprites & sprites, size_t const id, Entity const entity) -> void
 {
     switch (entity)
     {
@@ -228,7 +228,7 @@ auto lookup_set_walk_sprites(Sprites& sprites, const size_t id, const Entity ent
     }
 }
 
-auto lookup_set_idle_sprites(Sprites& sprites, const size_t id, const Entity entity) -> void
+auto lookup_set_idle_sprites(Sprites & sprites, size_t const id, Entity const entity) -> void
 {
     switch (entity)
     {

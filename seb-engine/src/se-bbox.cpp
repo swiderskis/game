@@ -30,12 +30,12 @@ auto resolve_collision(sm::Line bbox1, sm::Line bbox2) -> sm::Vec2;
 
 namespace seb_engine
 {
-BBox::BBox(const BBoxDetails bbox)
+BBox::BBox(BBoxDetails const bbox)
     : BBox{ bbox, sm::Vec2{} }
 {
 }
 
-BBox::BBox(const BBoxDetails bbox, const sm::Vec2 offset)
+BBox::BBox(BBoxDetails const bbox, sm::Vec2 const offset)
     : m_bbox{ bbox }
     , m_offset{ offset }
 {
@@ -45,9 +45,9 @@ auto BBox::val(sm::Vec2 pos) const -> BBoxVariant
 {
     return sl::match(
         m_bbox,
-        [pos, this](const BBoxRect bbox) -> BBoxVariant { return rl::Rectangle{ pos + m_offset, bbox.size }; },
-        [pos, this](const BBoxCircle bbox) -> BBoxVariant { return sm::Circle{ pos + m_offset, bbox.radius }; },
-        [pos, this](const BBoxLine bbox) -> BBoxVariant { return sm::Line{ pos + m_offset, bbox.len, bbox.angle }; }
+        [pos, this](BBoxRect const bbox) -> BBoxVariant { return rl::Rectangle{ pos + m_offset, bbox.size }; },
+        [pos, this](BBoxCircle const bbox) -> BBoxVariant { return sm::Circle{ pos + m_offset, bbox.radius }; },
+        [pos, this](BBoxLine const bbox) -> BBoxVariant { return sm::Line{ pos + m_offset, bbox.len, bbox.angle }; }
     );
 }
 
@@ -58,22 +58,22 @@ auto BBox::details() const -> BBoxDetails
 
 namespace bbox
 {
-auto collides(const BBoxVariant bbox1, const BBoxVariant bbox2) -> bool
+auto collides(BBoxVariant const bbox1, BBoxVariant const bbox2) -> bool
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return sm::check_collision(bbox1, bbox2); }); }
+        [bbox2](auto const bbox1)
+        { return sl::match(bbox2, [bbox1](auto const bbox2) { return sm::check_collision(bbox1, bbox2); }); }
     );
 }
 
 // currently assumes bbox2 is unmoving and unmovable, return value only resolves bbox1 pos
-auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> sm::Vec2
+auto resolve_collision(BBoxVariant const bbox1, BBoxVariant const bbox2) -> sm::Vec2
 {
     return sl::match(
         bbox1,
-        [bbox2](const auto bbox1)
-        { return sl::match(bbox2, [bbox1](const auto bbox2) { return ::resolve_collision(bbox1, bbox2); }); }
+        [bbox2](auto const bbox1)
+        { return sl::match(bbox2, [bbox1](auto const bbox2) { return ::resolve_collision(bbox1, bbox2); }); }
     );
 }
 } // namespace bbox
@@ -81,46 +81,46 @@ auto resolve_collision(const BBoxVariant bbox1, const BBoxVariant bbox2) -> sm::
 
 namespace
 {
-auto resolve_collision(const rl::Rectangle bbox1, const rl::Rectangle bbox2) -> sm::Vec2
+auto resolve_collision(rl::Rectangle const bbox1, rl::Rectangle const bbox2) -> sm::Vec2
 {
-    const auto x_overlap{ (bbox1.x > bbox2.x ? bbox2.x + bbox2.width - bbox1.x : bbox2.x - (bbox1.x + bbox1.width)) };
-    const auto y_overlap{ (bbox1.y > bbox2.y ? bbox2.y + bbox2.height - bbox1.y : bbox2.y - (bbox1.y + bbox1.height)) };
+    auto const x_overlap{ (bbox1.x > bbox2.x ? bbox2.x + bbox2.width - bbox1.x : bbox2.x - (bbox1.x + bbox1.width)) };
+    auto const y_overlap{ (bbox1.y > bbox2.y ? bbox2.y + bbox2.height - bbox1.y : bbox2.y - (bbox1.y + bbox1.height)) };
 
     return (std::fabs(y_overlap) > std::fabs(x_overlap) ? sm::Vec2{ x_overlap, 0.0 } : sm::Vec2{ 0.0, y_overlap });
 }
 
-auto resolve_collision(const rl::Rectangle bbox1, const sm::Circle bbox2) -> sm::Vec2
+auto resolve_collision(rl::Rectangle const bbox1, sm::Circle const bbox2) -> sm::Vec2
 {
-    const sm::Vec2 corner{ (bbox2.pos.x > bbox1.x ? bbox1.x + bbox1.width : bbox1.x),
+    sm::Vec2 const corner{ (bbox2.pos.x > bbox1.x ? bbox1.x + bbox1.width : bbox1.x),
                            (bbox2.pos.y > bbox1.y ? bbox1.y + bbox1.height : bbox1.y) };
-    const auto y_adjust_only{ bbox2.pos.x > bbox1.x && bbox2.pos.x < bbox1.x + bbox1.width };
-    const auto x_adjust_only{ bbox2.pos.y > bbox1.y && bbox2.pos.y < bbox1.y + bbox1.height };
-    const sm::Vec2 diff{ (y_adjust_only ? 0.0F : bbox2.pos.x - corner.x),
+    auto const y_adjust_only{ bbox2.pos.x > bbox1.x && bbox2.pos.x < bbox1.x + bbox1.width };
+    auto const x_adjust_only{ bbox2.pos.y > bbox1.y && bbox2.pos.y < bbox1.y + bbox1.height };
+    sm::Vec2 const diff{ (y_adjust_only ? 0.0F : bbox2.pos.x - corner.x),
                          (x_adjust_only ? 0.0F : bbox2.pos.y - corner.y) };
-    const auto angle{ std::atan2(diff.y, diff.x) };
+    auto const angle{ std::atan2(diff.y, diff.x) };
     slog::log(slog::TRC, "Angle {}", sm::radians_to_degrees(angle));
 
     return { diff - sm::Vec2{ cos(angle), sin(angle) } * bbox2.radius };
 }
 
-auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> sm::Vec2
+auto resolve_collision(rl::Rectangle const bbox1, sm::Line const bbox2) -> sm::Vec2
 {
-    const auto pos1{ bbox2.pos1 };
-    const auto pos2{ bbox2.pos2 };
-    const auto pos1_in_rect{
+    auto const pos1{ bbox2.pos1 };
+    auto const pos2{ bbox2.pos2 };
+    auto const pos1_in_rect{
         pos1.x >= bbox1.x && pos1.x <= bbox1.x + bbox1.width && pos1.y >= bbox1.y && pos1.y <= bbox1.y + bbox1.height
     };
-    const auto pos2_in_rect{
+    auto const pos2_in_rect{
         pos2.x >= bbox1.x && pos2.x <= bbox1.x + bbox1.width && pos2.y >= bbox1.y && pos2.y <= bbox1.y + bbox1.height
     };
     // collision resolution with one of line ends
     if (pos1_in_rect ^ pos2_in_rect)
     {
-        const auto x_adjust{
+        auto const x_adjust{
             (pos1_in_rect ? pos1.x - (pos1.x > pos2.x ? bbox1.x : bbox1.x + bbox1.width)
                           : pos2.x - (pos2.x > pos1.x ? bbox1.x : bbox1.x + bbox1.width))
         };
-        const auto y_adjust{
+        auto const y_adjust{
             (pos1_in_rect ? pos1.y - (pos1.y > pos2.y ? bbox1.y : bbox1.y + bbox1.height)
                           : pos2.y - (pos2.y > pos1.y ? bbox1.y : bbox1.y + bbox1.height))
         };
@@ -128,64 +128,64 @@ auto resolve_collision(const rl::Rectangle bbox1, const sm::Line bbox2) -> sm::V
         return (std::fabs(x_adjust) > std::fabs(y_adjust) ? sm::Vec2{ 0.0, y_adjust } : sm::Vec2{ x_adjust, 0.0 });
     }
 
-    const auto upward_line{ (pos2.x > pos1.x && pos1.y > pos2.y) || (pos1.x > pos2.x && pos2.y > pos1.y) };
-    const sm::Vec2 corner1{ bbox1.x, (upward_line ? bbox1.y : bbox1.y + bbox1.height) };
-    const sm::Vec2 corner2{ bbox1.x + bbox1.width, (upward_line ? bbox1.y + bbox1.height : bbox1.y) };
-    const auto diff{ pos1 - pos2 };
-    const auto closest_point1{ diff * ::Vector2DotProduct(corner1 - pos1, diff) / diff.sqr_len() };
-    const auto closest_point2{ diff * ::Vector2DotProduct(corner2 - pos1, diff) / diff.sqr_len() };
-    const auto adjust1{ pos1 + closest_point1 - corner1 };
-    const auto adjust2{ pos1 + closest_point2 - corner2 };
+    auto const upward_line{ (pos2.x > pos1.x && pos1.y > pos2.y) || (pos1.x > pos2.x && pos2.y > pos1.y) };
+    sm::Vec2 const corner1{ bbox1.x, (upward_line ? bbox1.y : bbox1.y + bbox1.height) };
+    sm::Vec2 const corner2{ bbox1.x + bbox1.width, (upward_line ? bbox1.y + bbox1.height : bbox1.y) };
+    auto const diff{ pos1 - pos2 };
+    auto const closest_point1{ diff * ::Vector2DotProduct(corner1 - pos1, diff) / diff.sqr_len() };
+    auto const closest_point2{ diff * ::Vector2DotProduct(corner2 - pos1, diff) / diff.sqr_len() };
+    auto const adjust1{ pos1 + closest_point1 - corner1 };
+    auto const adjust2{ pos1 + closest_point2 - corner2 };
 
     return (adjust1.len() > adjust2.len() ? adjust2 : adjust1);
 }
 
-auto resolve_collision(const sm::Circle bbox1, const rl::Rectangle bbox2) -> sm::Vec2
+auto resolve_collision(sm::Circle const bbox1, rl::Rectangle const bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Circle bbox1, const sm::Circle bbox2) -> sm::Vec2
+auto resolve_collision(sm::Circle const bbox1, sm::Circle const bbox2) -> sm::Vec2
 {
-    const auto distance{ bbox1.pos - bbox2.pos };
-    const auto overlap{ bbox1.radius + bbox2.radius - distance.len() };
+    auto const distance{ bbox1.pos - bbox2.pos };
+    auto const overlap{ bbox1.radius + bbox2.radius - distance.len() };
 
     return distance * overlap / distance.len();
 }
 
-auto resolve_collision(const sm::Circle bbox1, const sm::Line bbox2) -> sm::Vec2
+auto resolve_collision(sm::Circle const bbox1, sm::Line const bbox2) -> sm::Vec2
 {
-    const auto pos1{ bbox2.pos1 };
-    const auto pos2{ bbox2.pos2 };
-    const auto diff{ pos2 - pos1 };
-    const auto closest_line_point{
+    auto const pos1{ bbox2.pos1 };
+    auto const pos2{ bbox2.pos2 };
+    auto const diff{ pos2 - pos1 };
+    auto const closest_line_point{
         diff * std::clamp(::Vector2DotProduct(bbox1.pos - pos1, diff) / diff.sqr_len(), 0.0F, 1.0F)
     };
-    const auto point_to_line{ pos1 + closest_line_point - bbox1.pos };
+    auto const point_to_line{ pos1 + closest_line_point - bbox1.pos };
 
     return -point_to_line * ((bbox1.radius - point_to_line.len()) / point_to_line.len());
 }
 
-auto resolve_collision(const sm::Line bbox1, const rl::Rectangle bbox2) -> sm::Vec2
+auto resolve_collision(sm::Line const bbox1, rl::Rectangle const bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Line bbox1, const sm::Circle bbox2) -> sm::Vec2
+auto resolve_collision(sm::Line const bbox1, sm::Circle const bbox2) -> sm::Vec2
 {
     return -resolve_collision(bbox2, bbox1);
 }
 
-auto resolve_collision(const sm::Line bbox1, const sm::Line bbox2) -> sm::Vec2
+auto resolve_collision(sm::Line const bbox1, sm::Line const bbox2) -> sm::Vec2
 {
     rl::Vector2 collision_point;
     ::CheckCollisionLines(bbox1.pos1, bbox1.pos2, bbox2.pos1, bbox2.pos2, &collision_point);
-    const auto mid_adjust1{ -bbox1.pos1 + collision_point };
-    const auto mid_adjust2{ -bbox1.pos2 + collision_point };
-    const auto end_adjust1{ bbox2.pos1 - collision_point };
-    const auto end_adjust2{ bbox2.pos2 - collision_point };
-    const auto mid_adjust{ mid_adjust1.len() > mid_adjust2.len() ? mid_adjust2 : mid_adjust1 };
-    const auto end_adjust{ end_adjust1.len() > end_adjust2.len() ? end_adjust2 : end_adjust1 };
+    auto const mid_adjust1{ -bbox1.pos1 + collision_point };
+    auto const mid_adjust2{ -bbox1.pos2 + collision_point };
+    auto const end_adjust1{ bbox2.pos1 - collision_point };
+    auto const end_adjust2{ bbox2.pos2 - collision_point };
+    auto const mid_adjust{ mid_adjust1.len() > mid_adjust2.len() ? mid_adjust2 : mid_adjust1 };
+    auto const end_adjust{ end_adjust1.len() > end_adjust2.len() ? end_adjust2 : end_adjust1 };
 
     return (mid_adjust.len() > end_adjust.len() ? end_adjust : mid_adjust);
 }

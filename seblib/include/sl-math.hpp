@@ -29,15 +29,15 @@ struct Point
     explicit constexpr Point(rl::Vector2 vec);
 
     operator rl::Vector2() const; // NOLINT(hicpp-explicit-conversions)
-    [[maybe_unused]] auto operator=(rl::Vector2 vec) -> Point&;
+    [[maybe_unused]] auto operator=(rl::Vector2 vec) -> Point &;
     [[nodiscard]] auto operator+(rl::Vector2 vec) const -> Point;
     [[nodiscard]] auto operator-(rl::Vector2 vec) const -> Point;
     [[nodiscard]] auto operator*(float f) const -> Point;
     [[nodiscard]] auto operator/(float f) const -> Point;
-    [[maybe_unused]] auto operator+=(rl::Vector2 vec) -> Point&;
-    [[maybe_unused]] auto operator-=(rl::Vector2 vec) -> Point&;
-    [[maybe_unused]] auto operator*=(float f) -> Point&;
-    [[maybe_unused]] auto operator/=(float f) -> Point&;
+    [[maybe_unused]] auto operator+=(rl::Vector2 vec) -> Point &;
+    [[maybe_unused]] auto operator-=(rl::Vector2 vec) -> Point &;
+    [[maybe_unused]] auto operator*=(float f) -> Point &;
+    [[maybe_unused]] auto operator/=(float f) -> Point &;
     [[nodiscard]] auto len() const -> float;
     [[nodiscard]] auto sqr_len() const -> float;
     [[nodiscard]] auto operator-() const -> Point;
@@ -46,10 +46,10 @@ struct Point
     [[nodiscard]] auto operator-(Point vec) const -> Point;
     [[nodiscard]] auto operator*(Point vec) const -> Point;
     [[nodiscard]] auto operator/(Point vec) const -> Point;
-    [[maybe_unused]] auto operator+=(Point vec) -> Point&;
-    [[maybe_unused]] auto operator-=(Point vec) -> Point&;
-    [[maybe_unused]] auto operator*=(Point vec) -> Point&;
-    [[maybe_unused]] auto operator/=(Point vec) -> Point&;
+    [[maybe_unused]] auto operator+=(Point vec) -> Point &;
+    [[maybe_unused]] auto operator-=(Point vec) -> Point &;
+    [[maybe_unused]] auto operator*=(Point vec) -> Point &;
+    [[maybe_unused]] auto operator/=(Point vec) -> Point &;
 };
 
 struct Circle
@@ -94,8 +94,8 @@ struct std::formatter<seblib::math::Point<P>> // NOLINT(cert-dcl58-cpp)
 {
     std::formatter<std::string> formatter;
 
-    constexpr auto parse(std::format_parse_context& ctx);
-    auto format(seblib::math::Point<P> const& coords, std::format_context& ctx) const;
+    constexpr auto parse(std::format_parse_context & ctx);
+    auto format(seblib::math::Point<P> const & coords, std::format_context & ctx) const;
 };
 
 /****************************
@@ -107,14 +107,14 @@ struct std::formatter<seblib::math::Point<P>> // NOLINT(cert-dcl58-cpp)
 namespace seblib::math
 {
 template <typename P>
-constexpr Point<P>::Point(const float x, const float y)
+constexpr Point<P>::Point(float const x, float const y)
     : x{ x }
     , y{ y }
 {
 }
 
 template <typename P>
-constexpr Point<P>::Point(const rl::Vector2 vec)
+constexpr Point<P>::Point(rl::Vector2 const vec)
     : x{ vec.x }
     , y{ vec.y }
 {
@@ -127,7 +127,7 @@ Point<P>::operator rl::Vector2() const
 }
 
 template <typename P>
-auto Point<P>::operator=(const rl::Vector2 vec) -> Point<P>&
+auto Point<P>::operator=(rl::Vector2 const vec) -> Point<P> &
 {
     x = vec.x;
     y = vec.y;
@@ -136,25 +136,25 @@ auto Point<P>::operator=(const rl::Vector2 vec) -> Point<P>&
 }
 
 template <typename P>
-auto Point<P>::operator+(const rl::Vector2 vec) const -> Point<P>
+auto Point<P>::operator+(rl::Vector2 const vec) const -> Point<P>
 {
     return { x + vec.x, y + vec.y };
 }
 
 template <typename P>
-auto Point<P>::operator-(const rl::Vector2 vec) const -> Point<P>
+auto Point<P>::operator-(rl::Vector2 const vec) const -> Point<P>
 {
     return { x - vec.x, y - vec.y };
 }
 
 template <typename P>
-auto Point<P>::operator*(const float f) const -> Point<P>
+auto Point<P>::operator*(float const f) const -> Point<P>
 {
     return { x * f, y * f };
 }
 
 template <typename P>
-auto Point<P>::operator/(const float f) const -> Point<P>
+auto Point<P>::operator/(float const f) const -> Point<P>
 {
 #ifndef NDEBUG
     if (f == 0.0)
@@ -169,7 +169,7 @@ auto Point<P>::operator/(const float f) const -> Point<P>
 }
 
 template <typename P>
-auto Point<P>::operator+=(const rl::Vector2 vec) -> Point<P>&
+auto Point<P>::operator+=(rl::Vector2 const vec) -> Point<P> &
 {
     x += vec.x;
     y += vec.y;
@@ -178,7 +178,7 @@ auto Point<P>::operator+=(const rl::Vector2 vec) -> Point<P>&
 }
 
 template <typename P>
-auto Point<P>::operator-=(const rl::Vector2 vec) -> Point<P>&
+auto Point<P>::operator-=(rl::Vector2 const vec) -> Point<P> &
 {
     x -= vec.x;
     y -= vec.y;
@@ -187,7 +187,7 @@ auto Point<P>::operator-=(const rl::Vector2 vec) -> Point<P>&
 }
 
 template <typename P>
-auto Point<P>::operator*=(const float f) -> Point<P>&
+auto Point<P>::operator*=(float const f) -> Point<P> &
 {
     x *= f;
     y *= f;
@@ -196,7 +196,7 @@ auto Point<P>::operator*=(const float f) -> Point<P>&
 }
 
 template <typename P>
-auto Point<P>::operator/=(const float f) -> Point<P>&
+auto Point<P>::operator/=(float const f) -> Point<P> &
 {
 #ifndef NDEBUG
     if (f == 0.0)
@@ -269,7 +269,7 @@ auto Point<P>::operator/(Point vec) const -> Point
 }
 
 template <typename P>
-auto Point<P>::operator+=(Point vec) -> Point&
+auto Point<P>::operator+=(Point vec) -> Point &
 {
     x += vec.x;
     y += vec.y;
@@ -278,7 +278,7 @@ auto Point<P>::operator+=(Point vec) -> Point&
 }
 
 template <typename P>
-auto Point<P>::operator-=(Point vec) -> Point&
+auto Point<P>::operator-=(Point vec) -> Point &
 {
     x -= vec.x;
     y -= vec.y;
@@ -287,7 +287,7 @@ auto Point<P>::operator-=(Point vec) -> Point&
 }
 
 template <typename P>
-auto Point<P>::operator*=(Point vec) -> Point&
+auto Point<P>::operator*=(Point vec) -> Point &
 {
     x *= vec.x;
     y *= vec.y;
@@ -296,7 +296,7 @@ auto Point<P>::operator*=(Point vec) -> Point&
 }
 
 template <typename P>
-auto Point<P>::operator/=(Point vec) -> Point&
+auto Point<P>::operator/=(Point vec) -> Point &
 {
 #ifndef NDEBUG
     if (vec.x == 0.0 || vec.y == 0.0)
@@ -313,29 +313,29 @@ auto Point<P>::operator/=(Point vec) -> Point&
     return *this;
 }
 
-constexpr auto degrees_to_radians(const float ang) -> float
+constexpr auto degrees_to_radians(float const ang) -> float
 {
     return static_cast<float>(ang * std::numbers::pi / 180.0); // NOLINT(*magic-numbers)
 }
 
-constexpr auto radians_to_degrees(const float ang) -> float
+constexpr auto radians_to_degrees(float const ang) -> float
 {
     return static_cast<float>(ang * 180.0 / std::numbers::pi); // NOLINT(*magic-numbers)
 }
 } // namespace seblib::math
 
 template <typename P>
-constexpr auto std::formatter<seblib::math::Point<P>>::parse(std::format_parse_context& ctx)
+constexpr auto std::formatter<seblib::math::Point<P>>::parse(std::format_parse_context & ctx)
 {
     return formatter.parse(ctx);
 }
 
 template <typename P>
 auto std::formatter<seblib::math::Point<P>>::format(
-    seblib::math::Point<P> const& coords, std::format_context& ctx
+    seblib::math::Point<P> const & coords, std::format_context & ctx
 ) const
 {
-    const std::string output{ std::format("({}, {})", coords.x, coords.y) };
+    std::string const output{ std::format("({}, {})", coords.x, coords.y) };
 
     return formatter.format(output, ctx);
 }

@@ -52,9 +52,9 @@ public:
     auto place_tile(Tile tile, Coords<TileSize> coords) -> void;
     auto replace_tile(Tile tile, Coords<TileSize> coords) -> void;
     auto remove_tile(Coords<TileSize> coords) -> void;
-    auto draw(rl::Texture const& texture_sheet, float dt) -> void;
-    [[nodiscard]] auto tiles() const -> std::vector<Tile> const&;
-    [[nodiscard]] auto cboxes() const -> std::vector<rl::Rectangle> const&;
+    auto draw(rl::Texture const & texture_sheet, float dt) -> void;
+    [[nodiscard]] auto tiles() const -> std::vector<Tile> const &;
+    [[nodiscard]] auto cboxes() const -> std::vector<rl::Rectangle> const &;
     auto draw_cboxes() const -> void;
     auto calculate_cboxes() -> void;
     [[nodiscard]] auto row(size_t y, size_t min_x, size_t max_x) const;
@@ -71,8 +71,8 @@ private:
     static TileDetailsLookup<Tile, Sprite> s_details;
 
     [[nodiscard]] auto at(size_t id) const -> Tile;
-    [[nodiscard]] auto at_mut(Coords<TileSize> coords) -> Tile&;
-    [[nodiscard]] auto at_mut(size_t id) -> Tile&;
+    [[nodiscard]] auto at_mut(Coords<TileSize> coords) -> Tile &;
+    [[nodiscard]] auto at_mut(size_t id) -> Tile &;
     [[nodiscard]] auto coords_from_id(size_t id) const -> Coords<TileSize>;
     [[nodiscard]] auto id_from_coords(Coords<TileSize> coords) const -> size_t;
     [[nodiscard]] auto tile_in_cboxes(Coords<TileSize> coords) const -> bool;
@@ -90,7 +90,7 @@ private:
 namespace seb_engine
 {
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::place_tile(const Tile tile, const Coords<TileSize> coords) -> void
+auto World<Tile, Sprite, Width, Height, TileSize>::place_tile(Tile const tile, Coords<TileSize> const coords) -> void
 {
     if (at(coords) == static_cast<Tile>(0))
     {
@@ -99,42 +99,42 @@ auto World<Tile, Sprite, Width, Height, TileSize>::place_tile(const Tile tile, c
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::replace_tile(const Tile tile, const Coords<TileSize> coords) -> void
+auto World<Tile, Sprite, Width, Height, TileSize>::replace_tile(Tile const tile, Coords<TileSize> const coords) -> void
 {
     if (coords.x > Width || coords.y > Height)
     {
         return;
     }
 
-    const auto sprite{ s_details.get(tile).sprite };
+    auto const sprite{ s_details.get(tile).sprite };
     at_mut(coords) = tile;
     m_sprites.set(id_from_coords(coords), sprite);
     calculate_cboxes();
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::remove_tile(const Coords<TileSize> coords) -> void
+auto World<Tile, Sprite, Width, Height, TileSize>::remove_tile(Coords<TileSize> const coords) -> void
 {
     replace_tile(static_cast<Tile>(0), coords);
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::draw(rl::Texture const& texture_sheet, const float dt) -> void
+auto World<Tile, Sprite, Width, Height, TileSize>::draw(rl::Texture const & texture_sheet, float const dt) -> void
 {
-    for (const auto [id, tile] : m_tiles | views::enumerate)
+    for (auto const [id, tile] : m_tiles | views::enumerate)
     {
         m_sprites.draw(texture_sheet, coords_from_id(id), id, dt, false);
     }
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::tiles() const -> std::vector<Tile> const&
+auto World<Tile, Sprite, Width, Height, TileSize>::tiles() const -> std::vector<Tile> const &
 {
     return m_tiles;
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::cboxes() const -> std::vector<rl::Rectangle> const&
+auto World<Tile, Sprite, Width, Height, TileSize>::cboxes() const -> std::vector<rl::Rectangle> const &
 {
     return m_cboxes;
 }
@@ -142,7 +142,7 @@ auto World<Tile, Sprite, Width, Height, TileSize>::cboxes() const -> std::vector
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::draw_cboxes() const -> void
 {
-    for (const auto cbox : m_cboxes)
+    for (auto const cbox : m_cboxes)
     {
         cbox.DrawLines(::RED);
     }
@@ -153,13 +153,13 @@ template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Heigh
 auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
 {
     m_cboxes.clear();
-    const auto non_empty{ [](const auto tile) { return std::get<1>(tile) != static_cast<Tile>(0); } };
-    for (const auto [id, tile] : tiles() | views::enumerate | views::filter(non_empty))
+    auto const non_empty{ [](auto const tile) { return std::get<1>(tile) != static_cast<Tile>(0); } };
+    for (auto const [id, tile] : tiles() | views::enumerate | views::filter(non_empty))
     {
-        const auto coords{ coords_from_id(id) };
+        auto const coords{ coords_from_id(id) };
         rl::Rectangle tile_cbox{ coords, rl::Vector2{ TileSize, TileSize } };
-        const auto collisions{ m_cboxes
-                               | views::transform([tile_cbox](const auto existing_cbox)
+        auto const collisions{ m_cboxes
+                               | views::transform([tile_cbox](auto const existing_cbox)
                                                   { return bbox::collides(tile_cbox, existing_cbox); }) };
         if (ranges::any_of(collisions, std::identity{}))
         {
@@ -172,16 +172,16 @@ auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
         auto coords_max{ coords + Coords<TileSize>{ 1, 1 } };
         while (check_right || check_top)
         {
-            const auto top_right_not_empty{ check_right && check_top && at(coords_max) != static_cast<Tile>(0) };
-            const auto top_not_empty{ check_top
+            auto const top_right_not_empty{ check_right && check_top && at(coords_max) != static_cast<Tile>(0) };
+            auto const top_not_empty{ check_top
                                       && ranges::all_of(row(coords_max.y, coords.x, coords_max.x - 1), non_empty) };
-            const auto top_in_cboxes{ ranges::any_of(
+            auto const top_in_cboxes{ ranges::any_of(
                 views::iota(coords.x, coords_max.x)
-                    | views::transform([coords_max, this](const auto x)
+                    | views::transform([coords_max, this](auto const x)
                                        { return tile_in_cboxes({ x, coords_max.y }); }),
                 std::identity{}
             ) };
-            const auto right_not_empty{ check_right
+            auto const right_not_empty{ check_right
                                         && ranges::all_of(col(coords_max.x, coords.y, coords_max.y - 1), non_empty) };
             if (top_right_not_empty && top_not_empty && right_not_empty && !top_in_cboxes)
             {
@@ -214,14 +214,14 @@ auto World<Tile, Sprite, Width, Height, TileSize>::calculate_cboxes() -> void
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const size_t min_x, const size_t max_x) const
+auto World<Tile, Sprite, Width, Height, TileSize>::row(size_t const y, size_t const min_x, size_t const max_x) const
 {
     return m_tiles
         | views::enumerate
         | views::filter(
-               [this, y, min_x, max_x](const auto tile)
+               [this, y, min_x, max_x](auto const tile)
                {
-                   const auto coords{ coords_from_id(std::get<0>(tile)) };
+                   auto const coords{ coords_from_id(std::get<0>(tile)) };
 
                    return coords.y == y && coords.x >= min_x && coords.x <= max_x;
                }
@@ -229,14 +229,14 @@ auto World<Tile, Sprite, Width, Height, TileSize>::row(const size_t y, const siz
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::col(const size_t x, const size_t min_y, const size_t max_y) const
+auto World<Tile, Sprite, Width, Height, TileSize>::col(size_t const x, size_t const min_y, size_t const max_y) const
 {
     return m_tiles
         | views::enumerate
         | views::filter(
-               [this, x, min_y, max_y](const auto tile)
+               [this, x, min_y, max_y](auto const tile)
                {
-                   const auto coords{ coords_from_id(std::get<0>(tile)) };
+                   auto const coords{ coords_from_id(std::get<0>(tile)) };
 
                    return coords.x == x && coords.y >= min_y && coords.y <= max_y;
                }
@@ -244,9 +244,9 @@ auto World<Tile, Sprite, Width, Height, TileSize>::col(const size_t x, const siz
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::tile_cbox(const Coords<TileSize> coords) const -> BBoxVariant
+auto World<Tile, Sprite, Width, Height, TileSize>::tile_cbox(Coords<TileSize> const coords) const -> BBoxVariant
 {
-    const auto tile{ at(coords) };
+    auto const tile{ at(coords) };
 
     return cbox_from_tile_type(s_details.get(tile).type).val(coords);
 }
@@ -259,25 +259,25 @@ auto World<Tile, Sprite, Width, Height, TileSize>::new_tile_cbox(Tile tile, Coor
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::at(const Coords<TileSize> coords) const -> Tile
+auto World<Tile, Sprite, Width, Height, TileSize>::at(Coords<TileSize> const coords) const -> Tile
 {
     assert(coords.x <= Width);
     assert(coords.y <= Height);
 
-    const auto tile{ m_tiles[coords.y + (Height * coords.x)] };
+    auto const tile{ m_tiles[coords.y + (Height * coords.x)] };
     slog::log(slog::TRC, "Tile at {} is {}", coords, std::to_underlying(tile));
 
     return tile;
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::at(const size_t id) const -> Tile
+auto World<Tile, Sprite, Width, Height, TileSize>::at(size_t const id) const -> Tile
 {
     return at(coords_from_id(id));
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const Coords<TileSize> coords) -> Tile&
+auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(Coords<TileSize> const coords) -> Tile &
 {
     assert(coords.x <= Width);
     assert(coords.y <= Height);
@@ -286,19 +286,19 @@ auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const Coords<TileSize>
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(const size_t id) -> Tile&
+auto World<Tile, Sprite, Width, Height, TileSize>::at_mut(size_t const id) -> Tile &
 {
     return at_mut(coords_from_id(id));
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::coords_from_id(const size_t id) const -> Coords<TileSize>
+auto World<Tile, Sprite, Width, Height, TileSize>::coords_from_id(size_t const id) const -> Coords<TileSize>
 {
     return Coords<TileSize>{ id / Height, id % Height };
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::id_from_coords(const Coords<TileSize> coords) const -> size_t
+auto World<Tile, Sprite, Width, Height, TileSize>::id_from_coords(Coords<TileSize> const coords) const -> size_t
 {
     return (coords.x * Height) + coords.y;
 }
@@ -306,16 +306,16 @@ auto World<Tile, Sprite, Width, Height, TileSize>::id_from_coords(const Coords<T
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
 auto World<Tile, Sprite, Width, Height, TileSize>::tile_in_cboxes(Coords<TileSize> coords) const -> bool
 {
-    const auto cbox_tile{ tile_cbox(coords) };
+    auto const cbox_tile{ tile_cbox(coords) };
 
     return ranges::any_of(
-        m_cboxes | views::transform([cbox_tile](const auto cbox) { return bbox::collides(cbox, cbox_tile); }),
+        m_cboxes | views::transform([cbox_tile](auto const cbox) { return bbox::collides(cbox, cbox_tile); }),
         std::identity{}
     );
 }
 
 template <sl::Enumerable Tile, sl::Enumerable Sprite, size_t Width, size_t Height, unsigned TileSize>
-auto World<Tile, Sprite, Width, Height, TileSize>::cbox_from_tile_type(const TileType type) const -> BBox
+auto World<Tile, Sprite, Width, Height, TileSize>::cbox_from_tile_type(TileType const type) const -> BBox
 {
     switch (type)
     {

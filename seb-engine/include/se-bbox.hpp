@@ -75,22 +75,22 @@ auto resolve_collision(BBoxVariant bbox1, BBoxVariant bbox2) -> sm::Vec2;
 
 namespace seb_engine
 {
-constexpr BBoxRect::BBoxRect(const sm::Vec2 size)
+constexpr BBoxRect::BBoxRect(sm::Vec2 const size)
     : size{ size }
 {
 }
 
-constexpr BBoxRect::BBoxRect(const float width, const float height)
+constexpr BBoxRect::BBoxRect(float const width, float const height)
     : size{ width, height }
 {
 }
 
-constexpr BBoxCircle::BBoxCircle(const float radius)
+constexpr BBoxCircle::BBoxCircle(float const radius)
     : radius{ radius }
 {
 }
 
-constexpr BBoxLine::BBoxLine(const float len, const float angle)
+constexpr BBoxLine::BBoxLine(float const len, float const angle)
     : len{ len }
     , angle{ angle }
 {

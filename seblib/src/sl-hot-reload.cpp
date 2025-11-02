@@ -4,7 +4,7 @@
 
 namespace seblib::hot_reload
 {
-auto load_lib(const char* so_name, const bool exit_on_fail) -> SLHR_MODULE
+auto load_lib(char const * so_name, bool const exit_on_fail) -> SLHR_MODULE
 {
     slog::log(slog::INF, "Loading library {}", so_name);
 #if defined(_WIN32) || defined(__CYGWIN__)

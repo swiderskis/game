@@ -28,8 +28,8 @@ struct Coords
     constexpr operator sm::Vec2() const; // NOLINT(hicpp-explicit-conversions)
     [[nodiscard]] auto operator+(Coords coords) const -> Coords;
     [[nodiscard]] auto operator-(Coords coords) const -> Coords;
-    [[maybe_unused]] auto operator+=(Coords coords) -> Coords&;
-    [[maybe_unused]] auto operator-=(Coords coords) -> Coords&;
+    [[maybe_unused]] auto operator+=(Coords coords) -> Coords &;
+    [[maybe_unused]] auto operator-=(Coords coords) -> Coords &;
 };
 } // namespace seb_engine
 
@@ -38,8 +38,8 @@ struct std::formatter<seb_engine::Coords<CoordSize>> // NOLINT(cert-dcl58-cpp)
 {
     std::formatter<std::string> formatter;
 
-    constexpr auto parse(std::format_parse_context& ctx);
-    auto format(seb_engine::Coords<CoordSize> const& coords, std::format_context& ctx) const;
+    constexpr auto parse(std::format_parse_context & ctx);
+    auto format(seb_engine::Coords<CoordSize> const & coords, std::format_context & ctx) const;
 };
 
 /****************************
@@ -53,21 +53,21 @@ namespace seb_engine
 namespace slog = seblib::log;
 
 template <unsigned CoordSize>
-constexpr Coords<CoordSize>::Coords(const size_t x, const size_t y)
+constexpr Coords<CoordSize>::Coords(size_t const x, size_t const y)
     : x{ x }
     , y{ y }
 {
 }
 
 template <unsigned CoordSize>
-auto Coords<CoordSize>::from_vec2(const sm::Vec2 pos) -> std::optional<Coords<CoordSize>>
+auto Coords<CoordSize>::from_vec2(sm::Vec2 const pos) -> std::optional<Coords<CoordSize>>
 {
     if (pos.x + CoordSize < 0.0 || -pos.y < 0.0)
     {
         return std::nullopt;
     }
 
-    const Coords<CoordSize> coords{ (static_cast<unsigned>(pos.x + CoordSize) / CoordSize),
+    Coords<CoordSize> const coords{ (static_cast<unsigned>(pos.x + CoordSize) / CoordSize),
                                     static_cast<unsigned>(-pos.y) / CoordSize };
     slog::log(slog::TRC, "Coords {} from Vec2 {}", coords, pos);
 
@@ -87,19 +87,19 @@ constexpr Coords<CoordSize>::operator sm::Vec2() const
 }
 
 template <unsigned CoordSize>
-auto Coords<CoordSize>::operator+(const Coords coords) const -> Coords
+auto Coords<CoordSize>::operator+(Coords const coords) const -> Coords
 {
     return { x + coords.x, y + coords.y };
 }
 
 template <unsigned CoordSize>
-auto Coords<CoordSize>::operator-(const Coords coords) const -> Coords
+auto Coords<CoordSize>::operator-(Coords const coords) const -> Coords
 {
     return { x - coords.x, y - coords.y };
 }
 
 template <unsigned CoordSize>
-auto Coords<CoordSize>::operator+=(const Coords coords) -> Coords&
+auto Coords<CoordSize>::operator+=(Coords const coords) -> Coords &
 {
     x += coords.x;
     y += coords.y;
@@ -108,7 +108,7 @@ auto Coords<CoordSize>::operator+=(const Coords coords) -> Coords&
 }
 
 template <unsigned CoordSize>
-auto Coords<CoordSize>::operator-=(const Coords coords) -> Coords&
+auto Coords<CoordSize>::operator-=(Coords const coords) -> Coords &
 {
     x -= coords.x;
     y -= coords.y;
@@ -118,17 +118,17 @@ auto Coords<CoordSize>::operator-=(const Coords coords) -> Coords&
 } // namespace seb_engine
 
 template <unsigned CoordSize>
-constexpr auto std::formatter<seb_engine::Coords<CoordSize>>::parse(std::format_parse_context& ctx)
+constexpr auto std::formatter<seb_engine::Coords<CoordSize>>::parse(std::format_parse_context & ctx)
 {
     return formatter.parse(ctx);
 }
 
 template <unsigned CoordSize>
 auto std::formatter<seb_engine::Coords<CoordSize>>::format(
-    seb_engine::Coords<CoordSize> const& coords, std::format_context& ctx
+    seb_engine::Coords<CoordSize> const & coords, std::format_context & ctx
 ) const
 {
-    const std::string output{ std::format("({}, {})", coords.x, coords.y) };
+    std::string const output{ std::format("({}, {})", coords.x, coords.y) };
 
     return formatter.format(output, ctx);
 }

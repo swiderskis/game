@@ -4,17 +4,17 @@
 #include <cmath>
 #include <optional>
 
-auto Flags::is_enabled(const Flag flag_enum) const -> bool
+auto Flags::is_enabled(Flag const flag_enum) const -> bool
 {
     return flag[flag_enum];
 }
 
-auto Flags::set(const Flag flag_enum, const bool val) -> void
+auto Flags::set(Flag const flag_enum, bool const val) -> void
 {
     flag[flag_enum] = val;
 }
 
-auto Health::set(const int health) -> void
+auto Health::set(int const health) -> void
 {
     current = health;
     max = health;
